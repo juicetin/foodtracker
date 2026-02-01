@@ -1,0 +1,30 @@
+{
+  "name": "@foodtracker/ai-agent",
+  "version": "1.0.0",
+  "description": "Food tracking AI agents using Google ADK",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsx src/index.ts",
+    "test": "jest"
+  },
+  "keywords": [
+    "adk",
+    "ai",
+    "gemini",
+    "food-tracking"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@google/adk": "latest",
+    "dotenv": "^16.4.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.12.12",
+    "tsx": "^4.7.1",
+    "typescript": "^5.4.5"
+  }
+}
