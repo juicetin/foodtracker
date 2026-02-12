@@ -126,7 +126,7 @@ Note: Phase 3 can partially overlap with Phase 2 (no dependency between them).
 
 | Phase | Plans Complete | Status | Completed |
 |-------|---------------|--------|-----------|
-| 1. Food Detection Foundation | 0/TBD | Not started | - |
+| 1. Food Detection Foundation | 0/6 | Planned | - |
 | 2. Gallery Scanning & Deduplication | 0/TBD | Not started | - |
 | 3. Go Backend & Multi-Region Nutrition | 0/TBD | Not started | - |
 | 4. Tracking UI & Entry Management | 0/TBD | Not started | - |
