@@ -1,0 +1,38 @@
+# Large dataset files -- downloaded/generated, not committed
+datasets/raw/food-101/
+datasets/raw/isia-500/
+datasets/raw/roboflow-detection/
+datasets/raw/roboflow-binary/
+datasets/food-classification/
+datasets/food-detection/
+datasets/food-detection-autolabeled/
+datasets/food-detection-merged/
+datasets/food-binary/
+datasets/merge_report.json
+datasets/cuisine_audit_report.txt
+datasets/cuisine_audit_report.json
+datasets/raw/download_summary.json
+
+# Model weights and training runs
+runs/
+weights/
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.mlmodel
+*.mlpackage
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Auto-label checkpoints
+auto_label_progress.json

@@ -1,0 +1,26 @@
+# Food dish classification dataset config
+# Used for Stage 3 of the detection pipeline: identify specific dish types
+#
+# Dataset structure (ImageNet-style for YOLO classification):
+#   food-classification/
+#     train/
+#       pad-thai/
+#       sushi/
+#       hamburger/
+#       ...
+#     val/
+#     test/
+#     classes.txt
+#
+# nc and names are populated dynamically by merge_datasets.py
+# based on the actual classes discovered across Food-101 + ISIA-500.
+# After running merge_datasets.py, update this file with:
+#   nc: <number from classes.txt>
+#   names: <list from classes.txt>
+
+path: ../datasets/food-classification
+train: train
+val: val
+test: test
+# nc: <populated after merge -- see classes.txt for count>
+# names: <populated after merge -- see classes.txt for list>

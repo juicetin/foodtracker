@@ -1,0 +1,28 @@
+# Training environment dependencies for food detection pipeline
+# See: .planning/phases/01-food-detection-foundation/01-RESEARCH.md
+
+# YOLO training and export
+ultralytics>=8.3.0
+torch>=2.0.0
+torchvision>=0.15.0
+
+# Florence-2 auto-labeling and VLM benchmarks
+transformers>=4.36.0
+accelerate>=0.25.0
+
+# Dataset management
+roboflow>=1.1.0
+datasets>=2.14.0
+
+# Image processing
+Pillow>=10.0.0
+
+# Progress bars
+tqdm
+
+# iOS model export validation
+coremltools>=7.0
+
+# Utilities
+pyyaml>=6.0
+numpy>=1.24.0

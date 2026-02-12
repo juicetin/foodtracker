@@ -1,0 +1,21 @@
+# Food vs Not-Food binary classification dataset config
+# Used for Stage 1 of the detection pipeline: fast gate to filter non-food images
+#
+# Dataset structure (ImageNet-style for YOLO classification):
+#   food-binary/
+#     train/
+#       food/
+#       not-food/
+#     val/
+#       food/
+#       not-food/
+#     test/
+#       food/
+#       not-food/
+
+path: ../datasets/food-binary
+train: train
+val: val
+test: test
+nc: 2
+names: ['food', 'not-food']
