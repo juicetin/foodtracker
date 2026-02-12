@@ -32,11 +32,15 @@ Decimal phases appear between their surrounding integers in numeric order.
   4. App infers hidden ingredients from dish identification (e.g. "carbonara" yields egg, pancetta, parmesan, black pepper)
   5. A go/no-go decision has been made on detection approach: YOLO fine-tuning benchmarks are compared against multimodal LLM accuracy on the same test set, and one method is selected as the primary detection path for v1 based on accuracy results
 **Decision Point**: After initial YOLO fine-tuning and accuracy benchmarking, compare against multimodal LLM (Gemini/GPT-4o) on the same test images. If YOLO achieves target accuracy (>80% mAP), proceed with on-device YOLO. If not, pivot to LLM as the primary detection method and accept the cost/latency/network trade-offs. This decision gates Phase 2 architecture (on-device vs cloud detection pipeline).
-**Plans**: TBD
+**Plans**: 6 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
+- [ ] 01-01-PLAN.md -- Dataset acquisition, merging, auto-labeling with Florence-2
+- [ ] 01-02-PLAN.md -- Knowledge graph (SQLite schema, RecipeNLG/USDA seeding, query API, mobile export)
+- [ ] 01-03-PLAN.md -- Train YOLO26 models (binary, detection, classification) + per-cuisine evaluation
+- [ ] 01-04-PLAN.md -- VLM benchmark (PaliGemma 2 3B) + portion estimation module
+- [ ] 01-05-PLAN.md -- Export to CoreML/TFLite + validate + go/no-go decision checkpoint
+- [ ] 01-06-PLAN.md -- Mobile ML integration (react-native-fast-tflite, inference router, knowledge graph)
 
 ### Phase 2: Gallery Scanning & Deduplication
 **Goal**: The app passively discovers food photos from the user's gallery, extracts context, and deduplicates multi-angle shots into single meal events -- with explicit handling for iOS limited photo access
