@@ -9,28 +9,29 @@ See: .planning/PROJECT.md (updated 2026-02-12)
 
 ## Current Position
 
-Phase: 1 of 6 (Food Detection Foundation)
-Plan: 1 of 6 in current phase
-Status: Executing
-Last activity: 2026-02-12 -- Completed 01-01 (Dataset Acquisition and Auto-Labeling)
+**Phase:** 1 of 6 (Food Detection Foundation)
+**Current Plan:** 2
+**Total Plans in Phase:** 6
+**Status:** Executing
+**Last Activity:** 2026-02-13 -- Completed 01-02 (Knowledge Graph)
 
-Progress: [█░░░░░░░░░] 3%
+Progress: [██░░░░░░░░] 6%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 1
-- Average duration: 6min
-- Total execution time: 0.1 hours
+- Total plans completed: 2
+- Average duration: 26min
+- Total execution time: 0.9 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-food-detection-foundation | 1 | 6min | 6min |
+| 01-food-detection-foundation | 2 | 51min | 26min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6min)
+- Last 5 plans: 01-01 (6min), 01-02 (45min)
 - Trend: -
 
 *Updated after each plan completion*
@@ -51,6 +52,10 @@ Recent decisions affecting current work:
 - [01-01]: Food-101 via HuggingFace as primary classification source; ISIA-500 best-effort with graceful fallback
 - [01-01]: Florence-2-base (0.23B) for auto-labeling with full-image fallback for zero-detection images
 - [01-01]: Roboflow API key optional; pipeline degrades gracefully without it
+- [01-02]: Programmatic dish generation (1003 dishes) instead of RecipeNLG HuggingFace download
+- [01-02]: 5-tier best-guess fallback guarantees non-empty results for any input
+- [01-02]: Manual cross-language variant links for dishes like nasi goreng -> fried rice
+- [01-02]: DELETE journal mode for mobile SQLite export (single file, no WAL/SHM)
 
 ### Pending Todos
 
@@ -66,6 +71,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-02-12
-Stopped at: Completed 01-01-PLAN.md (Dataset Acquisition and Auto-Labeling)
+Last session: 2026-02-13
+Stopped at: Completed 01-02-PLAN.md (Knowledge Graph)
 Resume file: None
