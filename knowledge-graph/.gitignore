@@ -1,0 +1,15 @@
+# Virtual environment
+.venv/
+
+# SQLite databases (generated artifacts)
+*.db
+*.db-wal
+*.db-shm
+
+# Cache
+cache/
+
+# Python bytecode
+__pycache__/
+*.pyc
+*.pyo
