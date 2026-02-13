@@ -10,31 +10,37 @@ See: .planning/PROJECT.md (updated 2026-02-12)
 ## Current Position
 
 **Phase:** 1 of 6 (Food Detection Foundation)
-**Current Plan:** 2
+**Current Plan:** 3
 **Total Plans in Phase:** 6
 **Status:** Executing
-**Last Activity:** 2026-02-13 -- Completed 01-02 (Knowledge Graph)
+**Last Activity:** 2026-02-13 -- Completed 01-04 (VLM Benchmark + Portion Estimation)
 
-Progress: [██░░░░░░░░] 6%
+Progress: [████░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 2
-- Average duration: 26min
-- Total execution time: 0.9 hours
+- Total plans completed: 3
+- Average duration: 21min
+- Total execution time: 1.1 hours
 
 **By Phase:**
 
 | Phase | Plans | Total | Avg/Plan |
 |-------|-------|-------|----------|
-| 01-food-detection-foundation | 2 | 51min | 26min |
+| 01-food-detection-foundation | 3 | 64min | 21min |
 
 **Recent Trend:**
-- Last 5 plans: 01-01 (6min), 01-02 (45min)
-- Trend: -
+- Last 5 plans: 01-01 (6min), 01-02 (45min), 01-04 (13min)
+- Trend: improving
 
 *Updated after each plan completion*
+
+| Plan | Duration | Tasks | Files |
+|------|----------|-------|-------|
+| Phase 01 P01 | 6min | 2 tasks | 11 files |
+| Phase 01 P02 | 45min | 3 tasks | 8 files |
+| Phase 01 P04 | 13min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -56,6 +62,9 @@ Recent decisions affecting current work:
 - [01-02]: 5-tier best-guess fallback guarantees non-empty results for any input
 - [01-02]: Manual cross-language variant links for dishes like nasi goreng -> fried rice
 - [01-02]: DELETE journal mode for mobile SQLite export (single file, no WAL/SHM)
+- [Phase 01-04]: Built-in standard serving sizes preferred over KG fuzzy matching to avoid false positives
+- [Phase 01-04]: Geometry estimation needs Depth Anything V2 for +/-10% target; current baseline uses depth clamping (1-5cm)
+- [Phase 01-04]: VLM benchmark requires HuggingFace auth for gated PaliGemma models; Florence-2 as non-gated fallback
 
 ### Pending Todos
 
@@ -72,5 +81,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-02-13
-Stopped at: Completed 01-02-PLAN.md (Knowledge Graph)
+Stopped at: Completed 01-04-PLAN.md (VLM Benchmark + Portion Estimation)
 Resume file: None
