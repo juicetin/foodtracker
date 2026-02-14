@@ -1,0 +1,25 @@
+# Food Detection POC - Python dependencies
+# Install: pip install -r requirements.txt
+
+# Core ML / Detection
+ultralytics>=8.3.0        # YOLOv8/v11 - food object detection
+torch>=2.0.0              # PyTorch backend for YOLO
+torchvision>=0.15.0       # Image transforms, pretrained classifiers
+
+# Image processing
+Pillow>=10.0.0            # Image loading, manipulation
+opencv-python>=4.8.0      # Bounding box rendering, image annotation
+
+# EXIF / camera metadata
+exifread>=3.0.0           # Extract camera model, focal length, etc.
+
+# Nutritional data
+requests>=2.31.0          # USDA FoodData Central API calls
+
+# Notebook
+jupyter>=1.0.0            # Jupyter notebook runtime
+ipywidgets>=8.0.0         # Interactive widgets for review UI
+matplotlib>=3.7.0         # Plotting, image display with annotations
+
+# Data handling
+pandas>=2.0.0             # Tabular data for nutrition results

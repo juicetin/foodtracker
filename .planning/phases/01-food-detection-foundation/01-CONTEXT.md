@@ -68,7 +68,20 @@ Train/select a food detection model that accurately identifies food items, dish 
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope
+### Cloud LLM via subscription (alternative detection approach — TOS concerns)
+A potential alternative to on-device-only inference: use on-device binary classification (food/not-food) as a lightweight gate, then send confirmed food photos to a cloud LLM (e.g. Claude Sonnet) for detailed analysis. The concept:
+- **On-device gate**: cheap, fast binary classifier filters non-food photos (~95% of gallery)
+- **Cloud LLM for analysis**: structured tool calls returning JSON — dish name, ingredients list, macro/micro nutrients, portion estimate
+- **Batch/background processing**: photos queued and processed asynchronously as they appear in gallery, not blocking user interaction
+- **Parallel requests**: multiple photos processed concurrently for throughput
+- **Cost model**: flat subscription (e.g. Claude Max) instead of per-photo API costs — economically attractive if subscription covers sufficient volume
+
+**Why deferred:**
+- Using a subscription (Max plan) for automated/programmatic API-style calls likely violates provider TOS (designed for interactive human use, not background batch processing)
+- If a legitimate API-based approach becomes cost-effective in the future, this architecture is worth revisiting
+- Documented here to keep the option visible without committing to it
+
+**If revisited:** Would require a proper API plan with usage-based or tiered pricing that explicitly permits automated batch inference. The on-device gate + cloud LLM architecture itself is sound — the blocker is licensing, not technology.
 
 </deferred>
 

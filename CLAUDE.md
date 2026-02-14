@@ -76,3 +76,9 @@ Important Notes
 - No need for --yolo flag for read-only analysis
 - Gemini's context window can handle entire codebases that would overflow Claude's context
 - When checking implementations, be specific about what you're looking for to get accurate results
+
+# Architectural Decision Records
+
+Technical decisions are tracked in `docs/adr/`. See [docs/adr/README.md](docs/adr/README.md) for the full index.
+
+When making significant technical decisions (language/framework choices, architecture patterns, build-vs-buy), add a new ADR file following the existing format: Context, Decision, Consequences.

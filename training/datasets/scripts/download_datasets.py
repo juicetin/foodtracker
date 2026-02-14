@@ -22,6 +22,7 @@ import shutil
 import sys
 import urllib.request
 from pathlib import Path
+from typing import Optional
 
 logging.basicConfig(
     level=logging.INFO,
@@ -126,7 +127,7 @@ def download_isia500(output_dir: Path) -> dict:
         return {"name": "ISIA-500", "images": 0, "status": f"server unreachable: {e}"}
 
 
-def download_roboflow_detection(output_dir: Path, api_key: str | None = None) -> dict:
+def download_roboflow_detection(output_dir: Path, api_key: Optional[str] = None) -> dict:
     """Download food detection datasets from Roboflow Universe with bounding box annotations."""
     det_dir = output_dir / "roboflow-detection"
     if det_dir.exists() and any(det_dir.iterdir()):
@@ -201,7 +202,7 @@ def download_roboflow_detection(output_dir: Path, api_key: str | None = None) ->
         return {"name": "Roboflow-Detection", "images": 0, "status": f"failed: {e}"}
 
 
-def download_roboflow_binary(output_dir: Path, api_key: str | None = None) -> dict:
+def download_roboflow_binary(output_dir: Path, api_key: Optional[str] = None) -> dict:
     """Download food/not-food binary classification dataset from Roboflow Universe."""
     binary_dir = output_dir / "roboflow-binary"
     if binary_dir.exists() and any(binary_dir.iterdir()):

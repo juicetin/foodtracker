@@ -1,0 +1,20 @@
+# Virtual environments
+.venv/
+
+# Model weights
+*.pt
+*.onnx
+*.mlmodel
+*.mlpackage
+*.tflite
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code
+.claude/settings.local.json
