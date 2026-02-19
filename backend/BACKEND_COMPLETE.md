@@ -155,7 +155,7 @@ Photos are permanently linked to entries:
 ### ✅ Database Connection
 
 ```env
-DATABASE_URL=postgresql://foodtracker:foodtracker_dev@localhost:5433/foodtracker
+DATABASE_URL=postgresql://foodtracker:foodtracker_dev@localhost:4110/foodtracker
 ```
 
 **To start database:**
@@ -178,7 +178,7 @@ npm run dev    # Development server with hot reload
 npm start      # Production server
 ```
 
-**Endpoints available at:** `http://localhost:3000`
+**Endpoints available at:** `http://localhost:4100`
 
 ---
 

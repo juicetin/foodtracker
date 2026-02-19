@@ -99,7 +99,7 @@ npm run ios     # or npm run android
 ```bash
 cd backend
 npm install
-npm run dev     # Starts on http://localhost:3000
+npm run dev     # Starts on http://localhost:4100
 ```
 
 ### AI Agent Service

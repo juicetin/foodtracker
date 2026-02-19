@@ -1,7 +1,7 @@
 // API Client configuration
 
 const API_BASE_URL = __DEV__
-  ? 'http://localhost:3100/api'  // Local development
+  ? 'http://localhost:4100/api'  // Local development
   : 'https://api.foodtracker.com';  // Production (TODO: update)
 
 export class ApiClient {

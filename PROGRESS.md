@@ -199,7 +199,7 @@ Display in mobile app
 cd backend
 npm install
 npm run dev
-# Running on http://localhost:3000
+# Running on http://localhost:4100
 ```
 
 ### Terminal 2: Mobile App
