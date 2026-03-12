@@ -1,8 +1,8 @@
-# Roadmap: FoodTracker
+# Roadmap: FoodTracker v1.0 (Local-First Reset)
 
 ## Overview
 
-FoodTracker delivers accurate, effortless food tracking from photos users already take. The roadmap follows a risk-retirement strategy: validate food detection accuracy first (the foundation everything depends on, with a go/no-go decision on YOLO vs LLM as primary method), then prove the passive gallery scanning differentiator works within iOS permission constraints, stand up the multi-region nutrition backend, build the tracking UI, layer on UX intelligence, and finally add scale/weight accuracy enhancers. Each phase delivers a coherent, verifiable capability that unlocks the next.
+This roadmap delivers a fully functional local-first AI food tracker from on-device infrastructure through distribution. The critical path runs: local data foundation -> on-device detection pipeline -> nutrition resolution + diary UI -> gallery scanning -> enhanced detection + scale OCR -> sync + model delivery. Phases 1-3 produce a usable MVP (photo -> detection -> nutrition -> diary). Phase 4 adds the primary differentiator (passive gallery scanning). Phases 5-6 layer accuracy improvements, UX refinements, and cloud sync. Three prior plans (dataset acquisition 01-01, knowledge graph 01-02, VLM benchmark 01-04) are carried forward as validated work; three others (YOLO training 01-03, model export 01-05, mobile ML integration 01-06) are incorporated into Phases 2-3.
 
 ## Phases
 
@@ -12,106 +12,110 @@ FoodTracker delivers accurate, effortless food tracking from photos users alread
 
 Decimal phases appear between their surrounding integers in numeric order.
 
-- [ ] **Phase 1: Food Detection Foundation** - Validate detection accuracy and determine primary detection method (YOLO vs LLM)
-- [ ] **Phase 2: Gallery Scanning & Deduplication** - Discover and deduplicate food photos from the user's gallery
-- [ ] **Phase 3: Go Backend & Multi-Region Nutrition** - Serve nutrition data from global food composition databases and store food entries
-- [ ] **Phase 4: Tracking UI & Entry Management** - Let users view, edit, and manage their food diary
-- [ ] **Phase 5: UX Modes & Notifications** - Adapt the tracking experience to user preferences
-- [ ] **Phase 6: Scale Detection & Weight Refinement** - Improve portion accuracy with scale OCR and depth sensing
+- [ ] **Phase 1: Infrastructure + Data Foundation** - Local SQLite storage, dev build workflow, bundled nutrition DB, schema migrations
+- [ ] **Phase 2: On-Device Detection Pipeline** - YOLO training completion, model export, mobile ML integration, inference router
+- [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
+- [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
+- [ ] **Phase 5: Enhanced Detection + Scale OCR** - VLM integration, hidden ingredient inference, scale reading, container weights, UX modes, notifications
+- [ ] **Phase 6: Sync + Distribution** - Google Drive and iCloud sync, Play for On-Device AI, iOS On-Demand Resources, Gemini Nano adapter
 
 ## Phase Details
 
-### Phase 1: Food Detection Foundation
-**Goal**: Users can point the app at any food photo and get accurate identification of food items, dish type, and estimated portions -- with YOLO fine-tuning as the preferred on-device approach, but multimodal LLM calls as the primary method if YOLO accuracy proves insufficient. Accuracy is the top priority, above cost, speed, and on-device constraints.
+### Phase 1: Infrastructure + Data Foundation
+**Goal**: All local data infrastructure is in place so every subsequent module has a reliable storage and query layer
 **Depends on**: Nothing (first phase)
-**Requirements**: DET-01, DET-02, DET-03, DET-05, DET-07
+**Requirements**: DAT-01, DAT-02, DAT-03
 **Success Criteria** (what must be TRUE):
-  1. App correctly classifies a photo as food vs non-food with >90% accuracy on a diverse test set
-  2. App draws bounding boxes around individual food items in a photo and labels them with dish/ingredient names, achieving >80% mAP on a held-out test set spanning Western, Asian, and other regional cuisines
-  3. App estimates portion size from visual cues (plate size, reference objects) and displays a weight estimate
-  4. App infers hidden ingredients from dish identification (e.g. "carbonara" yields egg, pancetta, parmesan, black pepper)
-  5. A go/no-go decision has been made on detection approach: YOLO fine-tuning benchmarks are compared against multimodal LLM accuracy on the same test set, and one method is selected as the primary detection path for v1 based on accuracy results
-**Decision Point**: After initial YOLO fine-tuning and accuracy benchmarking, compare against multimodal LLM (Gemini/GPT-4o) on the same test images. If YOLO achieves target accuracy (>80% mAP), proceed with on-device YOLO. If not, pivot to LLM as the primary detection method and accept the cost/latency/network trade-offs. This decision gates Phase 2 architecture (on-device vs cloud detection pipeline).
-**Plans**: 6 plans
+  1. App builds and runs on both iOS and Android as custom dev builds (no Expo Go) with all native config plugins compiling together
+  2. User data (food entries, recipes, preferences) persists across app restarts in local op-sqlite database with versioned schema migrations
+  3. Bundled USDA FDC nutrition database is available on first launch (or fast-follow asset pack) and returns results for common food queries
+  4. Optional regional nutrition databases (AFCD, CoFID, CIQUAL) can be downloaded and queried alongside USDA data
+**Plans**: TBD
 
 Plans:
-- [ ] 01-01-PLAN.md -- Dataset acquisition, merging, auto-labeling with Florence-2
-- [ ] 01-02-PLAN.md -- Knowledge graph (SQLite schema, RecipeNLG/USDA seeding, query API, mobile export)
-- [ ] 01-03-PLAN.md -- Train YOLO26 models (binary, detection, classification) + per-cuisine evaluation
-- [ ] 01-04-PLAN.md -- VLM benchmark (PaliGemma 2 3B) + portion estimation module
-- [ ] 01-05-PLAN.md -- Export to CoreML/TFLite + validate + go/no-go decision checkpoint
-- [ ] 01-06-PLAN.md -- Mobile ML integration (react-native-fast-tflite, inference router, knowledge graph)
+- [ ] 01-01: TBD
+- [ ] 01-02: TBD
+- [ ] 01-03: TBD
 
-### Phase 2: Gallery Scanning & Deduplication
-**Goal**: The app passively discovers food photos from the user's gallery, extracts context, and deduplicates multi-angle shots into single meal events -- with explicit handling for iOS limited photo access
-**Depends on**: Phase 1 (needs food classifier to filter food vs non-food; detection method decision gates pipeline architecture)
-**Requirements**: GAL-01, GAL-02, GAL-03, GAL-04, GAL-05, GAL-06
+### Phase 2: On-Device Detection Pipeline
+**Goal**: Users can photograph food and receive on-device identification with bounding boxes and confidence indicators
+**Depends on**: Phase 1
+**Requirements**: DET-01, DET-05, DET-06
 **Success Criteria** (what must be TRUE):
-  1. User can manually trigger a gallery scan and see detected food photos appear in the app within seconds
-  2. App performs background/periodic scanning and surfaces newly discovered food photos without user intervention (when full library access is granted)
-  3. App correctly groups multiple photos of the same meal (different angles, before/during eating) into a single meal event
-  4. When deduplication confidence is low, user is prompted to confirm whether photos are the same meal or different meals
-  5. Each discovered photo retains its EXIF metadata (timestamp, location) displayed as meal context (e.g. "Tuesday 12:34 PM, near home")
+  1. User photographs food and sees identified food items with bounding boxes drawn on the image within 2 seconds on mid-range devices
+  2. Each detected item shows a confidence indicator (green/yellow/red) and the user can manually correct low-confidence results
+  3. Detected items include portion size estimates based on visual cues (plate size, reference objects, density tables)
+  4. Detection pipeline runs entirely on-device via CoreML (iOS) and LiteRT (Android) with no network dependency
 **Plans**: TBD
 
 Plans:
 - [ ] 02-01: TBD
 - [ ] 02-02: TBD
+- [ ] 02-03: TBD
 
-### Phase 3: Go Backend & Multi-Region Nutrition
-**Goal**: A Go API serves accurate per-ingredient nutritional data from region-appropriate food composition databases covering North America, Europe, APAC/Oceania, and Asia -- with Open Food Facts as a global fallback -- stores food entries, and routes lookups based on user locale
-**Depends on**: Phase 1 (model class labels map to nutrition DB entries)
-**Requirements**: NUT-01, NUT-02, NUT-03, NUT-04, NUT-05, NUT-06, NUT-07, NUT-08, NUT-09, NUT-10
+**Carried forward work incorporated:**
+- 01-03 (YOLO training scripts) -> continues as training completion within this phase
+- 01-05 (model export) -> CoreML/LiteRT export pipeline
+- 01-06 (mobile ML integration) -> react-native-fast-tflite integration + inference router
+
+### Phase 3: Nutrition Resolution + Diary
+**Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
+**Depends on**: Phase 2
+**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08
 **Success Criteria** (what must be TRUE):
-  1. App retrieves per-ingredient macro breakdown (calories, protein, carbs, fat) from the backend for any detected food item, sourced from the user's region-appropriate database
-  2. App retrieves per-ingredient micronutrient data (vitamins, minerals) stored alongside macro data
-  3. When the user views a detected meal, the app displays a combined total nutrition estimate (sum of all detected ingredients weighted by estimated portions)
-  4. Backend supports nutrition lookups from at least 4 regional database groups: North America (USDA FDC, CNF), EU (CoFID, CIQUAL), APAC/Oceania (AFCD, NZFCD), and Asia (Japan STFCJ and others available)
-  5. Backend routes nutrition queries to the appropriate regional database based on user locale or explicit region preference, falling back to Open Food Facts when no regional match exists
+  1. User views a daily food diary organized by meal (breakfast/lunch/dinner/snacks) showing per-meal and daily macro totals
+  2. User can search the bundled USDA database and manually add a food item in under 7 taps
+  3. User can edit any logged meal (change ingredients, adjust portions, modify quantities) after initial logging
+  4. User can save a corrected meal as a recipe, reuse it in one tap, and create nested recipes (recipes containing other recipes) with expand/collapse and edit-in-context-or-globally prompts
+  5. User can view the linked photo(s) for any logged meal and switch between UX modes (zero-effort, confirm-only, guided-edit)
 **Plans**: TBD
 
 Plans:
 - [ ] 03-01: TBD
 - [ ] 03-02: TBD
+- [ ] 03-03: TBD
 
-### Phase 4: Tracking UI & Entry Management
-**Goal**: Users can view their daily food diary, manually search and add foods, edit AI-detected meals, save and reuse recipes, and review linked photos -- the complete food logging experience
-**Depends on**: Phase 2 (gallery scanning provides detected food entries), Phase 3 (backend stores entries and serves nutrition data)
-**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08
+### Phase 4: Gallery Scanning + Deduplication
+**Goal**: Users no longer need to manually trigger photo analysis -- the app discovers food photos from the gallery automatically
+**Depends on**: Phase 2, Phase 3
+**Requirements**: GAL-01, GAL-02, GAL-03, GAL-04, GAL-05
 **Success Criteria** (what must be TRUE):
-  1. User can view a daily dashboard showing per-meal and total macros (calories, protein, carbs, fat)
-  2. User can search for and manually add a food item in under 10 taps when AI detection fails
-  3. User can edit any detected meal's ingredients, portions, and quantities after logging
-  4. User can save a corrected meal as a recipe and reuse that recipe to log future meals in one tap
-  5. User can view daily and weekly nutrition summaries and tap any logged meal to see its linked photo(s)
+  1. User can manually trigger a gallery scan and see newly discovered food photos queued for processing
+  2. App performs periodic background scanning that surfaces new food photos without user intervention, operating within platform constraints (iOS 30-second BGTask, Android WorkManager) using chunked processing blocks
+  3. Multiple photos of the same meal (taken within 5-minute window with GPS proximity) are grouped into a single meal event instead of creating duplicates
+  4. Each discovered photo displays EXIF-derived context (timestamp as meal time, location as meal venue)
 **Plans**: TBD
 
 Plans:
 - [ ] 04-01: TBD
 - [ ] 04-02: TBD
 
-### Phase 5: UX Modes & Notifications
-**Goal**: Users can choose how much involvement they want in the tracking process, from fully automatic to step-by-step guided editing, and receive a daily nutrition summary notification
-**Depends on**: Phase 4 (needs working tracking UI to apply modes to)
-**Requirements**: UX-01, UX-02, UX-03
+### Phase 5: Enhanced Detection + Scale OCR
+**Goal**: Users get higher accuracy through VLM for complex dishes, hidden ingredient inference, and kitchen scale weight reading
+**Depends on**: Phase 2, Phase 4
+**Requirements**: DET-02, DET-03, DET-04, SCL-01, SCL-02, SCL-03, NTF-01, NTF-02
 **Success Criteria** (what must be TRUE):
-  1. App defaults to zero-effort mode where detected meals are auto-logged and user can edit after the fact
-  2. User can switch to confirm-only mode (review each detected meal before it is logged) or guided-edit mode (step-by-step ingredient correction)
-  3. User receives a configurable end-of-day notification summarizing total calories, protein, carbs, and fat
+  1. Device automatically selects and downloads the appropriate VLM tier (SmolVLM-256M / Moondream 0.5B / Gemma 3n) based on device capability, and on supported devices (Pixel 8+, Galaxy S24+) Gemini Nano provides opportunistic inference
+  2. User sees inferred hidden ingredients for identified dishes (e.g., "carbonara" shows egg, pancetta, parmesan) via knowledge graph lookup
+  3. When a kitchen scale is visible in a food photo, the app reads the displayed weight via 7-segment OCR and user can manage container tare weights (save, auto-subtract, and the app learns frequently used containers over time)
+  4. User receives a configurable end-of-day push notification summarizing daily macros, which can also serve as a trigger to bring the app to foreground for gallery processing
+  5. User can import weight data from Apple Health / Google Fit and view a smoothed weight trend
 **Plans**: TBD
 
 Plans:
 - [ ] 05-01: TBD
+- [ ] 05-02: TBD
+- [ ] 05-03: TBD
 
-### Phase 6: Scale Detection & Weight Refinement
-**Goal**: Users who weigh their food get dramatically more accurate tracking through automatic scale reading, container weight learning, and depth-based portion estimation
-**Depends on**: Phase 1 (detection pipeline), Phase 3 (backend for weight storage), Phase 4 (UI to display scale-detected weights)
-**Requirements**: DET-04, DET-06, SCL-01, SCL-02, SCL-03
+### Phase 6: Sync + Distribution
+**Goal**: Users can back up data to the cloud and receive ML models through platform-optimized delivery channels
+**Depends on**: Phase 1, Phase 5
+**Requirements**: DAT-04, DAT-05, DAT-06, MDL-01, MDL-02
 **Success Criteria** (what must be TRUE):
-  1. When a kitchen scale is visible in a food photo, the app reads the displayed weight via OCR and pre-fills the weight field
-  2. User can save known container/vessel weights, and the app automatically subtracts tare weight from scale readings
-  3. App learns frequently used container weights over time and intelligently guesses whether a scale reading includes the container or not
-  4. On iPhone Pro devices with LiDAR, the app uses depth data for more accurate portion estimation, with graceful fallback to visual estimation on other devices
+  1. User can opt into Google Drive backup/sync via app data folder, with data accessible cross-platform (iOS and Android)
+  2. User on iOS can opt into iCloud backup/sync as an alternative to Google Drive
+  3. Sync conflicts between devices are resolved via last-write-wins with timestamps, and full edit history is retained locally
+  4. Android app delivers ML models via Play for On-Device AI with device targeting by RAM and chipset; iOS app delivers optional models via On-Demand Resources or Background Assets API
 **Plans**: TBD
 
 Plans:
@@ -122,13 +126,12 @@ Plans:
 
 **Execution Order:**
 Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
-Note: Phase 3 can partially overlap with Phase 2 (no dependency between them).
 
 | Phase | Plans Complete | Status | Completed |
-|-------|---------------|--------|-----------|
-| 1. Food Detection Foundation | 0/6 | Planned | - |
-| 2. Gallery Scanning & Deduplication | 0/TBD | Not started | - |
-| 3. Go Backend & Multi-Region Nutrition | 0/TBD | Not started | - |
-| 4. Tracking UI & Entry Management | 0/TBD | Not started | - |
-| 5. UX Modes & Notifications | 0/TBD | Not started | - |
-| 6. Scale Detection & Weight Refinement | 0/TBD | Not started | - |
+|-------|----------------|--------|-----------|
+| 1. Infrastructure + Data Foundation | 0/3 | Not started | - |
+| 2. On-Device Detection Pipeline | 0/3 | Not started | - |
+| 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
+| 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
+| 5. Enhanced Detection + Scale OCR | 0/3 | Not started | - |
+| 6. Sync + Distribution | 0/2 | Not started | - |

@@ -102,13 +102,44 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| (populated by roadmapper) | | |
+| DET-01 | Phase 2 | Pending |
+| DET-02 | Phase 5 | Pending |
+| DET-03 | Phase 5 | Pending |
+| DET-04 | Phase 5 | Pending |
+| DET-05 | Phase 2 | Pending |
+| DET-06 | Phase 2 | Pending |
+| DAT-01 | Phase 1 | Pending |
+| DAT-02 | Phase 1 | Pending |
+| DAT-03 | Phase 1 | Pending |
+| DAT-04 | Phase 6 | Pending |
+| DAT-05 | Phase 6 | Pending |
+| DAT-06 | Phase 6 | Pending |
+| GAL-01 | Phase 4 | Pending |
+| GAL-02 | Phase 4 | Pending |
+| GAL-03 | Phase 4 | Pending |
+| GAL-04 | Phase 4 | Pending |
+| GAL-05 | Phase 4 | Pending |
+| UI-01 | Phase 3 | Pending |
+| UI-02 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Pending |
+| UI-04 | Phase 3 | Pending |
+| UI-05 | Phase 3 | Pending |
+| UI-06 | Phase 3 | Pending |
+| UI-07 | Phase 3 | Pending |
+| UI-08 | Phase 3 | Pending |
+| SCL-01 | Phase 5 | Pending |
+| SCL-02 | Phase 5 | Pending |
+| SCL-03 | Phase 5 | Pending |
+| NTF-01 | Phase 5 | Pending |
+| NTF-02 | Phase 5 | Pending |
+| MDL-01 | Phase 6 | Pending |
+| MDL-02 | Phase 6 | Pending |
 
 **Coverage:**
 - v1 requirements: 28 total
-- Mapped to phases: 0
-- Unmapped: 28
+- Mapped to phases: 28
+- Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after local-first architecture reset*
+*Last updated: 2026-03-12 after v1.0 roadmap creation*
