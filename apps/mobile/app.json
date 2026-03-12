@@ -30,10 +30,19 @@
     },
     "plugins": [
       "expo-localization",
-      ["react-native-fast-tflite", {
-        "enableCoreMLDelegate": true,
-        "enableAndroidGpuLibraries": true
-      }]
-    ]
+      [
+        "react-native-fast-tflite",
+        {
+          "enableCoreMLDelegate": true,
+          "enableAndroidGpuLibraries": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "5744c2b0-e4d9-48bd-94f3-eeb27c1e729f"
+      }
+    },
+    "owner": "jting-expo"
   }
 }

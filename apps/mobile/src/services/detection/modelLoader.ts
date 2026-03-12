@@ -22,11 +22,11 @@ import type { ModelSet } from './types';
 // Bundled models -- resolved at build time by Metro bundler.
 // These are the pre-trained baseline models (AIY Food V1 + YOLO11n COCO).
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const BUNDLED_BINARY = require('../../../../assets/models/binary.tflite');
+const BUNDLED_BINARY = require('../../../assets/models/binary.tflite');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const BUNDLED_DETECT = require('../../../../assets/models/detect.tflite');
+const BUNDLED_DETECT = require('../../../assets/models/detect.tflite');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const BUNDLED_CLASSIFY = require('../../../../assets/models/classify.tflite');
+const BUNDLED_CLASSIFY = require('../../../assets/models/classify.tflite');
 
 /** Module-level cache for loaded models. */
 let cachedModelSet: ModelSet | null = null;
