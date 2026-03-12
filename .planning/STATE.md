@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 02-01 (detection type contracts and TFLite config)
-last_updated: "2026-03-12T12:18:32.083Z"
-last_activity: 2026-03-12 -- Completed Plan 02-01 (detection type contracts and TFLite config)
+stopped_at: Completed 02-02 (ML inference core - postProcess, modelLoader, inferenceRouter)
+last_updated: "2026-03-12T12:21:15Z"
+last_activity: 2026-03-12 -- Completed Plan 02-02 (ML inference core)
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 5
-  percent: 70
+  completed_plans: 6
+  percent: 73
 ---
 
 # Project State
@@ -26,18 +26,18 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 2 of 6 (On-Device Detection Pipeline)
-Plan: 1 of 5 in current phase (02-01 complete)
+Plan: 2 of 5 in current phase (02-02 complete)
 Status: In Progress
-Last activity: 2026-03-12 -- Completed Plan 02-01 (detection type contracts and TFLite config)
+Last activity: 2026-03-12 -- Completed Plan 02-02 (ML inference core)
 
-Progress: [█████░░░░░] 53%
+Progress: [██████░░░░] 60%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 7 (3 carried from pre-pivot + 3 new + 1 phase 2)
-- Average duration: 15min
-- Total execution time: ~1.65 hours
+- Total plans completed: 8 (3 carried from pre-pivot + 3 new + 2 phase 2)
+- Average duration: 14min
+- Total execution time: ~1.75 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,11 +53,12 @@ Progress: [█████░░░░░] 53%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 7min, 4min, 3min
-- Trend: Accelerating (foundation plans becoming smaller scoped)
+- Last 3 plans: 4min, 3min, 6min
+- Trend: Stable (TDD plans slightly longer due to test infrastructure)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
+| Phase 02 P02 | 6min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -90,6 +91,10 @@ Recent decisions affecting current work:
 - [02-01]: TFLiteModel interface uses ArrayBufferLike[] matching react-native-fast-tflite's TensorflowModel shape
 - [02-01]: FP16 quantisation only (no INT8) -- avoids calibration dataset and preserves food colour accuracy
 - [02-01]: NMS performed in JavaScript, not baked into TFLite model -- cross-platform portability
+- [02-02]: inferenceRouter uses getModelSet() (not loadModelSet()) to enforce pre-loading pattern
+- [02-02]: Portion estimates placeholder (method: pending) -- portionBridge fills in Plan 03
+- [02-02]: Detection IDs use monotonic counter + timestamp for RN runtime compatibility
+- [02-02]: Transposed YOLO access: output[row * numPredictions + col] is correct pattern
 
 ### Pending Todos
 
@@ -105,6 +110,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T12:17:32Z
-Stopped at: Completed 02-01 (detection type contracts and TFLite config)
-Resume file: .planning/phases/02-on-device-detection-pipeline/02-01-SUMMARY.md
+Last session: 2026-03-12T12:21:15Z
+Stopped at: Completed 02-02 (ML inference core - postProcess, modelLoader, inferenceRouter)
+Resume file: .planning/phases/02-on-device-detection-pipeline/02-02-SUMMARY.md
