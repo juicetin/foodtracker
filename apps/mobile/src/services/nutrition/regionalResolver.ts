@@ -13,7 +13,9 @@
  * Also provides schema validation for custom pack imports.
  */
 
-import { openNutritionDb } from '../../../db/client';
+import { Paths, File, Directory } from 'expo-file-system';
+import { openNutritionDb, userDb } from '../../../db/client';
+import { installedPacks } from '../../../db/schema';
 import { PackManager } from '../packs/packManager';
 import { NutritionService } from './nutritionService';
 import type {
@@ -187,6 +189,79 @@ export class RegionalResolver {
       lastChecked: null,
     });
     this._rebuildPriority();
+  }
+
+  /**
+   * Import a user-supplied custom SQLite nutrition pack.
+   *
+   * Validates the pack schema, copies the file to the packs directory,
+   * registers it in the installed_packs table, and opens it in the resolver.
+   *
+   * @param filePath - Path to the source SQLite database file
+   * @param packId - Unique pack identifier
+   * @param name - Human-readable pack name
+   * @returns The newly registered InstalledPack record
+   * @throws If schema validation fails (no file copy or registration occurs)
+   */
+  async importCustomPack(
+    filePath: string,
+    packId: string,
+    name: string
+  ): Promise<InstalledPack> {
+    // 1. Validate schema -- reject early if invalid
+    const validation = await validatePackSchema(filePath);
+    if (!validation.valid) {
+      throw new Error(
+        'Custom pack schema validation failed: ' + validation.errors.join(', ')
+      );
+    }
+
+    // 2. Copy file to packs directory
+    const destDir = `${Paths.document.uri}packs/nutrition/${packId}`;
+    const destPath = `${destDir}/${packId}.db`;
+
+    const dir = new Directory(destDir);
+    if (!dir.exists) {
+      dir.create();
+    }
+
+    const source = new File(filePath);
+    const bytes = source.bytes();
+    const dest = new File(destPath);
+    dest.write(bytes);
+
+    // 3. Insert record into installed_packs table
+    const now = new Date().toISOString();
+    const pack: InstalledPack = {
+      id: packId,
+      name,
+      type: 'nutrition',
+      version: '1.0.0',
+      filePath: destPath,
+      sizeBytes: bytes.byteLength,
+      sha256: null,
+      region: null,
+      installedAt: now,
+      lastChecked: null,
+    };
+
+    await userDb.insert(installedPacks).values({
+      id: pack.id,
+      name: pack.name,
+      type: pack.type,
+      version: pack.version,
+      filePath: pack.filePath,
+      sizeBytes: pack.sizeBytes,
+      sha256: pack.sha256,
+      region: pack.region,
+      installedAt: pack.installedAt,
+      lastChecked: pack.lastChecked,
+    });
+
+    // 4. Open the database in the resolver
+    await this.addDatabase(packId, destPath);
+
+    return pack;
   }
 
   /**
