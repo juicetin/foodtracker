@@ -23,6 +23,10 @@ tqdm
 # iOS model export validation
 coremltools>=7.0
 
+# TFLite model validation (prefer ai-edge-litert; tflite-runtime as fallback)
+ai-edge-litert>=2.1.0
+# tflite-runtime>=2.14  # alternative if ai-edge-litert unavailable
+
 # Utilities
 pyyaml>=6.0
 numpy>=1.24.0

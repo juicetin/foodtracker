@@ -1,12 +1,15 @@
 # Virtual environments
 .venv/
 
-# Model weights
+# Model weights and export artifacts
 *.pt
 *.onnx
 *.mlmodel
 *.mlpackage
 *.tflite
+*_saved_model/
+calibration_image_sample_data_*.npy
+training/exports/
 
 # Python
 __pycache__/

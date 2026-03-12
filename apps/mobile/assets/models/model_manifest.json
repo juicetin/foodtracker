@@ -1,0 +1,67 @@
+{
+  "version": "1.0.0",
+  "exportedAt": "2026-03-12T20:59:51.154107+00:00",
+  "pipeline": "three-stage",
+  "quantisation": "mixed",
+  "notes": "Pre-trained baseline models. AIY Food V1 for binary gate + classify (no custom training). YOLO26n COCO FP16 for detection. NMS is performed in JavaScript, not baked into models.",
+  "models": [
+    {
+      "id": "yolo-binary-v1",
+      "stage": "binary",
+      "version": "1.0.0",
+      "file": "binary.tflite",
+      "sizeBytes": 21151551,
+      "format": "tflite",
+      "quantisation": "uint8_quantized",
+      "inputSize": 192,
+      "numClasses": 2024,
+      "inputNormalization": "uint8_quantized",
+      "inputDtype": "uint8",
+      "outputShape": [
+        1,
+        2024
+      ],
+      "name": "AIY Food V1 (Binary Gate)",
+      "description": "Google AIY Food V1 model repurposed as binary gate. Max confidence across 2024 food classes > threshold = food detected."
+    },
+    {
+      "id": "yolo-detect-v1",
+      "stage": "detect",
+      "version": "1.0.0",
+      "file": "detect.tflite",
+      "sizeBytes": 5458174,
+      "format": "tflite",
+      "quantisation": "fp16",
+      "inputSize": 640,
+      "numClasses": 80,
+      "inputNormalization": "float32_0_1",
+      "inputDtype": "float32",
+      "outputShape": [
+        1,
+        84,
+        8400
+      ],
+      "name": "YOLO26n COCO Detection",
+      "description": "YOLO26n pre-trained on COCO. 80 classes including 10 food items. NMS performed in JavaScript."
+    },
+    {
+      "id": "yolo-classify-v1",
+      "stage": "classify",
+      "version": "1.0.0",
+      "file": "classify.tflite",
+      "sizeBytes": 21151551,
+      "format": "tflite",
+      "quantisation": "uint8_quantized",
+      "inputSize": 192,
+      "numClasses": 2024,
+      "inputNormalization": "uint8_quantized",
+      "inputDtype": "uint8",
+      "outputShape": [
+        1,
+        2024
+      ],
+      "name": "AIY Food V1 (Classification)",
+      "description": "Google AIY Food V1 model for 2024-class food classification."
+    }
+  ]
+}
