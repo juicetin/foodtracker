@@ -5,6 +5,9 @@
  * yolo-binary-*, yolo-detect-*, yolo-classify-* naming convention.
  * Models are loaded via react-native-fast-tflite and cached for reuse.
  *
+ * When no packs are installed, falls back to bundled models loaded via
+ * require() -- these are the pre-trained models bundled with the APK.
+ *
  * File paths from PackManager use the file:// prefix required by
  * loadTensorflowModel. If the stored path doesn't have the prefix,
  * it is prepended automatically.
@@ -15,6 +18,15 @@ import { eq } from 'drizzle-orm';
 import { userDb } from '../../../db/client';
 import { installedPacks } from '../../../db/schema';
 import type { ModelSet } from './types';
+
+// Bundled models -- resolved at build time by Metro bundler.
+// These are the pre-trained baseline models (AIY Food V1 + YOLO11n COCO).
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const BUNDLED_BINARY = require('../../../../assets/models/binary.tflite');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const BUNDLED_DETECT = require('../../../../assets/models/detect.tflite');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const BUNDLED_CLASSIFY = require('../../../../assets/models/classify.tflite');
 
 /** Module-level cache for loaded models. */
 let cachedModelSet: ModelSet | null = null;
@@ -63,6 +75,22 @@ export async function loadModelSet(): Promise<ModelSet> {
   const detectPath = await findModelPackPath('yolo-detect-');
   const classifyPath = await findModelPackPath('yolo-classify-');
 
+  // If no packs are installed at all, fall back to bundled models
+  if (!binaryPath && !detectPath && !classifyPath) {
+    const [binary, detect, classify] = await Promise.all([
+      loadTensorflowModel(BUNDLED_BINARY, 'default'),
+      loadTensorflowModel(BUNDLED_DETECT, 'default'),
+      loadTensorflowModel(BUNDLED_CLASSIFY, 'default'),
+    ]);
+    cachedModelSet = {
+      binary: binary as unknown as ModelSet['binary'],
+      detect: detect as unknown as ModelSet['detect'],
+      classify: classify as unknown as ModelSet['classify'],
+    };
+    return cachedModelSet;
+  }
+
+  // Partial install: some but not all packs found -- error
   if (!binaryPath || !detectPath || !classifyPath) {
     const missing: string[] = [];
     if (!binaryPath) missing.push('yolo-binary-*');

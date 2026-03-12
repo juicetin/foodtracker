@@ -8,6 +8,14 @@
  *
  * Anti-pattern: do NOT run stages in parallel. The binary gate exists
  * to save compute when the image is not food.
+ *
+ * Binary gate uses AIY Food V1 which outputs 2024 class probabilities.
+ * The max confidence across all classes is used as the food score.
+ * Uses manual loop (not Math.max(...array)) to avoid stack overflow
+ * on 2024-element arrays.
+ *
+ * Accepts dual buffers: detectBuffer (640x640) for the detection stage,
+ * and classifyBuffer (192x192) for the binary gate and classify stages.
  */
 
 import { getModelSet } from './modelLoader';
@@ -50,17 +58,19 @@ function defaultPortionEstimate(): PortionEstimate {
 }
 
 /**
- * Run the three-stage detection pipeline on an image buffer.
+ * Run the three-stage detection pipeline on preprocessed image buffers.
  *
- * @param imageBuffer  - Raw image data as ArrayBuffer (preprocessed to model input size)
- * @param imageWidth   - Width of the preprocessed image (e.g. 640)
- * @param imageHeight  - Height of the preprocessed image (e.g. 640)
- * @param classNames   - Array of class labels for detection output decoding
+ * @param detectBuffer   - Raw image data preprocessed at 640x640 for detection stage
+ * @param classifyBuffer - Raw image data preprocessed at 192x192 for binary gate + classify
+ * @param imageWidth     - Width of the detection image (e.g. 640)
+ * @param imageHeight    - Height of the detection image (e.g. 640)
+ * @param classNames     - Array of class labels for detection output decoding
  * @returns InferenceResult with detected items and timing metrics
  * @throws If models are not loaded (call loadModelSet() first)
  */
 export async function runDetectionPipeline(
-  imageBuffer: ArrayBufferLike,
+  detectBuffer: ArrayBufferLike,
+  classifyBuffer: ArrayBufferLike,
   imageWidth: number,
   imageHeight: number,
   classNames: string[],
@@ -76,14 +86,20 @@ export async function runDetectionPipeline(
   const pipelineStages: PipelineStage[] = [];
 
   // ── Stage 1: Binary gate ──
+  // Uses classifyBuffer (192x192) since AIY Food V1 expects that input size.
   const binaryStart = performance.now();
-  const binaryOutput = await models.binary.run([imageBuffer]);
+  const binaryOutput = await models.binary.run([classifyBuffer]);
   const binaryTimeMs = performance.now() - binaryStart;
   pipelineStages.push({ stage: 'binary', timeMs: binaryTimeMs });
 
-  // Interpret binary output: first value > threshold = food
-  // react-native-fast-tflite returns ArrayBuffer at runtime; cast is safe.
-  const binaryScore = new Float32Array(binaryOutput[0] as ArrayBuffer)[0];
+  // Interpret binary output: AIY Food V1 outputs 2024 class probabilities.
+  // Max confidence across all classes = food score.
+  // Manual loop avoids stack overflow on 2024-element array (no Math.max(...spread)).
+  const binaryScores = new Float32Array(binaryOutput[0] as ArrayBuffer);
+  let binaryScore = 0;
+  for (let i = 0; i < binaryScores.length; i++) {
+    if (binaryScores[i] > binaryScore) binaryScore = binaryScores[i];
+  }
   const isFood = binaryScore > BINARY_THRESHOLD;
 
   if (!isFood) {
@@ -95,8 +111,9 @@ export async function runDetectionPipeline(
   }
 
   // ── Stage 2: Detection ──
+  // Uses detectBuffer (640x640) since YOLO expects that input size.
   const detectStart = performance.now();
-  const detectOutput = await models.detect.run([imageBuffer]);
+  const detectOutput = await models.detect.run([detectBuffer]);
   const detectTimeMs = performance.now() - detectStart;
   pipelineStages.push({ stage: 'detect', timeMs: detectTimeMs });
 
@@ -119,12 +136,13 @@ export async function runDetectionPipeline(
   );
 
   // ── Stage 3: Classification ──
+  // Uses classifyBuffer (192x192) for AIY Food V1 classification.
   // For a single-pass YOLO detector, classification is already done in the
   // detection output (class scores per anchor). The classify model refines
   // class predictions for each detected region. If no detections, skip.
   const classifyStart = performance.now();
   if (rawDetections.length > 0) {
-    await models.classify.run([imageBuffer]);
+    await models.classify.run([classifyBuffer]);
   }
   const classifyTimeMs = performance.now() - classifyStart;
   pipelineStages.push({ stage: 'classify', timeMs: classifyTimeMs });
