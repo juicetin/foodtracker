@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 01-01-PLAN.md
-last_updated: "2026-03-12T06:16:07Z"
-last_activity: 2026-03-12 -- Completed Plan 01-01 (local data foundation with op-sqlite + drizzle)
+stopped_at: Completed 01-02-PLAN.md
+last_updated: "2026-03-12T06:40:05Z"
+last_activity: 2026-03-12 -- Completed Plan 01-02 (USDA nutrition pipeline + pack manager)
 progress:
   total_phases: 6
   completed_phases: 0
   total_plans: 6
-  completed_plans: 4
-  percent: 5
+  completed_plans: 5
+  percent: 10
 ---
 
 # Project State
@@ -26,18 +26,18 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 1 of 6 (Infrastructure + Data Foundation)
-Plan: 1 of 3 in current phase
+Plan: 2 of 3 in current phase
 Status: Executing
-Last activity: 2026-03-12 -- Completed Plan 01-01 (local data foundation with op-sqlite + drizzle)
+Last activity: 2026-03-12 -- Completed Plan 01-02 (USDA nutrition pipeline + pack manager)
 
-Progress: [█░░░░░░░░░] 5%
+Progress: [█░░░░░░░░░] 10%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 4 (3 carried from pre-pivot + 1 new)
+- Total plans completed: 5 (3 carried from pre-pivot + 2 new)
 - Average duration: 18min
-- Total execution time: 1.2 hours
+- Total execution time: 1.5 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -48,10 +48,11 @@ Progress: [█░░░░░░░░░] 5%
 | Phase 01 P04 | 13min | 2 tasks | 7 files |
 
 | New Phase 01 P01 | 8min | 2 tasks | 16 files |
+| New Phase 01 P02 | 19min | 2 tasks | 12 files |
 
 **Recent Trend:**
-- Last 3 plans: 45min, 13min, 8min
-- Trend: Improving
+- Last 3 plans: 13min, 8min, 19min
+- Trend: Stable
 
 *Updated after each plan completion*
 
@@ -71,6 +72,11 @@ Recent decisions affecting current work:
 - [01-01]: db/client.ts is canonical location for all DB connections (userDb + openNutritionDb)
 - [01-01]: Write-first-then-refresh pattern for all Zustand store mutations
 - [01-01]: Soft-delete via isDeleted flag instead of row removal
+- [01-02]: expo-file-system v19 uses class-based API (File/Directory/Paths), not legacy functional API
+- [01-02]: Nutrition queries use raw SQL via op-sqlite, not drizzle-orm (separate schema)
+- [01-02]: R2 download with X-API-Key header for Phase 1; full attestation deferred to Phase 6
+- [01-02]: Both platforms download from R2 for Phase 1; platform-native delivery deferred to Phase 6
+- [01-02]: PackManager is generic -- same logic for nutrition DBs and ML model packs
 
 ### Pending Todos
 
@@ -86,6 +92,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T06:16:07Z
-Stopped at: Completed 01-01-PLAN.md
-Resume file: .planning/phases/01-infrastructure-data-foundation/01-02-PLAN.md
+Last session: 2026-03-12T06:40:05Z
+Stopped at: Completed 01-02-PLAN.md
+Resume file: .planning/phases/01-infrastructure-data-foundation/01-03-PLAN.md
