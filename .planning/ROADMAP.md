@@ -62,6 +62,24 @@ Plans:
 - 01-05 (model export) -> CoreML/LiteRT export pipeline
 - 01-06 (mobile ML integration) -> react-native-fast-tflite integration + inference router
 
+### Phase 02.1: Pre-trained model acquisition and TFLite integration (INSERTED)
+
+**Goal:** Acquire pre-trained ML models (Google AIY Food V1 + YOLO26n COCO) and wire them into the existing three-stage detection pipeline, producing a testable APK with on-device inference
+**Requirements**: DET-01
+**Depends on:** Phase 2
+**Success Criteria** (what must be TRUE):
+  1. Three .tflite model files (binary gate, detection, classification) are bundled in the app
+  2. Pipeline loads bundled models via require() fallback when no downloaded packs exist
+  3. Binary gate correctly interprets AIY Food V1 multi-class output (max-confidence approach)
+  4. Detection uses YOLO26n COCO with proper 80-class names and food-class filtering
+  5. APK builds successfully and detection pipeline runs end-to-end on a real device
+**Plans:** 3 plans
+
+Plans:
+- [ ] 02.1-01-PLAN.md -- Python acquisition script: download AIY Food V1, export YOLO26n to TFLite, validate, copy to assets
+- [ ] 02.1-02-PLAN.md -- TypeScript pipeline wiring: bundled model fallback, binary gate fix, COCO constants, dual input sizes
+- [ ] 02.1-03-PLAN.md -- EAS build config, APK build, on-device human verification of detection pipeline
+
 ### Phase 3: Nutrition Resolution + Diary
 **Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
 **Depends on**: Phase 2
@@ -129,12 +147,13 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure + Data Foundation | 4/4 | Complete | 2026-03-12 |
 | 2. On-Device Detection Pipeline | 5/6 | Gap closure | - |
+| 2.1. Pre-trained Model Acquisition | 0/3 | Planning complete | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Enhanced Detection + Scale OCR | 0/3 | Not started | - |
