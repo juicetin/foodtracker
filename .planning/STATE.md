@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02-06-PLAN.md (Phase 2 gap closure complete)
-last_updated: "2026-03-12T19:51:22.355Z"
-last_activity: "2026-03-13 -- Completed Plan 02-06 (Gap closure: image preprocessing + TS fixes)"
+status: in-progress
+stopped_at: Completed 02.1-01-PLAN.md
+last_updated: "2026-03-13T00:02:00Z"
+last_activity: "2026-03-13 -- Completed Plan 02.1-01 (Model acquisition: AIY Food V1 + YOLO11n COCO)"
 progress:
-  total_phases: 6
+  total_phases: 7
   completed_phases: 2
-  total_plans: 10
-  completed_plans: 10
-  percent: 81
+  total_plans: 13
+  completed_plans: 11
+  percent: 82
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 3: Nutrition Resolution + Diary
+**Current focus:** Phase 02.1: Pre-trained Model Acquisition and TFLite Integration
 
 ## Current Position
 
-Phase: 3 of 6 (Nutrition Resolution + Diary)
-Plan: 0 of 3 in current phase (Phase 2 fully closed, Phase 3 not started)
-Status: Phase 2 Fully Closed (gap closure 02-06 complete)
-Last activity: 2026-03-13 -- Completed Plan 02-06 (Gap closure: image preprocessing + TS fixes)
+Phase: 02.1 of 7 (Pre-trained Model Acquisition and TFLite Integration)
+Plan: 1 of 3 in current phase
+Status: In Progress (Plan 02.1-01 complete, 2 plans remaining)
+Last activity: 2026-03-13 -- Completed Plan 02.1-01 (Model acquisition: AIY Food V1 + YOLO11n COCO)
 
-Progress: [████████░░] 81%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 13 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2)
+- Total plans completed: 14 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 1 phase 02.1)
 - Average duration: 12min
-- Total execution time: ~2.25 hours
+- Total execution time: ~2.5 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,8 +53,8 @@ Progress: [████████░░] 81%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 3min, 15min, 4min
-- Trend: Stable (gap closure plan fast due to focused scope)
+- Last 3 plans: 15min, 4min, 19min
+- Trend: Stable (model acquisition plan slower due to downloads + YOLO export)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -63,6 +63,8 @@ Progress: [████████░░] 81%
 | Phase 02 P04 | 3min | 2 tasks | 8 files |
 | Phase 02 P05 | 15min | 3 tasks | 10 files |
 | Phase 02 P06 | 4min | 2 tasks | 6 files |
+
+| Phase 02.1 P01 | 19min | 1 task | 6 files |
 
 ## Accumulated Context
 
@@ -114,6 +116,15 @@ Recent decisions affecting current work:
 - [02-06]: manipulateAsync legacy API for simplicity over new context-based ImageManipulator API
 - [02-06]: Direct ArrayBuffer cast (as ArrayBuffer) for TFLite outputs instead of instanceof checks
 - [02-06]: PNG format for base64 output (lossless) to preserve pixel accuracy for model input
+- [02.1-01]: AIY Food V1 actual properties: 192x192 uint8 quantized input (not 224x224 float32), 2024 classes (not 2023). Scale=0.0078125, zero_point=128.
+- [02.1-01]: YOLO26n TFLite export fails (onnx2tf TopK error); YOLO11n succeeds as fallback with [1,84,8400] output shape
+- [02.1-01]: Kaggle Models API replaces GCS for AIY download (GCS returns 403). Returns tar.gz archive.
+- [02.1-01]: ai-edge-litert (v2.1.2) replaces tflite-runtime for Python 3.12+ TFLite validation
+- [02.1-01]: AIY Food V1 English labels extracted from embedded probability-labels-en.txt metadata (2024 food names)
+
+### Roadmap Evolution
+
+- Phase 02.1 inserted after Phase 02: Pre-trained model acquisition and TFLite integration (URGENT) — no .tflite models exist in repo; pipeline untestable without real models. Uses Google AIY Food V1 (classification) + YOLO26n COCO (detection) as zero-training baseline.
 
 ### Pending Todos
 
@@ -129,6 +140,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T19:32:47.467Z
-Stopped at: Completed 02-06-PLAN.md (Phase 2 gap closure complete)
-Resume file: .planning/phases/02-on-device-detection-pipeline/02-06-SUMMARY.md
+Last session: 2026-03-13T00:02:00Z
+Stopped at: Completed 02.1-01-PLAN.md
+Resume file: .planning/phases/02.1-pre-trained-model-acquisition-and-tflite-integration/02.1-01-SUMMARY.md
