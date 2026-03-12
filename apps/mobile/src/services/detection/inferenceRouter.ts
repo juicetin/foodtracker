@@ -82,11 +82,8 @@ export async function runDetectionPipeline(
   pipelineStages.push({ stage: 'binary', timeMs: binaryTimeMs });
 
   // Interpret binary output: first value > threshold = food
-  const binaryScore = new Float32Array(
-    binaryOutput[0] instanceof Float32Array
-      ? binaryOutput[0].buffer
-      : binaryOutput[0],
-  )[0];
+  // react-native-fast-tflite returns ArrayBuffer at runtime; cast is safe.
+  const binaryScore = new Float32Array(binaryOutput[0] as ArrayBuffer)[0];
   const isFood = binaryScore > BINARY_THRESHOLD;
 
   if (!isFood) {
@@ -104,11 +101,8 @@ export async function runDetectionPipeline(
   pipelineStages.push({ stage: 'detect', timeMs: detectTimeMs });
 
   // Decode YOLO output tensor into raw detections
-  const detectTensor = new Float32Array(
-    detectOutput[0] instanceof Float32Array
-      ? detectOutput[0].buffer
-      : detectOutput[0],
-  );
+  // react-native-fast-tflite returns ArrayBuffer at runtime; cast is safe.
+  const detectTensor = new Float32Array(detectOutput[0] as ArrayBuffer);
 
   // Determine number of predictions from output shape
   // YOLO output shape: [1, 4+nc, numPredictions]
