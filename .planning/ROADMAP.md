@@ -130,7 +130,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Infrastructure + Data Foundation | 3/4 | Gap closure planned | - |
+| 1. Infrastructure + Data Foundation | 4/4 | Complete | 2026-03-12 |
 | 2. On-Device Detection Pipeline | 0/3 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
