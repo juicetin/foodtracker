@@ -14,3 +14,4 @@ Each ADR follows the structure: **Context → Decision → Consequences**.
 | [002](002-go-backend-python-ml-inference.md) | Go backend with Python ML inference layer | Accepted | 2026-02-08 |
 | [003](003-yolo-based-food-detection.md) | YOLO-based food detection over multimodal LLMs | Accepted | 2026-02-08 |
 | [004](004-usda-fdc-as-primary-nutrition-api.md) | USDA FoodData Central as primary nutrition API for POC | Accepted | 2026-02-08 |
+| [005](005-local-first-no-subscription-architecture.md) | Local-first, no-subscription architecture | Proposed | 2026-03-12 |
