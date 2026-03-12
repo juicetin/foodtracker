@@ -93,7 +93,13 @@ All local data infrastructure in place so every subsequent module has a reliable
 <deferred>
 ## Deferred Ideas
 
-None — discussion stayed within phase scope.
+The following UX decisions were discussed as Phase 1 but deferred to Phase 3 (Nutrition Resolution + Diary) since they depend on the navigation system and diary UI built there. The data services they consume are built in Phase 1.
+
+- **Progress screen** blocking food logging during DB download — deferred to Phase 3
+- **Onboarding screen** (calorie/macro goals, units, region auto-detect) — deferred to Phase 3
+- **Settings > Data & Storage screen** (installed packs, sizes, download/delete) — deferred to Phase 3
+- **usePreferencesStore migration** from AsyncStorage to op-sqlite — deferred to Phase 3
+- **In-app feedback form** for suggesting new nutrition databases — deferred to Phase 3
 
 </deferred>
 
