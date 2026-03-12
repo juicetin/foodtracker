@@ -18,6 +18,12 @@ import { runDetectionPipeline } from '../services/detection/inferenceRouter';
 import { loadModelSet } from '../services/detection/modelLoader';
 import { preprocessImageForModel } from '../services/detection/imagePreprocess';
 import {
+  COCO_CLASS_NAMES,
+  COCO_FOOD_CLASS_IDS,
+  BINARY_INPUT_SIZE,
+  DETECT_INPUT_SIZE,
+} from '../services/detection/constants';
+import {
   estimatePortion,
   type ImageSize,
 } from '../services/detection/portionBridge';
@@ -52,16 +58,9 @@ const CARB_PER_GRAM = 0.2;
 /** Rough fat-per-gram (Phase 2 proxy). */
 const FAT_PER_GRAM = 0.08;
 
-/**
- * Placeholder class names for YOLO detection output decoding.
- * In production, these come from the model pack metadata.
- * For Phase 2, we use a compact list covering common food categories.
- */
-const DEFAULT_CLASS_NAMES = [
-  'rice', 'noodle', 'bread', 'meat', 'chicken', 'fish', 'egg',
-  'vegetable', 'salad', 'fruit', 'soup', 'curry', 'pizza', 'burger',
-  'sandwich', 'sushi', 'cake', 'pasta', 'steak', 'tofu',
-];
+// Class names and input sizes imported from constants.ts:
+// COCO_CLASS_NAMES (80 entries), COCO_FOOD_CLASS_IDS (10 food class IDs),
+// BINARY_INPUT_SIZE (192), DETECT_INPUT_SIZE (640).
 
 // ---------------------------------------------------------------------------
 // Component
@@ -195,20 +194,37 @@ export function DetectionScreen() {
       // Load models if not already loaded
       await loadModelSet();
 
-      // Preprocess the photo: resize to model input size and extract normalised RGB pixels
-      const modelInputSize = 640;
-      const pixelBuffer = await preprocessImageForModel(uri, modelInputSize);
+      // Preprocess at both sizes: 640x640 for detection, 192x192 for binary gate + classify
+      const [detectPixels, classifyPixels] = await Promise.all([
+        preprocessImageForModel(uri, DETECT_INPUT_SIZE),
+        preprocessImageForModel(uri, BINARY_INPUT_SIZE),
+      ]);
 
       const result = await runDetectionPipeline(
-        pixelBuffer.buffer,
-        modelInputSize,
-        modelInputSize,
-        DEFAULT_CLASS_NAMES,
+        detectPixels.buffer,
+        classifyPixels.buffer,
+        DETECT_INPUT_SIZE,
+        DETECT_INPUT_SIZE,
+        COCO_CLASS_NAMES,
       );
+
+      // Post-filter: only keep food detections from COCO 80 classes.
+      // Non-food items (person, car, etc.) are logged for debug but hidden from UI.
+      const foodItems = result.items.filter((item) => {
+        const classIdx = COCO_CLASS_NAMES.indexOf(item.className);
+        if (classIdx >= 0 && !COCO_FOOD_CLASS_IDS.has(classIdx)) {
+          // Non-food COCO detection -- skip from results
+          if (__DEV__) {
+            console.debug(`[Detection] Filtered non-food: ${item.className} (class ${classIdx})`);
+          }
+          return false;
+        }
+        return true;
+      });
 
       // Enrich each detected item with portion estimates
       const imageSize: ImageSize = { width: imgWidth, height: imgHeight };
-      const enrichedItems = result.items.map((item) => ({
+      const enrichedItems = foodItems.map((item) => ({
         ...item,
         portionEstimate: estimatePortion(
           item.bbox,
