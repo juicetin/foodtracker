@@ -1,114 +1,244 @@
-# Stack Research: On-Device ML Food Detection & Passive Gallery Scanning
+# Stack Research: Local-First Architecture Pivot
 
-**Domain:** AI-powered food tracking with on-device ML, passive gallery scanning, health platform integration
-**Researched:** 2026-02-12
-**Confidence:** MEDIUM (verified core libraries via npm/GitHub releases; some version-pinning is best-effort)
+**Domain:** Local-first AI food tracking -- on-device ML, bundled data, optional cloud sync
+**Researched:** 2026-03-12
+**Confidence:** MEDIUM-HIGH (core libraries verified via npm/GitHub; some integration points unverified in combination)
+
+**Scope:** This document covers ONLY the new libraries needed for the local-first pivot (ADR-005). It does not re-document the existing stack (React Native 0.81.5, Expo ~54.0.33, Zustand, React Navigation, etc.) which is carried forward unchanged.
 
 ---
 
 ## Recommended Stack
 
-### On-Device ML Inference
+### 1. Local Database (replaces PostgreSQL)
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| react-native-fast-tflite | ^2.0.0 | Run TFLite/LiteRT models in React Native | Built by mrousavy (same author as VisionCamera). Uses JSI with zero-copy ArrayBuffers -- 40-60% faster than bridge-based alternatives. v2.0.0 (Jan 2026) upgrades to LiteRT 1.4.0, adds Android 16KB page size support. GPU delegates via CoreML/Metal (iOS) and OpenGL/NNAPI (Android). Directly loads `.tflite` files at runtime without rebuild. **HIGH confidence** -- verified via GitHub releases. |
-| react-native-vision-camera | ^4.7.3 | Camera capture + frame processors | Frame Processor plugin system allows synchronous native ML inference per-frame. Pairs with react-native-fast-tflite for realtime camera detection. Same author ecosystem ensures tight integration. **HIGH confidence** -- verified via npm. |
-| vision-camera-resize-plugin | latest | Frame preprocessing (resize, crop, YUV-to-RGB) | SIMD-accelerated frame resizing required before feeding frames to TFLite models. Essential companion to VisionCamera + TFLite pipeline. **MEDIUM confidence** -- version not independently verified. |
+| @op-engineering/op-sqlite | ^15.2.5 | All local structured data (user data, food entries, recipes, history) | 8-9x faster than expo-sqlite in batch operations per @craftzdog benchmarks. JSI-based with zero-copy. Synchronous and asynchronous APIs. WAL mode support. Used by PowerSync's React Native SDK internally. Expo compatible via `npx expo install`. Requires `npx expo prebuild --clean` (CNG). **HIGH confidence** -- verified via npm (15.2.5 published Feb 2026). |
+| drizzle-orm | latest | Type-safe query builder and schema management over op-sqlite | Official op-sqlite integration (`drizzle-orm/op-sqlite`). Type-safe queries, migrations via `useMigrations` hook, schema-as-code. Avoids raw SQL string sprawl across the codebase. Zero runtime overhead -- compiles to SQL at build time. **HIGH confidence** -- verified via drizzle docs. |
+| drizzle-kit | latest (dev) | Migration generation and schema diffing | Generates SQL migration files from TypeScript schema changes. `dialect: 'sqlite'`, `driver: 'expo'` in drizzle.config.ts. Dev-only dependency. **HIGH confidence** -- official companion to drizzle-orm. |
 
-### Food Detection Model
+**Why not expo-sqlite:** expo-sqlite (v55.0.9) has closed the gap significantly and is simpler to set up. However, op-sqlite remains faster for batch operations and large dataset queries -- both critical for nutrition DB lookups (50-80MB database) and batch gallery scanning. op-sqlite also has better PowerSync integration if row-level sync is needed later. The performance difference matters when querying a bundled nutrition database with 300K+ food entries.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| YOLO26 (Ultralytics) | ultralytics >=8.4.8 | Object detection model for food recognition | YOLO26 (released Jan 2026) is purpose-built for edge deployment: NMS-free end-to-end inference, DFL removed for clean CoreML/TFLite export, 43% faster CPU inference than YOLO11-N, and STAL (Small-Target-Aware Label Assignment) specifically improves accuracy on small/occluded objects like food items on a plate. Export to both `.mlmodel` (iOS CoreML) and `.tflite` (Android LiteRT) natively supported. **HIGH confidence** -- verified via Ultralytics GitHub releases and YOLO26 paper. |
-| Roboflow Universe | N/A (platform) | Food-specific training datasets + annotation | Hosts multiple food detection datasets (4,900+ images). Supports YOLO26 training directly on platform. Use for fine-tuning on food-specific classes beyond COCO's ~10 food categories. **MEDIUM confidence** -- verified via Roboflow blog. |
+**Why not WatermelonDB:** WatermelonDB adds its own abstraction layer over SQLite with lazy loading and observable queries. This is valuable for apps with complex sync requirements, but adds unnecessary complexity for a single-user local-first app. op-sqlite + drizzle gives us direct SQLite control without the overhead.
 
-### Gallery Scanning & Background Processing
+### 2. On-Device ML Inference (YOLO Pipeline)
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| expo-media-library | ^18.2.1 (SDK 54) | Access photo gallery, query assets, subscribe to changes | Already in project. Provides `getAssetsAsync` for paginated gallery access, `addListener` for new-photo events, creation time sorting, and EXIF/GPS metadata via `getAssetInfoAsync`. Sufficient for SDK 54; upgrade path to SDK 55's object-oriented `/next` API when stable. **HIGH confidence** -- already in use, verified via Expo docs. |
-| expo-background-task | ^1.0.10 | Periodic background gallery scanning | Replaces deprecated expo-background-fetch. Uses WorkManager (Android, min 15-min interval) and BGTaskScheduler (iOS). Single-worker model -- all background tasks funnel through one scheduler. Suitable for periodic "scan new photos since last check" batch processing. **HIGH confidence** -- verified via npm + Expo blog. |
-| expo-task-manager | latest | Register and manage background task definitions | Required companion to expo-background-task. Provides `defineTask` and `isTaskRegisteredAsync`. **HIGH confidence** -- official Expo package. |
+| react-native-fast-tflite | ^2.0.0 | Run YOLO TFLite/LiteRT models for food detection | JSI-based, zero-copy ArrayBuffers. v2.0.0 (Jan 2026) upgrades to LiteRT 1.4.0. GPU delegates: CoreML (iOS), OpenGL (Android). Expo config plugin for CoreML and GPU library configuration. New Architecture compatible (required). Loads `.tflite` files at runtime. **HIGH confidence** -- verified via npm and GitHub releases. |
+| react-native-vision-camera | ^4.7.3 | Camera capture for scale OCR (live viewfinder) | Frame processor plugin system runs synchronous native ML inference per-frame. Pairs with react-native-fast-tflite for live camera detection (scale reading). Expo config plugin available. Same author (mrousavy) as fast-tflite -- tight integration. **HIGH confidence** -- verified via npm. |
+| vision-camera-resize-plugin | latest | Frame preprocessing (resize, crop, pixel format conversion) | SIMD-accelerated frame resizing before TFLite inference. Required companion for VisionCamera + TFLite pipeline. Converts YUV camera frames to RGB tensors. **MEDIUM confidence** -- version not independently pinned. |
 
-### EXIF Metadata Extraction
+**Expo integration:** Both react-native-fast-tflite and react-native-vision-camera ship Expo config plugins. Add to `app.json` plugins array. Requires CNG (`npx expo prebuild --clean`) -- not compatible with Expo Go. Use Expo Dev Client for development.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| expo-media-library (getAssetInfoAsync) | ^18.2.1 | Primary EXIF extraction (GPS, timestamp, dimensions) | Built-in to existing dependency. Returns `exif` object with GPS coordinates, DateTimeOriginal, camera info. Requires `ACCESS_MEDIA_LOCATION` permission on Android for GPS data. Use this first before reaching for a separate library. **HIGH confidence** -- verified via Expo docs. |
-| react-native-exify | latest | Fallback EXIF read/write if expo-media-library gaps found | Dedicated native EXIF reader/writer. Only add if expo-media-library's EXIF output is insufficient (e.g., missing fields, write-back needed). Actively maintained on GitHub. **LOW confidence** -- version not independently verified, may not be needed. |
+**New Architecture:** The project already has `"newArchEnabled": true` in app.json. react-native-fast-tflite v2.0.0 requires New Architecture (Fabric + TurboModules). react-native-vision-camera v4.7.3 supports New Architecture. No conflicts.
 
-### Health Platform Integration
+**CoreML vs LiteRT strategy:** Export YOLO models to both `.mlmodel` (CoreML for iOS) and `.tflite` (LiteRT for Android). react-native-fast-tflite handles both formats. CoreML leverages Apple Neural Engine; LiteRT uses vendor NPU delegates (Qualcomm QNN, MediaTek NeuroPilot). An inference router in JS selects the right model file per platform.
 
-| Technology | Version | Purpose | Why Recommended |
-|------------|---------|---------|-----------------|
-| @kingstinct/react-native-healthkit | ^13.1.1 | Apple HealthKit (iOS) nutrition data sync | Most actively maintained HealthKit library (updated 4 days ago as of research date). Full TypeScript support, Expo plugin config, Promise-based API close to native HealthKit naming. Supports writing `HKQuantityType` for dietary energy, macros, micronutrients. **HIGH confidence** -- verified via npm (13.1.1 published Feb 2026). |
-| react-native-health-connect | ^3.5.0 | Google Health Connect (Android) nutrition data sync | Standard wrapper for Android Health Connect API. Supports NutritionRecord for logging meals with macro breakdowns. Published 2 months ago. **HIGH confidence** -- verified via npm. |
-
-### Supporting Libraries
-
-| Library | Version | Purpose | When to Use |
-|---------|---------|---------|-------------|
-| zustand | ^5.0.11 | State management | Already in project. Use for ML pipeline state (scan queue, processing status, results cache). |
-| expo-file-system | ^19.0.21 | File I/O for model files and image processing | Already in project. Use for downloading updated models OTA, caching processed images. |
-| expo-notifications | latest | Notify user of gallery scan results | When background scan completes and finds food photos. Local notifications only. |
-
-### Model Training & Export (Python, development-only)
+### 3. On-Device VLM Inference (Optional Enhanced Mode)
 
 | Technology | Version | Purpose | Why Recommended |
 |------------|---------|---------|-----------------|
-| ultralytics | >=8.4.8 | Train and export YOLO26 models | `pip install ultralytics` gives access to YOLO26. Export via `model.export(format='coreml')` and `model.export(format='tflite')`. Supports INT8 quantization for smaller mobile models. |
-| coremltools | >=8.0 | Post-export CoreML model optimization | Apple's official tool for CoreML model conversion and optimization. Needed for iOS-specific quantization and metadata. |
-| Roboflow | N/A | Dataset management, annotation, augmentation | Web platform for managing food training datasets. Exports in YOLO format directly. |
+| llama.rn | ^0.11.2 | Run GGUF VLMs on-device for complex dish identification | React Native binding of llama.cpp. Supports multimodal vision (image+text) via mmproj files. GPU offloading on iOS (Metal) and Android (OpenCL on Adreno 700+). Expo config plugin via expo-build-properties. Supports SmolVLM, Qwen3-VL, Gemma 3n. GGUF format is the standard for quantized LLM/VLM distribution. **HIGH confidence** -- verified via npm (0.11.2 published Mar 2026). |
 
-### Development Tools
+**Why llama.rn over alternatives:**
+
+| Option | Verdict | Reason |
+|--------|---------|--------|
+| llama.rn (mybigday) | **Use this** | Most mature RN binding of llama.cpp. Active development (weekly releases). Vision/multimodal support merged. Expo plugin. Supports all target VLMs (SmolVLM, Gemma 3n). |
+| @pocketpalai/llama.rn | Do not use | Fork of llama.rn with PocketPal-specific changes. Lags behind upstream. No benefit for our use case. |
+| react-native-executorch | Not yet | v0.7.2 (pre-1.0). VLM vision support on the roadmap but not yet shipped. Revisit when 1.0 launches. Promising for ExecuTorch-optimized models but immature today. |
+| @callstackincubator/ai | Do not use | Wraps llama.rn with Vercel AI SDK compatibility. Adds abstraction we don't need. Use llama.rn directly. |
+| LiteRT-LM (Google) | Android only | Official runtime for Gemma 3n on Android. No React Native binding exists. Would require a custom Expo native module in Kotlin. Consider only if Gemma 3n performance via llama.rn is insufficient. |
+
+**VLM model tiers (delivered via asset packs, not bundled):**
+
+| Model | GGUF Size | Runtime RAM | Target Devices | llama.rn Support |
+|-------|-----------|-------------|----------------|------------------|
+| SmolVLM-256M (Q4) | ~100MB | ~300-500MB | Budget (<=4GB RAM) | Yes (GGUF + mmproj) |
+| Moondream 0.5B (INT4) | ~375MB | ~816MB | Mid-range (6GB) | Yes (GGUF) |
+| Gemma 3n E2B | ~2GB | ~2GB | Flagship (8GB+) | Yes (GGUF) |
+
+### 4. Bundled Nutrition Database
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| Pre-populated SQLite database | N/A | USDA FDC Foundation + SR Legacy nutrition data | Bundled as a `.db` file (~50-80MB compressed). Opened read-only via op-sqlite. Queried with drizzle-orm using the same type-safe API as user data. Shipped as a fast-follow asset pack (auto-downloads after install). The knowledge graph build pipeline (`export_mobile.py`) already produces this format. **HIGH confidence** -- architecture validated by existing export tooling. |
+
+**No new library needed.** op-sqlite opens the bundled database as a second connection. The existing knowledge graph export pipeline (`scripts/knowledge-graph/export_mobile.py`) already produces mobile-friendly SQLite. Regional databases (AFCD, CoFID, CIQUAL) delivered as optional on-demand asset packs.
+
+### 5. Cloud Sync (Optional)
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| react-native-cloud-storage | ^2.3.0 | Google Drive and iCloud file-level sync | Unified API for both Google Drive (REST, all platforms) and iCloud (native, iOS only). Google Drive uses `drive.appdata` scope (narrow permission -- hidden folder, no full Drive access). Zero backend dependencies. Supports binary files (v2.3.0, Jun 2025). Works with Expo via config plugin. **HIGH confidence** -- verified via GitHub releases (v2.3.0). |
+
+**Sync strategy (per ADR-005):**
+
+1. **Phase 1 (MVP):** File-level sync via react-native-cloud-storage. Export SQLite database as a file, upload to Google Drive appDataFolder or iCloud. Download and replace on other device. Simple backup/restore.
+2. **Phase 2 (if multi-device needed):** Evaluate PowerSync self-hosted Open Edition for row-level sync. But only if users actually use multiple devices simultaneously -- file-level LWW is sufficient for single-user append-heavy food logs.
+
+**Conflict resolution:** Last-write-wins (LWW) with timestamps. Implemented in application logic, not a library. Soft-delete with `is_deleted` + `deleted_at`. No CRDT library needed.
+
+### 6. Asset Delivery (Models + Databases)
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| expo-play-asset-delivery | ^1.2.3 | Play Asset Delivery for Android (AI packs, nutrition DBs) | Expo config plugin for configuring asset packs in app.config.js. Supports install-time, fast-follow, and on-demand delivery modes. Required for Play for On-Device AI integration. `npx expo prebuild --clean` after config changes. **MEDIUM confidence** -- last published 2 years ago, but Play Asset Delivery API is stable. May need fork/update for Play for On-Device AI (PODAI) specific features like device targeting. |
+| expo-file-system | ^19.0.21 | Download/manage model files and asset packs on iOS | Already installed. Use for On-Demand Resources on iOS (Apple's equivalent of Play Asset Delivery). Download VLM models on-demand, cache in app-local storage. **HIGH confidence** -- already in use. |
+
+**Play for On-Device AI (PODAI) integration note:** PODAI extends Play Asset Delivery with device targeting by RAM, chipset, and device model. The `expo-play-asset-delivery` plugin handles standard asset packs. PODAI-specific device targeting may require a custom Expo config plugin or native module extension. This is a known gap that needs phase-specific research during implementation.
+
+**iOS equivalent:** Apple's On-Demand Resources (ODR) and Background Assets API. No Expo plugin exists. Will require a custom Expo native module wrapping `NSBundleResourceRequest` for ODR. This is straightforward (< 100 lines of Swift) but is custom work.
+
+### 7. Gemini Nano / AICore (Opportunistic)
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| Custom Expo Native Module (Kotlin) | N/A | ML Kit GenAI Prompt API for Gemini Nano multimodal inference | No React Native binding exists for ML Kit GenAI APIs. Requires a thin Kotlin native module (~200 lines) wrapping `GenerativeModel` from `com.google.mlkit:genai`. Accessed via Expo Modules API. Foreground-only, 1024 token limit, battery-quotaed. **MEDIUM confidence** -- API is alpha (Prompt API) / beta (high-level APIs). React Native integration is custom work. |
+
+**Why build a custom module rather than wait for a library:**
+- ML Kit GenAI Prompt API is alpha -- no third-party RN wrapper is likely to appear soon
+- The wrapper is thin: `initialize`, `generateContent(image, prompt)`, `close`
+- Gemini Nano is a bonus on supported devices, not a critical path
+- Zero app size cost (model is system-provided via AICore)
+
+**Not needed for MVP.** Add after core YOLO + VLM pipeline is working.
+
+### 8. Gallery Scanning & Background Processing
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| expo-media-library | ^18.2.1 | Gallery access, photo querying, EXIF metadata | Already installed. `getAssetsAsync` for paginated gallery queries sorted by creation time. `getAssetInfoAsync` for EXIF (GPS, timestamp, camera). `addListener` for new-photo events. Requires `ACCESS_MEDIA_LOCATION` Android permission for GPS. **HIGH confidence** -- already in use. |
+| expo-background-task | ^1.0.10 | Periodic background gallery scanning | Replaces deprecated expo-background-fetch. Uses WorkManager (Android, min 15-min interval) and BGTaskScheduler (iOS). Single-worker model. Register via expo-task-manager. Does NOT work in Expo Go -- requires Dev Client. **HIGH confidence** -- verified via npm and Expo docs. |
+| expo-task-manager | latest | Task registration for background processing | Required companion to expo-background-task. `defineTask` and `isTaskRegisteredAsync`. **HIGH confidence** -- official Expo package. |
+
+### 9. Image Processing
+
+| Technology | Version | Purpose | Why Recommended |
+|------------|---------|---------|-----------------|
+| expo-image-manipulator | ^55.0.9 | Resize/crop images before ML inference | Already part of Expo SDK. Resize gallery photos to model input dimensions (e.g., 640x640 for YOLO) before inference. Crop scale display region for OCR. No additional install needed beyond Expo SDK. **HIGH confidence** -- official Expo package. |
+
+### 10. Scale OCR (Custom 7-Segment Model)
+
+No new library needed beyond react-native-fast-tflite (already listed above). The custom 7-segment OCR model is a TFLite model (17KB-5MB) loaded via the same react-native-fast-tflite runtime used for YOLO. The camera pipeline uses react-native-vision-camera with a frame processor for live viewfinder detection.
+
+**Training pipeline (Python, dev-only):**
+- Training data: Roboflow Universe 7-segment datasets (948+ annotated images)
+- Model: Small CNN or YOLO-based digit detector
+- Export: TFLite INT8 via ultralytics or direct Keras/TF export
+- Post-processing: digit+decimal whitelist, range validation (0-5000g)
+
+---
+
+## Supporting Libraries (Already Installed, Carry Forward)
+
+| Library | Version | Purpose | Notes for Local-First |
+|---------|---------|---------|----------------------|
+| zustand | ^5.0.11 | State management | Use for ML pipeline state (scan queue, processing status, inference results, sync status). No changes needed. |
+| expo-file-system | ^19.0.21 | File I/O | Photo storage, model file management, asset pack downloads. No changes needed. |
+| expo-media-library | ^18.2.1 | Gallery access | Already installed. Core to gallery scanning feature. |
+| expo-image-picker | ^17.0.10 | Manual photo selection | Already installed. Fallback when gallery scan misses a photo. |
+| @react-native-async-storage/async-storage | ^2.2.0 | Key-value settings | Already installed. Use for app settings, last sync timestamp, device capability flags. NOT for structured data (use op-sqlite). |
+
+---
+
+## Development Tools
 
 | Tool | Purpose | Notes |
 |------|---------|-------|
-| Expo Dev Client | Test native modules on device | Required -- expo-background-task, ML inference, and HealthKit do not work in Expo Go. |
-| expo-dev-client | Build custom dev client | `npx expo prebuild` to generate native projects, then build with `npx expo run:ios` / `npx expo run:android`. |
-| Flipper / React Native Debugger | Debug ML pipeline | Inspect TFLite model loading, inference timing, memory usage. |
+| Expo Dev Client | Test native modules on device | Required -- op-sqlite, react-native-fast-tflite, llama.rn, vision-camera all require native code. Cannot use Expo Go. |
+| npx expo prebuild | Generate native projects (CNG) | Run after adding any new native dependency. Use `--clean` flag when changing config plugins. |
+| npx expo run:ios / run:android | Build and run dev client | Local builds for development. EAS Build for CI/distribution. |
 
 ---
 
-## On-Device vs Cloud Decision Matrix
+## Installation
 
-| Component | On-Device | Cloud | Recommendation | Rationale |
-|-----------|-----------|-------|----------------|-----------|
-| Food detection (YOLO) | ~30ms, free, private, offline | 100-500ms, $0.01-0.03/image, no offline | **On-device** | Cost at scale ($0.02 x 5 photos/day x 10K users = $1K/day), latency, privacy. YOLO26-N is small enough for mobile NPU. |
-| Food classification (refine detection) | Possible with larger model | More accurate with LLM | **On-device primary, cloud fallback** | Use on-device for >80% of cases. Cloud fallback (Gemini/GPT-4o) for low-confidence detections only. |
-| Weight/portion estimation | Feasible with depth model | More accurate with reference objects | **On-device primary** | Monocular depth estimation (Depth Anything V2) runs on-device. Fiducial marker (credit card) improves accuracy without cloud. |
-| Nutrition lookup | N/A (needs database) | USDA FDC API | **Cloud** | Nutrition databases are large and change. Query Go backend which proxies USDA FDC. Cache common foods on-device. |
-| Gallery scanning | Must be on-device | N/A | **On-device** | Photos never leave device. Privacy is non-negotiable for gallery access. |
-| Health data sync | Native APIs are on-device | N/A | **On-device** | HealthKit/Health Connect are local-first APIs. Backend receives synced summaries, not raw health data. |
+```bash
+# === NEW DEPENDENCIES (Local-First Pivot) ===
 
----
+# Local database (replaces PostgreSQL)
+npx expo install @op-engineering/op-sqlite
+npm install drizzle-orm
+npm install -D drizzle-kit
 
-## React Native vs Native Trade-offs for ML Workloads
+# On-device ML inference (YOLO pipeline)
+npx expo install react-native-fast-tflite
+npx expo install react-native-vision-camera
+npm install vision-camera-resize-plugin
 
-### Verdict: Stay with React Native + Native Modules
+# On-device VLM inference (optional enhanced mode)
+npm install llama.rn
 
-**Why not go fully native (Swift/Kotlin)?**
+# Cloud sync (optional)
+npm install react-native-cloud-storage
 
-1. **react-native-fast-tflite v2.0.0 closes the gap.** JSI-based, zero-copy, GPU-delegated inference is within 5-10% of native performance. The bottleneck is the model, not the bridge.
+# Asset delivery (Android)
+npm install expo-play-asset-delivery
 
-2. **Frame processors are synchronous native code.** VisionCamera frame processors run C++/Swift/Kotlin natively -- JS only orchestrates. The actual ML inference happens at native speed.
+# Background processing
+npx expo install expo-background-task expo-task-manager
 
-3. **Rewriting the app is a 3-6 month detour.** The existing React Native app has navigation, state management, UI, and backend integration. Rewriting for marginal ML perf gains is poor ROI.
+# Image processing (already part of Expo SDK, verify installed)
+npx expo install expo-image-manipulator
 
-4. **Expo Modules API enables escape hatches.** If a specific ML pipeline needs fully native performance (e.g., custom CoreML pipeline), write an Expo Module in Swift/Kotlin and call it from JS. No need to rewrite the whole app.
+# === REGENERATE NATIVE PROJECTS ===
+npx expo prebuild --clean
+```
 
-**When to consider native modules (not a full rewrite):**
+```bash
+# Python (model training/export -- dev machine only, unchanged)
+pip install ultralytics>=8.4.8
+pip install coremltools>=8.0
+```
 
-- Custom CoreML pipeline with model chaining (detection -> classification -> portion estimation) that needs sub-10ms latency
-- Background gallery processing that needs to run as an iOS App Extension
-- Advanced HealthKit integration (background delivery, workout sessions) not supported by the JS wrapper
+### app.json Plugin Configuration
 
-**When to consider Nitro Modules (margelo) instead of Expo Modules:**
-
-- If building a reusable, high-throughput native module (e.g., custom image preprocessing pipeline)
-- Nitro is 13-59x faster than Expo Modules in micro-benchmarks, uses Swift <> C++ interop with zero Objective-C overhead
-- However, Expo Modules have better ecosystem integration and documentation; prefer Expo Modules unless profiling proves it's a bottleneck
+```json
+{
+  "expo": {
+    "plugins": [
+      [
+        "react-native-fast-tflite",
+        {
+          "enableAndroidGpuLibraries": true
+        }
+      ],
+      [
+        "react-native-vision-camera",
+        {
+          "cameraPermissionText": "FoodTracker needs camera access to read kitchen scale displays",
+          "enableFrameProcessors": true
+        }
+      ],
+      [
+        "llama.rn",
+        {
+          "forceCxx20": true,
+          "enableOpenCL": true
+        }
+      ],
+      [
+        "expo-play-asset-delivery",
+        {
+          "assetPacks": {
+            "nutrition-db": {
+              "path": "./assets/nutrition",
+              "deliveryMode": "fast-follow"
+            },
+            "vlm-budget": {
+              "path": "./assets/models/smolvlm",
+              "deliveryMode": "on-demand"
+            }
+          }
+        }
+      ]
+    ]
+  }
+}
+```
 
 ---
 
@@ -116,15 +246,16 @@
 
 | Category | Recommended | Alternative | Why Not |
 |----------|-------------|-------------|---------|
-| On-device inference | react-native-fast-tflite | @infinitered/react-native-mlkit | MLKit's object detection is generic (not food-specific) and you cannot load custom YOLO models. MLKit is good for barcode/text/face but not custom detection. |
-| On-device inference | react-native-fast-tflite | TensorIO | Stale -- last meaningful update years ago. Fast-tflite is actively maintained by the VisionCamera author. |
-| Detection model | YOLO26 | RF-DETR (Roboflow) | RF-DETR achieves higher mAP on COCO but requires GPU (transformer backbone). YOLO26 is optimized for CPU/NPU on edge devices, has cleaner TFLite/CoreML export, and 43% faster CPU inference. For mobile food detection, YOLO26 is the better trade-off. |
-| Detection model | YOLO26 | YOLOv8/YOLO11 | YOLO26 has cleaner export (no DFL/NMS ops that cause CoreML issues), faster CPU inference, and better small-object detection (STAL). If YOLO26 export proves unstable, fall back to YOLO11 which is battle-tested. |
-| Background tasks | expo-background-task | react-native-background-actions | expo-background-task is the official Expo replacement for background-fetch, uses modern OS APIs (BGTaskScheduler/WorkManager), and integrates with expo-task-manager. Third-party alternatives risk breaking with Expo SDK updates. |
-| HealthKit (iOS) | @kingstinct/react-native-healthkit | react-native-health (agencyenterprise) | react-native-health is rewriting from Obj-C to Swift (not yet stable). @kingstinct is already Swift-based, actively maintained (updated days ago), has full TypeScript types, and Expo plugin support. |
-| Health Connect (Android) | react-native-health-connect | @stridekick/react-native-health-connect | The matinzd version is the community standard with better documentation and more frequent updates. |
-| Agent orchestration | LangGraph (Python, server-side) | Google ADK | ADK is being dropped per project context. LangGraph is better for stateful multi-step workflows (detect -> classify -> estimate -> lookup -> log). Use server-side only -- no agent framework needed on device. |
-| EXIF metadata | expo-media-library built-in | react-native-exif / exifreader | Start with what expo-media-library provides. Only add a dedicated library if gaps are found. Fewer dependencies = less maintenance. |
+| Local DB | op-sqlite + drizzle | expo-sqlite | expo-sqlite is simpler but slower for batch operations. Nutrition DB has 300K+ rows; op-sqlite's 8-9x batch advantage matters. expo-sqlite also lacks WAL mode control needed for concurrent read/write during sync. |
+| Local DB | op-sqlite + drizzle | WatermelonDB | WatermelonDB adds lazy-loading and observable queries -- overkill for single-user app. Its sync protocol requires building a backend endpoint, which conflicts with our no-backend architecture. |
+| Local DB ORM | drizzle-orm | TypeORM / Prisma | TypeORM has poor React Native support. Prisma doesn't support SQLite on mobile. Drizzle is purpose-built for this: zero runtime, type-safe, official op-sqlite adapter. |
+| VLM runtime | llama.rn | react-native-executorch | Executorch RN is v0.7.2 (pre-1.0). VLM vision support not yet shipped. llama.rn has production-ready multimodal support today. Revisit when executorch hits 1.0. |
+| VLM runtime | llama.rn | Custom LiteRT-LM native module | LiteRT-LM is Android-only and has no RN binding. Would require maintaining two separate native modules (Kotlin for LiteRT-LM, Swift for CoreML). llama.rn is cross-platform with a single API. |
+| Cloud sync | react-native-cloud-storage | PowerSync | PowerSync requires a backend (Postgres). Our architecture has no backend. react-native-cloud-storage works serverless. If row-level sync is later needed, PowerSync self-hosted is the upgrade path. |
+| Cloud sync | react-native-cloud-storage | Custom Google Drive REST API calls | react-native-cloud-storage wraps the REST API with auth handling, token refresh, and iCloud support. Writing raw REST calls is error-prone and duplicates work the library handles. |
+| Asset delivery | expo-play-asset-delivery | Manual APK expansion files | Expansion files (OBBs) are legacy. Play Asset Delivery is the modern replacement with delta patching and device targeting. |
+| YOLO inference | react-native-fast-tflite | @infinitered/react-native-mlkit | ML Kit object detection is generic (not food-specific). Cannot load custom YOLO models. ML Kit is for barcode/text/face, not custom detection. |
+| Camera | react-native-vision-camera | expo-camera | expo-camera lacks frame processor support needed for real-time scale OCR. VisionCamera's frame processor pipeline is essential for live inference. |
 
 ---
 
@@ -132,35 +263,20 @@
 
 | Avoid | Why | Use Instead |
 |-------|-----|-------------|
-| Google ADK (Agent Development Kit) | Being dropped from project. Tightly coupled to Gemini, limited orchestration control. | LangGraph for server-side orchestration, or direct API calls for simple pipelines. |
-| expo-background-fetch | Deprecated in favor of expo-background-task as of SDK 53. | expo-background-task ^1.0.10 |
-| react-native-tensorflow (shaqian) | Last updated 5+ years ago. Uses the old RN bridge, no JSI support. | react-native-fast-tflite ^2.0.0 |
-| TensorFlow Lite (direct) | Rebranded to LiteRT. TF Lite Python APIs being removed from TensorFlow package. The npm packages still use "tflite" naming but the underlying runtime is LiteRT. | react-native-fast-tflite (already uses LiteRT 1.4.0 internally in v2.0.0) |
-| Running ML inference on Go backend for production | Defeats purpose of on-device inference. Adds latency, cost, privacy concerns. | On-device YOLO26 via react-native-fast-tflite. Keep Go backend for nutrition DB queries, user data, and cloud fallback only. |
-| Expo Go for development | Does not support native modules (TFLite, HealthKit, Background Tasks, VisionCamera). | Expo Dev Client with `npx expo prebuild`. |
-| Multimodal LLMs as primary detector | $0.01-0.03 per image, 2-5s latency, no offline, no bounding boxes for portion estimation. | YOLO26 on-device primary, LLM cloud fallback for low-confidence only. |
-
----
-
-## Stack Patterns by Variant
-
-**If accuracy is the top priority (cloud fallback aggressive):**
-- Run YOLO26 on-device for initial detection
-- If confidence < 0.7, send image to Gemini 2.0 Flash via Go backend for classification refinement
-- Use cloud-based Depth Anything V2 for portion estimation
-- Higher cost, higher accuracy, requires connectivity
-
-**If privacy/offline is the top priority:**
-- YOLO26 on-device only, no cloud fallback
-- On-device portion estimation with local depth model
-- Cache USDA nutrition data locally (top 500 foods)
-- Full offline capability, slightly lower accuracy on rare foods
-
-**If development speed is the priority (MVP):**
-- Skip on-device inference initially
-- Send photos to Go backend running YOLO26 via Python microservice (ADR-002 option 3)
-- Migrate to on-device after model is validated
-- Fastest to ship, not production architecture
+| Express.js backend | Removed per ADR-005. No server needed. | All logic on-device via op-sqlite + react-native-fast-tflite + llama.rn. |
+| PostgreSQL | Removed per ADR-005. No remote database. | op-sqlite for local structured data. |
+| Google ADK agents | Removed per ADR-005. No cloud agent framework. | Direct on-device inference pipeline (YOLO -> VLM -> nutrition lookup). |
+| NNAPI delegate | Deprecated in Android 15. | LiteRT with vendor NPU delegates (Qualcomm QNN, MediaTek NeuroPilot) via react-native-fast-tflite. |
+| Realm / MongoDB Atlas Device Sync | EOL September 2025. SDKs no longer maintained. | op-sqlite + react-native-cloud-storage. |
+| CRDTs (Automerge, Yjs) | Overkill for single-user food logs. Automerge requires WASM (not supported in RN). Yjs adds complexity without benefit for record-oriented data. | LWW conflict resolution in application code. |
+| ElectricSQL | Pivoted to read-path only (July 2024). Not bidirectional offline-first. | react-native-cloud-storage for sync. |
+| expo-background-fetch | Deprecated in favor of expo-background-task as of SDK 53. | expo-background-task ^1.0.10. |
+| Expo Go | Does not support native modules (op-sqlite, TFLite, llama.rn, VisionCamera). | Expo Dev Client with `npx expo prebuild`. |
+| @kingstinct/react-native-healthkit | Out of scope for v1.0 per PROJECT.md. Do not add. | Defer to post-v1.0. |
+| react-native-health-connect | Out of scope for v1.0 per PROJECT.md. Do not add. | Defer to post-v1.0. |
+| LangGraph / agent frameworks | No server-side orchestration needed. Pipeline is deterministic (YOLO -> classify -> lookup). | Direct function calls in TypeScript. |
+| Depth Anything V2 / depth estimation | Portion estimation uses reference-based approach (known container weights, food density lookup), not monocular depth. | Existing portion estimator module (Python, already validated). |
+| Firebase / Supabase / any BaaS | Adds server dependency and potential costs. Conflicts with zero-subscription guarantee. | react-native-cloud-storage for sync to user's own Google Drive / iCloud. |
 
 ---
 
@@ -168,85 +284,90 @@
 
 | Package | Compatible With | Notes |
 |---------|-----------------|-------|
-| react-native-fast-tflite@2.0.0 | React Native >= 0.76 (New Architecture) | v2.0.0 requires New Architecture (Fabric + TurboModules). RN 0.81.5 in project is compatible. |
-| react-native-vision-camera@4.7.3 | React Native >= 0.73, Expo SDK >= 51 | Frame processors require Worklets (react-native-worklets-core). |
-| expo-background-task@1.0.10 | Expo SDK >= 52, requires expo-task-manager | Does NOT work in Expo Go. Requires dev client. |
-| @kingstinct/react-native-healthkit@13.1.1 | Expo SDK >= 49, iOS >= 13 | Requires Expo dev client (not Expo Go). Expo plugin in app.json. |
-| react-native-health-connect@3.5.0 | Android SDK >= 28 (Android 9+), requires Health Connect app | Health Connect preinstalled on Android 14+. Older devices need to install from Play Store. |
-| YOLO26 models (.tflite) | LiteRT >= 1.4.0, react-native-fast-tflite >= 2.0.0 | Export with `model.export(format='tflite', int8=True)` for smallest size. |
-| YOLO26 models (.mlmodel) | CoreML >= 6 (iOS 16+), Xcode >= 15 | Export with `model.export(format='coreml', nms=False)` -- YOLO26 is NMS-free by design. |
+| @op-engineering/op-sqlite@15.2.5 | React Native >= 0.71, Expo SDK >= 50 | Requires `npx expo prebuild --clean`. CNG compatible. |
+| drizzle-orm (latest) | @op-engineering/op-sqlite >= 11.x | Use `drizzle-orm/op-sqlite` adapter. Configure metro.config.js for `.sql` migration files. |
+| react-native-fast-tflite@2.0.0 | React Native >= 0.76 (New Architecture required) | RN 0.81.5 + `newArchEnabled: true` in project -- compatible. Expo config plugin for CoreML/GPU delegates. |
+| react-native-vision-camera@4.7.3 | React Native >= 0.73, Expo SDK >= 51 | Frame processors require react-native-worklets-core. Expo config plugin available. |
+| llama.rn@0.11.2 | React Native >= 0.71, Expo SDK >= 50 | Expo config plugin via expo-build-properties. OpenCL support for Adreno 700+ GPUs. |
+| react-native-cloud-storage@2.3.0 | React Native >= 0.72, Expo SDK >= 49 | Google Drive requires OAuth2 setup. iCloud requires Apple Developer entitlements. |
+| expo-play-asset-delivery@1.2.3 | Expo SDK >= 48 | May need updates for Play for On-Device AI device targeting. Standard asset packs work today. |
+| expo-background-task@1.0.10 | Expo SDK >= 52 | Requires expo-task-manager. Does NOT work in Expo Go. |
+| YOLO models (.tflite) | LiteRT >= 1.4.0, react-native-fast-tflite >= 2.0.0 | Export: `model.export(format='tflite', int8=True)`. |
+| YOLO models (.mlmodel) | CoreML >= 6 (iOS 16+) | Export: `model.export(format='coreml')`. YOLO26 is NMS-free. |
+| VLM models (.gguf) | llama.rn >= 0.11.0 | Requires corresponding mmproj file for vision models. Set `ctx_shift: false` for VLMs. |
+
+**Critical note on Expo SDK 54:** SDK 54 is the last version where New Architecture can be disabled. Since our project already has `newArchEnabled: true` and all recommended libraries support New Architecture, this is a non-issue. SDK 55+ will mandate New Architecture.
 
 ---
 
-## Installation
+## Managed vs Bare Workflow Impact
 
-```bash
-# On-device ML inference
-npx expo install react-native-fast-tflite
-npx expo install react-native-vision-camera
-npm install vision-camera-resize-plugin
+**This project uses CNG (Continuous Native Generation)** -- native directories are generated from app.json/app.config.js via `npx expo prebuild`. This is the recommended Expo workflow for apps with native dependencies.
 
-# Background processing
-npx expo install expo-background-task expo-task-manager
+**All recommended libraries support CNG via config plugins:**
+- op-sqlite: `npx expo install` handles config
+- react-native-fast-tflite: ships Expo config plugin
+- react-native-vision-camera: ships Expo config plugin
+- llama.rn: config via expo-build-properties plugin
+- expo-play-asset-delivery: ships Expo config plugin
+- expo-background-task: official Expo package
 
-# Health platforms
-npm install @kingstinct/react-native-healthkit
-npm install react-native-health-connect
+**Custom native modules needed (not covered by existing libraries):**
+1. Gemini Nano / AICore wrapper (Kotlin, ~200 lines) -- use Expo Modules API
+2. iOS On-Demand Resources wrapper (Swift, ~100 lines) -- use Expo Modules API
 
-# EXIF (only if expo-media-library is insufficient)
-# npm install react-native-exify
+Both can be created as local Expo Modules within the project's `modules/` directory without ejecting or leaving CNG.
 
-# Already installed (verify versions)
-# expo-media-library, expo-file-system, zustand
-```
+---
 
-```bash
-# Python (model training -- dev machine only)
-pip install ultralytics>=8.4.8
-pip install coremltools>=8.0
-pip install roboflow
-```
+## Dependency Count Impact
 
-```bash
-# Build dev client (required for native modules)
-npx expo prebuild
-npx expo run:ios
-npx expo run:android
-```
+**New runtime dependencies being added:** 8 packages
+- @op-engineering/op-sqlite, drizzle-orm, react-native-fast-tflite, react-native-vision-camera, vision-camera-resize-plugin, llama.rn, react-native-cloud-storage, expo-play-asset-delivery
+
+**New dev dependencies:** 1 package
+- drizzle-kit
+
+**Existing dependencies repurposed (no new install):** 4 packages
+- expo-media-library, expo-file-system, expo-image-manipulator, zustand
+
+**Dependencies being removed (no longer needed):** Express.js backend + all its dependencies, PostgreSQL client, Google ADK SDK. These are in separate workspace directories (`backend/`, `services/ai-agent/`) and can be archived.
+
+**Total new runtime deps: 8.** This is lean for the scope of features being added (local DB, ML inference, VLM, cloud sync, asset delivery).
 
 ---
 
 ## Sources
 
-### HIGH Confidence (verified via official releases / docs)
-- [react-native-fast-tflite v2.0.0 release](https://github.com/mrousavy/react-native-fast-tflite/releases) -- GitHub releases page, verified Jan 2026
-- [react-native-vision-camera](https://github.com/mrousavy/react-native-vision-camera) -- GitHub, v4.7.3
-- [YOLO26 paper](https://arxiv.org/html/2509.25164v4) -- arXiv, architectural details and benchmarks
-- [YOLO26 overview](https://blog.roboflow.com/yolo26/) -- Roboflow, deployment guide
-- [expo-background-task docs](https://docs.expo.dev/versions/latest/sdk/background-task/) -- Official Expo documentation
-- [expo-background-task announcement](https://expo.dev/blog/goodbye-background-fetch-hello-expo-background-task) -- Expo blog
-- [expo-media-library docs](https://docs.expo.dev/versions/latest/sdk/media-library/) -- Official Expo documentation
-- [@kingstinct/react-native-healthkit](https://github.com/kingstinct/react-native-healthkit) -- GitHub, v13.1.1 verified
-- [react-native-health-connect](https://github.com/matinzd/react-native-health-connect) -- GitHub, v3.5.0 verified
-- [Ultralytics releases](https://github.com/ultralytics/ultralytics/releases) -- GitHub, v8.4.8+ verified
-- [LiteRT (TFLite successor)](https://github.com/google-ai-edge/LiteRT) -- Google AI Edge, official repo
-- [Expo SDK 55 beta announcement](https://expo.dev/changelog/sdk-55-beta) -- Expo changelog
+### HIGH Confidence (verified via official releases/docs)
+- [@op-engineering/op-sqlite npm](https://www.npmjs.com/package/@op-engineering/op-sqlite) -- v15.2.5, published Feb 2026
+- [op-sqlite GitHub](https://github.com/OP-Engineering/op-sqlite) -- installation docs, Expo compatibility
+- [Drizzle ORM op-sqlite docs](https://orm.drizzle.team/docs/connect-op-sqlite) -- official integration guide
+- [react-native-fast-tflite npm](https://www.npmjs.com/package/react-native-fast-tflite) -- v2.0.0, Jan 2026
+- [react-native-fast-tflite GitHub](https://github.com/mrousavy/react-native-fast-tflite) -- Expo config plugin docs
+- [react-native-vision-camera npm](https://www.npmjs.com/package/react-native-vision-camera) -- v4.7.3
+- [llama.rn npm](https://www.npmjs.com/package/llama.rn) -- v0.11.2, published Mar 2026
+- [llama.rn GitHub](https://github.com/mybigday/llama.rn) -- multimodal vision support, Expo plugin
+- [react-native-cloud-storage GitHub releases](https://github.com/Kuatsu/react-native-cloud-storage/releases) -- v2.3.0, Jun 2025
+- [expo-play-asset-delivery npm](https://www.npmjs.com/package/expo-play-asset-delivery) -- v1.2.3
+- [Expo SDK 54 changelog](https://expo.dev/changelog/sdk-54) -- New Architecture, CNG
+- [expo-background-task docs](https://docs.expo.dev/versions/latest/sdk/background-task/) -- official Expo documentation
+- [PowerSync React Native benchmarks](https://www.powersync.com/blog/react-native-database-performance-comparison) -- op-sqlite vs expo-sqlite
 
 ### MEDIUM Confidence (verified via multiple credible sources)
-- [RF-DETR vs YOLO26 comparison](https://medium.com/@abrhamadamu05/yolo-26-vs-rf-detr-a-comparison-of-two-leading-object-detection-models-d9a306742201) -- Medium, cross-referenced with Roboflow blog
-- [Nitro Modules benchmarks](https://github.com/mrousavy/NitroBenchmarks) -- GitHub, micro-benchmarks (real-world perf varies)
-- [Food weight estimation research](https://pmc.ncbi.nlm.nih.gov/articles/PMC12787865/) -- PMC, peer-reviewed 2026
-- [Monocular food portion estimation](https://arxiv.org/html/2411.10492v1) -- arXiv, MFP3D framework
-- [Expo Modules API overview](https://docs.expo.dev/modules/overview/) -- Official Expo docs
-- [Roboflow food datasets](https://universe.roboflow.com/) -- Roboflow Universe, available datasets verified
+- [ML Kit GenAI Prompt API](https://developers.google.com/ml-kit/genai/prompt/android) -- alpha status, API surface verified
+- [Play for On-Device AI docs](https://developer.android.com/google/play/on-device-ai) -- beta, device targeting features
+- [expo-play-asset-delivery GitHub](https://github.com/one-am-it/expo-play-asset-delivery) -- community plugin, may need updates for PODAI
+- [Expo Modules API](https://docs.expo.dev/modules/overview/) -- custom native module creation
 
-### LOW Confidence (single source or unverified)
-- react-native-exify version and maintenance status -- GitHub only, not independently verified
-- vision-camera-resize-plugin exact version -- not independently verified
-- Depth Anything V2 on-device feasibility for mobile -- research papers only, no production React Native integration found
-- LangGraph suitability for food tracking agent orchestration -- general framework docs, no food-domain-specific validation
+### LOW Confidence (needs phase-specific validation)
+- vision-camera-resize-plugin exact version -- not pinned, use latest
+- expo-play-asset-delivery compatibility with Play for On-Device AI device targeting -- untested in combination
+- llama.rn OpenCL GPU performance on non-Adreno chipsets -- documented for Adreno 700+ only
+- Custom Expo native module effort estimates (Gemini Nano wrapper, iOS ODR wrapper) -- based on API surface analysis, not implementation experience
 
 ---
 
-*Stack research for: AI-powered food tracking with on-device ML*
-*Researched: 2026-02-12*
+*Stack research for: Local-first AI food tracking pivot (ADR-005)*
+*Researched: 2026-03-12*
+*Supersedes: Previous STACK.md (2026-02-12) which assumed cloud backend*
