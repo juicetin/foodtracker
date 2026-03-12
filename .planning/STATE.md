@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02-04-PLAN.md
-last_updated: "2026-03-12T12:31:56.460Z"
-last_activity: 2026-03-12 -- Completed Plan 02-04 (Detection store & UI components)
+stopped_at: Completed 02-05-PLAN.md (Phase 2 complete)
+last_updated: "2026-03-13T15:04:28Z"
+last_activity: 2026-03-13 -- Completed Plan 02-05 (Detail sheet + DetectionScreen orchestration) -- Phase 2 complete
 progress:
   total_phases: 6
-  completed_phases: 1
+  completed_phases: 2
   total_plans: 15
-  completed_plans: 11
-  percent: 73
+  completed_plans: 12
+  percent: 80
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 2: On-Device Detection Pipeline
+**Current focus:** Phase 3: Nutrition Resolution + Diary
 
 ## Current Position
 
-Phase: 2 of 6 (On-Device Detection Pipeline)
-Plan: 4 of 5 in current phase (02-04 complete)
-Status: In Progress
-Last activity: 2026-03-12 -- Completed Plan 02-04 (Detection store & UI components)
+Phase: 3 of 6 (Nutrition Resolution + Diary)
+Plan: 0 of 3 in current phase (Phase 2 complete, Phase 3 not started)
+Status: Phase 2 Complete
+Last activity: 2026-03-13 -- Completed Plan 02-05 (Detail sheet + DetectionScreen orchestration) -- Phase 2 complete
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 11 (3 carried from pre-pivot + 3 new + 4 phase 2 + 1 current)
+- Total plans completed: 12 (3 carried from pre-pivot + 4 new phase 1 + 5 phase 2)
 - Average duration: 12min
-- Total execution time: ~2.0 hours
+- Total execution time: ~2.25 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,14 +53,15 @@ Progress: [███████░░░] 73%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 6min, 8min, 3min
-- Trend: Stable (UI component plans fast)
+- Last 3 plans: 8min, 3min, 15min
+- Trend: Stable (orchestration plan slightly longer due to checkpoint)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
 | Phase 02 P02 | 6min | 2 tasks | 6 files |
 | Phase 02 P03 | 8min | 2 tasks | 6 files |
 | Phase 02 P04 | 3min | 2 tasks | 8 files |
+| Phase 02 P05 | 15min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -104,6 +105,10 @@ Recent decisions affecting current work:
 - [02-04]: View-based absolute positioning for bounding boxes instead of react-native-svg (not installed)
 - [02-04]: Detection store is ephemeral (in-memory only) -- no SQLite persistence until Log Meal
 - [02-04]: Rough calorie/protein estimates (1.5 kcal/g, 0.1g protein/g) as Phase 2 proxy
+- [02-05]: @react-native-community/slider for portion adjustment (reliable cross-platform vs custom gesture)
+- [02-05]: DetectionScreen state machine pattern (idle/picking/detecting/results/logging) for clear flow control
+- [02-05]: Bottom sheet snap points at 40%/70% for compact and expanded detail views
+- [02-05]: Barrel index pattern for detection component module -- all components from single index.ts
 
 ### Pending Todos
 
@@ -119,6 +124,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T12:31:56.456Z
-Stopped at: Completed 02-04-PLAN.md
-Resume file: .planning/phases/02-on-device-detection-pipeline/02-04-SUMMARY.md
+Last session: 2026-03-13T15:04:28Z
+Stopped at: Completed 02-05-PLAN.md (Phase 2 complete)
+Resume file: .planning/phases/02-on-device-detection-pipeline/02-05-SUMMARY.md
