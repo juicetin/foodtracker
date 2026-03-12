@@ -13,7 +13,7 @@ This roadmap delivers a fully functional local-first AI food tracker from on-dev
 Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Infrastructure + Data Foundation** - Local SQLite storage, dev build workflow, bundled nutrition DB, schema migrations
-- [x] **Phase 2: On-Device Detection Pipeline** - YOLO training completion, model export, mobile ML integration, inference router (completed 2026-03-12)
+- [ ] **Phase 2: On-Device Detection Pipeline** - YOLO training completion, model export, mobile ML integration, inference router (gap closure in progress)
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
 - [ ] **Phase 5: Enhanced Detection + Scale OCR** - VLM integration, hidden ingredient inference, scale reading, container weights, UX modes, notifications
@@ -47,14 +47,15 @@ Plans:
   2. Each detected item shows a confidence indicator (green/yellow/red) and the user can manually correct low-confidence results
   3. Detected items include portion size estimates based on visual cues (plate size, reference objects, density tables)
   4. Detection pipeline runs entirely on-device via CoreML (iOS) and LiteRT (Android) with no network dependency
-**Plans:** 5/5 plans complete
+**Plans:** 6 plans (5 complete + 1 gap closure)
 
 Plans:
-- [ ] 02-01-PLAN.md -- Detection types, build config (react-native-fast-tflite plugin, metro .tflite), YOLO export script
-- [ ] 02-02-PLAN.md -- ML service layer: YOLO post-processing (tensor decode + NMS), model loader, inference router
-- [ ] 02-03-PLAN.md -- Portion estimator TS port (from Python), correction store with SQLite history
-- [ ] 02-04-PLAN.md -- Detection store + UI components: annotated photo, bounding boxes, summary bar, list, FAB, undo toast
-- [ ] 02-05-PLAN.md -- Detail sheet + portion slider, DetectionScreen orchestration, navigation wiring
+- [x] 02-01-PLAN.md -- Detection types, build config (react-native-fast-tflite plugin, metro .tflite), YOLO export script
+- [x] 02-02-PLAN.md -- ML service layer: YOLO post-processing (tensor decode + NMS), model loader, inference router
+- [x] 02-03-PLAN.md -- Portion estimator TS port (from Python), correction store with SQLite history
+- [x] 02-04-PLAN.md -- Detection store + UI components: annotated photo, bounding boxes, summary bar, list, FAB, undo toast
+- [x] 02-05-PLAN.md -- Detail sheet + portion slider, DetectionScreen orchestration, navigation wiring
+- [ ] 02-06-PLAN.md -- Gap closure: image preprocessing bridge + inferenceRouter TS fixes
 
 **Carried forward work incorporated:**
 - 01-03 (YOLO training scripts) -> continues as training completion within this phase
@@ -133,7 +134,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure + Data Foundation | 4/4 | Complete | 2026-03-12 |
-| 2. On-Device Detection Pipeline | 5/5 | Complete   | 2026-03-12 |
+| 2. On-Device Detection Pipeline | 5/6 | Gap closure | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Enhanced Detection + Scale OCR | 0/3 | Not started | - |
