@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 02.1-01-PLAN.md
-last_updated: "2026-03-13T00:02:00Z"
-last_activity: "2026-03-13 -- Completed Plan 02.1-01 (Model acquisition: AIY Food V1 + YOLO11n COCO)"
+stopped_at: Completed 02.1-02-PLAN.md
+last_updated: "2026-03-12T21:14:16Z"
+last_activity: "2026-03-13 -- Completed Plan 02.1-02 (Pipeline wiring: bundled fallback, binary gate fix, dual-buffer, COCO names)"
 progress:
   total_phases: 7
   completed_phases: 2
   total_plans: 13
-  completed_plans: 11
-  percent: 82
+  completed_plans: 12
+  percent: 85
 ---
 
 # Project State
@@ -26,16 +26,16 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 02.1 of 7 (Pre-trained Model Acquisition and TFLite Integration)
-Plan: 1 of 3 in current phase
-Status: In Progress (Plan 02.1-01 complete, 2 plans remaining)
-Last activity: 2026-03-13 -- Completed Plan 02.1-01 (Model acquisition: AIY Food V1 + YOLO11n COCO)
+Plan: 2 of 3 in current phase
+Status: In Progress (Plan 02.1-02 complete, 1 plan remaining)
+Last activity: 2026-03-13 -- Completed Plan 02.1-02 (Pipeline wiring: bundled model fallback, binary gate fix, dual-buffer, COCO names)
 
-Progress: [████████░░] 82%
+Progress: [████████░░] 85%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 14 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 1 phase 02.1)
+- Total plans completed: 15 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1)
 - Average duration: 12min
 - Total execution time: ~2.5 hours
 
@@ -53,8 +53,8 @@ Progress: [████████░░] 82%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 15min, 4min, 19min
-- Trend: Stable (model acquisition plan slower due to downloads + YOLO export)
+- Last 3 plans: 4min, 19min, 7min
+- Trend: Stable (pipeline wiring plan fast -- mostly code changes and tests)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -65,6 +65,7 @@ Progress: [████████░░] 82%
 | Phase 02 P06 | 4min | 2 tasks | 6 files |
 
 | Phase 02.1 P01 | 19min | 1 task | 6 files |
+| Phase 02.1 P02 | 7min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -121,6 +122,11 @@ Recent decisions affecting current work:
 - [02.1-01]: Kaggle Models API replaces GCS for AIY download (GCS returns 403). Returns tar.gz archive.
 - [02.1-01]: ai-edge-litert (v2.1.2) replaces tflite-runtime for Python 3.12+ TFLite validation
 - [02.1-01]: AIY Food V1 English labels extracted from embedded probability-labels-en.txt metadata (2024 food names)
+- [02.1-02]: BINARY_INPUT_SIZE=192 (not 224) and 2024 classes (not 2023) per actual AIY model dimensions from Plan 01
+- [02.1-02]: Manual loop for binary gate max (not Math.max(...spread)) to avoid stack overflow on 2024-element array
+- [02.1-02]: Dual-buffer pipeline: detectBuffer (640x640) for YOLO, classifyBuffer (192x192) for AIY binary gate + classify
+- [02.1-02]: Food-only post-filter in DetectionScreen using COCO_FOOD_CLASS_IDS with __DEV__ debug logging
+- [02.1-02]: tfliteAsset.js mock (returns numeric 1) for Jest .tflite moduleNameMapper
 
 ### Roadmap Evolution
 
@@ -140,6 +146,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T00:02:00Z
-Stopped at: Completed 02.1-01-PLAN.md
-Resume file: .planning/phases/02.1-pre-trained-model-acquisition-and-tflite-integration/02.1-01-SUMMARY.md
+Last session: 2026-03-12T21:14:16Z
+Stopped at: Completed 02.1-02-PLAN.md
+Resume file: .planning/phases/02.1-pre-trained-model-acquisition-and-tflite-integration/02.1-02-SUMMARY.md
