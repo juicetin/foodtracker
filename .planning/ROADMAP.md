@@ -47,12 +47,14 @@ Plans:
   2. Each detected item shows a confidence indicator (green/yellow/red) and the user can manually correct low-confidence results
   3. Detected items include portion size estimates based on visual cues (plate size, reference objects, density tables)
   4. Detection pipeline runs entirely on-device via CoreML (iOS) and LiteRT (Android) with no network dependency
-**Plans**: TBD
+**Plans:** 5 plans
 
 Plans:
-- [ ] 02-01: TBD
-- [ ] 02-02: TBD
-- [ ] 02-03: TBD
+- [ ] 02-01-PLAN.md -- Detection types, build config (react-native-fast-tflite plugin, metro .tflite), YOLO export script
+- [ ] 02-02-PLAN.md -- ML service layer: YOLO post-processing (tensor decode + NMS), model loader, inference router
+- [ ] 02-03-PLAN.md -- Portion estimator TS port (from Python), correction store with SQLite history
+- [ ] 02-04-PLAN.md -- Detection store + UI components: annotated photo, bounding boxes, summary bar, list, FAB, undo toast
+- [ ] 02-05-PLAN.md -- Detail sheet + portion slider, DetectionScreen orchestration, navigation wiring
 
 **Carried forward work incorporated:**
 - 01-03 (YOLO training scripts) -> continues as training completion within this phase
@@ -131,7 +133,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure + Data Foundation | 4/4 | Complete | 2026-03-12 |
-| 2. On-Device Detection Pipeline | 0/3 | Not started | - |
+| 2. On-Device Detection Pipeline | 0/5 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Enhanced Detection + Scale OCR | 0/3 | Not started | - |
