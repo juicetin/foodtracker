@@ -2,7 +2,7 @@
  * Tests for RegionalResolver -- multi-database query resolver with priority ordering.
  *
  * Mocks NutritionService instances to test priority ordering, fallback behavior,
- * cross-database routing, and custom pack schema validation.
+ * cross-database routing, custom pack schema validation, and importCustomPack.
  */
 
 // Mock db/client
@@ -13,8 +13,50 @@ const mockConnection = {
   close: mockClose,
 };
 
+const mockInsertValues = jest.fn().mockResolvedValue(undefined);
+const mockInsert = jest.fn().mockReturnValue({ values: mockInsertValues });
+
 jest.mock('../../../../db/client', () => ({
   openNutritionDb: jest.fn(() => mockConnection),
+  userDb: {
+    insert: (...args: unknown[]) => mockInsert(...args),
+  },
+}));
+
+// Mock db/schema
+jest.mock('../../../../db/schema', () => ({
+  installedPacks: {
+    id: 'id',
+    name: 'name',
+    type: 'type',
+    version: 'version',
+    filePath: 'file_path',
+    sizeBytes: 'size_bytes',
+    sha256: 'sha256',
+    region: 'region',
+    installedAt: 'installed_at',
+    lastChecked: 'last_checked',
+  },
+}));
+
+// Mock expo-file-system (v19 class-based API)
+const mockFileWrite = jest.fn();
+const mockFileBytes = jest.fn().mockReturnValue(new Uint8Array([1, 2, 3, 4]));
+const mockDirCreate = jest.fn();
+
+jest.mock('expo-file-system', () => ({
+  Paths: {
+    document: { uri: '/mock/documents/' },
+  },
+  File: jest.fn().mockImplementation(() => ({
+    exists: true,
+    bytes: mockFileBytes,
+    write: mockFileWrite,
+  })),
+  Directory: jest.fn().mockImplementation(() => ({
+    exists: false,
+    create: mockDirCreate,
+  })),
 }));
 
 // Mock packManager
@@ -302,15 +344,17 @@ describe('validatePackSchema', () => {
 });
 
 describe('importCustomPack', () => {
-  it('validates schema, copies to pack directory, and records in installed_packs', async () => {
-    // This test validates the import flow conceptually.
-    // Full integration testing happens at the pack manager level.
+  let resolver: RegionalResolver;
 
-    const resolver = new RegionalResolver();
+  beforeEach(async () => {
+    jest.clearAllMocks();
+    resolver = new RegionalResolver();
     mockGetInstalledPacks.mockResolvedValue([]);
     await resolver.initialize();
+  });
 
-    // Mock schema validation to pass
+  it('validates schema, copies file, registers in DB, and adds to resolver', async () => {
+    // Mock schema validation to pass (validatePackSchema calls)
     mockExecute
       .mockResolvedValueOnce({
         rows: [
@@ -327,13 +371,56 @@ describe('importCustomPack', () => {
         rows: [{ name: 'food_id' }, { name: 'nutrient_id' }, { name: 'amount' }],
       });
 
-    // importCustomPack validates, then adds database
-    const result = await validatePackSchema('/mock/path/custom.db');
-    expect(result.valid).toBe(true);
+    const result = await resolver.importCustomPack(
+      '/mock/path/custom.db',
+      'my-custom-pack',
+      'My Custom Pack'
+    );
 
-    // After validation passes, database can be added
-    await resolver.addDatabase('custom-db', '/mock/path/custom.db');
+    // Returns a well-formed InstalledPack
+    expect(result.id).toBe('my-custom-pack');
+    expect(result.name).toBe('My Custom Pack');
+    expect(result.type).toBe('nutrition');
+
+    // Database is now visible in installed databases
     const databases = resolver.getInstalledDatabases();
-    expect(databases.some((db) => db.id === 'custom-db')).toBe(true);
+    expect(databases.some((db) => db.id === 'my-custom-pack')).toBe(true);
+
+    // File was copied (Directory created, File.write called)
+    const { Directory, File } = require('expo-file-system');
+    expect(Directory).toHaveBeenCalled();
+    expect(mockDirCreate).toHaveBeenCalled();
+    expect(mockFileWrite).toHaveBeenCalled();
+
+    // Record inserted into installed_packs table
+    expect(mockInsert).toHaveBeenCalled();
+    expect(mockInsertValues).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: 'my-custom-pack',
+        name: 'My Custom Pack',
+        type: 'nutrition',
+      })
+    );
+  });
+
+  it('rejects packs that fail schema validation without copying or registering', async () => {
+    // Mock schema validation to fail (only foods table exists)
+    mockExecute.mockResolvedValueOnce({
+      rows: [{ name: 'foods' }],
+    });
+
+    await expect(
+      resolver.importCustomPack('/mock/path/bad.db', 'bad-pack', 'Bad Pack')
+    ).rejects.toThrow('schema validation failed');
+
+    // No file copy should have occurred
+    expect(mockFileWrite).not.toHaveBeenCalled();
+
+    // No DB insert should have occurred
+    expect(mockInsert).not.toHaveBeenCalled();
+
+    // Database should NOT be in the resolver
+    const databases = resolver.getInstalledDatabases();
+    expect(databases.some((db) => db.id === 'bad-pack')).toBe(false);
   });
 });
