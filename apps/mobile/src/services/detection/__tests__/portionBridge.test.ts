@@ -16,17 +16,19 @@ import {
 // ---------- Constants ----------
 
 describe('portionBridge constants', () => {
-  it('FOOD_DENSITY_TABLE has all 55 entries matching Python version', () => {
-    // Python version has exactly 55 entries (counted from source)
-    expect(Object.keys(FOOD_DENSITY_TABLE).length).toBe(55);
+  it('FOOD_DENSITY_TABLE has all 81 entries matching Python version', () => {
+    // Python version has exactly 81 entries (counted from source)
+    expect(Object.keys(FOOD_DENSITY_TABLE).length).toBe(81);
   });
 
   it('REFERENCE_OBJECTS has all 15 entries matching Python version', () => {
     expect(Object.keys(REFERENCE_OBJECTS).length).toBe(15);
   });
 
-  it('STANDARD_SERVINGS has 60+ entries matching Python version', () => {
-    expect(Object.keys(STANDARD_SERVINGS).length).toBeGreaterThanOrEqual(60);
+  it('STANDARD_SERVINGS has 52 entries matching Python version', () => {
+    // Python _builtin_serving_size STANDARD_SERVINGS dict has 52 entries
+    // (category_defaults are a separate fallback layer)
+    expect(Object.keys(STANDARD_SERVINGS).length).toBe(52);
   });
 
   it('DEFAULT_DEPTH_RATIO is 0.25', () => {
