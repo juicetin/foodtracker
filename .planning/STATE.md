@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 02-02 (ML inference core - postProcess, modelLoader, inferenceRouter)
-last_updated: "2026-03-12T12:21:15Z"
-last_activity: 2026-03-12 -- Completed Plan 02-02 (ML inference core)
+stopped_at: Completed 02-03 (Portion bridge + correction store)
+last_updated: "2026-03-12T12:22:46Z"
+last_activity: 2026-03-12 -- Completed Plan 02-03 (Portion bridge + correction store)
 progress:
   total_phases: 6
   completed_phases: 1
   total_plans: 9
-  completed_plans: 6
-  percent: 73
+  completed_plans: 7
+  percent: 78
 ---
 
 # Project State
@@ -26,18 +26,18 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 2 of 6 (On-Device Detection Pipeline)
-Plan: 2 of 5 in current phase (02-02 complete)
+Plan: 3 of 5 in current phase (02-03 complete)
 Status: In Progress
-Last activity: 2026-03-12 -- Completed Plan 02-02 (ML inference core)
+Last activity: 2026-03-12 -- Completed Plan 02-03 (Portion bridge + correction store)
 
-Progress: [██████░░░░] 60%
+Progress: [███████░░░] 78%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 8 (3 carried from pre-pivot + 3 new + 2 phase 2)
-- Average duration: 14min
-- Total execution time: ~1.75 hours
+- Total plans completed: 9 (3 carried from pre-pivot + 3 new + 3 phase 2)
+- Average duration: 13min
+- Total execution time: ~1.9 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,12 +53,13 @@ Progress: [██████░░░░] 60%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 4min, 3min, 6min
-- Trend: Stable (TDD plans slightly longer due to test infrastructure)
+- Last 3 plans: 3min, 6min, 8min
+- Trend: Stable (TDD plans with data tables slightly longer)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
 | Phase 02 P02 | 6min | 2 tasks | 6 files |
+| Phase 02 P03 | 8min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -95,6 +96,10 @@ Recent decisions affecting current work:
 - [02-02]: Portion estimates placeholder (method: pending) -- portionBridge fills in Plan 03
 - [02-02]: Detection IDs use monotonic counter + timestamp for RN runtime compatibility
 - [02-02]: Transposed YOLO access: output[row * numPredictions + col] is correct pattern
+- [02-03]: Density table has 81 entries (not 55 as plan estimated) -- all ported faithfully from Python
+- [02-03]: Standard servings 52 entries + separate category_defaults fallback layer
+- [02-03]: Suggestion threshold of 3 corrections ensures pattern-based recommendations
+- [02-03]: Uses crypto.randomUUID() for correction record IDs (matches useFoodLogStore convention)
 
 ### Pending Todos
 
@@ -110,6 +115,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T12:21:15Z
-Stopped at: Completed 02-02 (ML inference core - postProcess, modelLoader, inferenceRouter)
-Resume file: .planning/phases/02-on-device-detection-pipeline/02-02-SUMMARY.md
+Last session: 2026-03-12T12:22:46Z
+Stopped at: Completed 02-03 (Portion bridge + correction store)
+Resume file: .planning/phases/02-on-device-detection-pipeline/02-03-SUMMARY.md

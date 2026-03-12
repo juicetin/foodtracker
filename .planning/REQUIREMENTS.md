@@ -13,8 +13,8 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **DET-02**: User's device automatically selects the appropriate VLM tier (SmolVLM-256M / Moondream 0.5B / Gemma 3n E2B) based on device capability, downloaded post-install
 - [ ] **DET-03**: User on a supported device (Pixel 8+, Galaxy S24+, etc.) gets opportunistic Gemini Nano inference for food identification via AICore
 - [ ] **DET-04**: User sees inferred hidden ingredients from dish identification via knowledge graph lookup (e.g., "carbonara" -> egg, pancetta, parmesan)
-- [ ] **DET-05**: User sees confidence indicators (green/yellow/red) on detection results and can manually correct when confidence is low
-- [ ] **DET-06**: User sees portion estimates based on visual cues (plate size, reference objects, density tables) from the on-device portion estimator
+- [x] **DET-05**: User sees confidence indicators (green/yellow/red) on detection results and can manually correct when confidence is low
+- [x] **DET-06**: User sees portion estimates based on visual cues (plate size, reference objects, density tables) from the on-device portion estimator
 
 ### Data & Storage
 
@@ -106,8 +106,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | DET-02 | Phase 5 | Pending |
 | DET-03 | Phase 5 | Pending |
 | DET-04 | Phase 5 | Pending |
-| DET-05 | Phase 2 | Pending |
-| DET-06 | Phase 2 | Pending |
+| DET-05 | Phase 2 | Complete |
+| DET-06 | Phase 2 | Complete |
 | DAT-01 | Phase 1 | Complete |
 | DAT-02 | Phase 1 | Complete |
 | DAT-03 | Phase 1 | Complete |
