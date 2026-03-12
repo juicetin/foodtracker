@@ -30,12 +30,12 @@ Decimal phases appear between their surrounding integers in numeric order.
   2. User data (food entries, recipes, preferences) persists across app restarts in local op-sqlite database with versioned schema migrations
   3. Bundled USDA FDC nutrition database is available on first launch (or fast-follow asset pack) and returns results for common food queries
   4. Optional regional nutrition databases (AFCD, CoFID, CIQUAL) can be downloaded and queried alongside USDA data
-**Plans**: TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 01-01: TBD
-- [ ] 01-02: TBD
-- [ ] 01-03: TBD
+- [ ] 01-01-PLAN.md -- Local data foundation: op-sqlite + drizzle schema, migrations, store refactor, legacy cleanup
+- [ ] 01-02-PLAN.md -- USDA nutrition DB: FDC build pipeline, pack manager, nutrition query service
+- [ ] 01-03-PLAN.md -- Regional DBs: AFCD/CoFID/CIQUAL build pipelines, locale detection, multi-DB resolver
 
 ### Phase 2: On-Device Detection Pipeline
 **Goal**: Users can photograph food and receive on-device identification with bounding boxes and confidence indicators
@@ -129,7 +129,7 @@ Phases execute in numeric order: 1 -> 2 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Infrastructure + Data Foundation | 0/3 | Not started | - |
+| 1. Infrastructure + Data Foundation | 0/3 | Planning complete | - |
 | 2. On-Device Detection Pipeline | 0/3 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
