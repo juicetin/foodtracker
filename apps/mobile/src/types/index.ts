@@ -2,10 +2,12 @@
 export type RootStackParamList = {
   Main: undefined;
   EntryDetail: { entryId: string };
+  Detection: undefined;
 };
 
 export type MainTabParamList = {
   Home: undefined;
+  Detect: undefined;
   Diary: undefined;
   Profile: undefined;
 };
