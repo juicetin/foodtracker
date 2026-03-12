@@ -16,6 +16,7 @@ import { useDetectionStore } from '../store/useDetectionStore';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import { runDetectionPipeline } from '../services/detection/inferenceRouter';
 import { loadModelSet } from '../services/detection/modelLoader';
+import { preprocessImageForModel } from '../services/detection/imagePreprocess';
 import {
   estimatePortion,
   type ImageSize,
@@ -182,7 +183,7 @@ export function DetectionScreen() {
   // -- Inference pipeline ----------------------------------------------------
 
   const runInference = useCallback(async (
-    _uri: string,
+    uri: string,
     imgWidth: number,
     imgHeight: number,
   ) => {
@@ -194,20 +195,12 @@ export function DetectionScreen() {
       // Load models if not already loaded
       await loadModelSet();
 
-      // Phase 2 limitation: Image preprocessing (resize + pixel buffer conversion)
-      // requires native module support. For now, create a placeholder buffer.
-      // Real preprocessing will use expo-image-manipulator or a custom native module
-      // to resize to 640x640 and convert to Float32Array pixel data.
-      //
-      // Known limitation: Without proper preprocessing, inference will not produce
-      // accurate results until Phase 2.5 adds the image-to-tensor bridge.
+      // Preprocess the photo: resize to model input size and extract normalised RGB pixels
       const modelInputSize = 640;
-      const placeholderBuffer = new Float32Array(
-        modelInputSize * modelInputSize * 3,
-      ).buffer;
+      const pixelBuffer = await preprocessImageForModel(uri, modelInputSize);
 
       const result = await runDetectionPipeline(
-        placeholderBuffer,
+        pixelBuffer.buffer,
         modelInputSize,
         modelInputSize,
         DEFAULT_CLASS_NAMES,
