@@ -5,7 +5,8 @@
  */
 
 // ── Mock db/client ──
-const mockExecute = jest.fn();
+// execute returns a Promise in op-sqlite v15.x
+const mockExecute = jest.fn().mockResolvedValue({ rows: [] });
 const mockConnection = {
   execute: mockExecute,
   close: jest.fn(),
@@ -44,7 +45,7 @@ describe('NutritionService', () => {
           rank: -4.8,
         },
       ];
-      mockExecute.mockReturnValue({ rows: mockFoods });
+      mockExecute.mockResolvedValue({ rows: mockFoods });
 
       const results = await service.searchFoods('chicken');
 
@@ -57,14 +58,14 @@ describe('NutritionService', () => {
     });
 
     it('returns empty array for no matches', async () => {
-      mockExecute.mockReturnValue({ rows: [] });
+      mockExecute.mockResolvedValue({ rows: [] });
 
       const results = await service.searchFoods('xyznonexistent');
       expect(results).toHaveLength(0);
     });
 
     it('respects limit parameter', async () => {
-      mockExecute.mockReturnValue({ rows: [] });
+      mockExecute.mockResolvedValue({ rows: [] });
 
       await service.searchFoods('apple', 5);
 
@@ -84,7 +85,7 @@ describe('NutritionService', () => {
         data_type: 'foundation_food',
         publication_date: null,
       };
-      mockExecute.mockReturnValue({ rows: [mockFood] });
+      mockExecute.mockResolvedValue({ rows: [mockFood] });
 
       const result = await service.getFoodById(100);
 
@@ -94,7 +95,7 @@ describe('NutritionService', () => {
     });
 
     it('returns null for non-existent food', async () => {
-      mockExecute.mockReturnValue({ rows: [] });
+      mockExecute.mockResolvedValue({ rows: [] });
 
       const result = await service.getFoodById(999999);
       expect(result).toBeNull();
@@ -109,7 +110,7 @@ describe('NutritionService', () => {
         { nutrient_id: 1005, name: 'Carbohydrate, by difference', amount: 0.0, unit: 'g' },
         { nutrient_id: 1004, name: 'Total lipid (fat)', amount: 3.6, unit: 'g' },
       ];
-      mockExecute.mockReturnValue({ rows: mockNutrients });
+      mockExecute.mockResolvedValue({ rows: mockNutrients });
 
       const results = await service.getFoodNutrients(100);
 
@@ -131,7 +132,7 @@ describe('NutritionService', () => {
           modifier: 'breast',
         },
       ];
-      mockExecute.mockReturnValue({ rows: mockPortions });
+      mockExecute.mockResolvedValue({ rows: mockPortions });
 
       const results = await service.getFoodPortions(100);
 
@@ -150,7 +151,7 @@ describe('NutritionService', () => {
         { nutrient_id: 1005, name: 'Carbohydrate, by difference', amount: 0.0, unit: 'g' },
         { nutrient_id: 1004, name: 'Total lipid (fat)', amount: 3.6, unit: 'g' },
       ];
-      mockExecute.mockReturnValue({ rows: mockNutrients });
+      mockExecute.mockResolvedValue({ rows: mockNutrients });
 
       const result = await service.getMacros(100, 200); // 200g of chicken
 

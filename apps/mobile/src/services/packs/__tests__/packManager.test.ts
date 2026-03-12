@@ -1,39 +1,37 @@
 /**
  * Tests for PackManager and PackManifest services.
  *
- * Mocks: expo-file-system, expo-crypto, op-sqlite (via __mocks__),
- *        and the userDb from db/client.
+ * Mocks: expo-file-system (v19 File/Directory/Paths), expo-crypto,
+ *        db/client, db/schema, drizzle-orm, global fetch.
  */
 
 import type {
   PackEntry,
   PackManifest,
   InstalledPack,
-  DownloadProgress,
 } from '../types';
 
-// ── Mock expo-file-system ──
-const mockDownloadCallback = jest.fn();
-const mockDownloadResumable = {
-  downloadAsync: jest.fn(),
+// ── Mock expo-file-system (v19 class-based API) ──
+const mockFileInstance = {
+  exists: true,
+  base64: jest.fn().mockReturnValue('base64content'),
+  text: jest.fn().mockReturnValue('text'),
+  write: jest.fn(),
+  delete: jest.fn(),
+};
+
+const mockDirInstance = {
+  exists: false,
+  create: jest.fn(),
 };
 
 jest.mock('expo-file-system', () => ({
-  documentDirectory: '/mock/documents/',
-  createDownloadResumable: jest.fn(
-    (
-      url: string,
-      fileUri: string,
-      _options: Record<string, unknown>,
-      callback: (progress: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => void
-    ) => {
-      mockDownloadCallback.mockImplementation(callback);
-      return mockDownloadResumable;
-    }
-  ),
-  deleteAsync: jest.fn().mockResolvedValue(undefined),
-  getInfoAsync: jest.fn().mockResolvedValue({ exists: true, size: 1024 }),
-  makeDirectoryAsync: jest.fn().mockResolvedValue(undefined),
+  Paths: {
+    document: { uri: '/mock/documents/' },
+    cache: { uri: '/mock/cache/' },
+  },
+  File: jest.fn().mockImplementation(() => ({ ...mockFileInstance })),
+  Directory: jest.fn().mockImplementation(() => ({ ...mockDirInstance })),
 }));
 
 // ── Mock expo-crypto ──
@@ -42,32 +40,33 @@ jest.mock('expo-crypto', () => ({
   CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
 }));
 
-// ── Mock db/client ──
-const mockExecute = jest.fn().mockReturnValue({ rows: [] });
-const mockUserDbInsert = jest.fn().mockReturnValue({
-  values: jest.fn().mockResolvedValue(undefined),
+// ── Mock db/client with proper drizzle-like chaining ──
+const mockInsertValues = jest.fn().mockResolvedValue(undefined);
+const mockInsert = jest.fn().mockReturnValue({ values: mockInsertValues });
+
+const mockDeleteWhere = jest.fn().mockResolvedValue(undefined);
+const mockDelete = jest.fn().mockReturnValue({ where: mockDeleteWhere });
+
+let selectFromResult: unknown[] = [];
+const mockSelectWhere = jest.fn().mockImplementation(() => Promise.resolve(selectFromResult));
+const mockSelectFrom = jest.fn().mockImplementation(() => {
+  const result = Promise.resolve(selectFromResult);
+  (result as unknown as Record<string, unknown>).where = mockSelectWhere;
+  return result;
 });
-const mockUserDbSelect = jest.fn().mockReturnValue({
-  from: jest.fn().mockReturnValue({
-    where: jest.fn().mockResolvedValue([]),
-    then: jest.fn().mockResolvedValue([]),
-  }),
-});
-const mockUserDbDelete = jest.fn().mockReturnValue({
-  where: jest.fn().mockResolvedValue(undefined),
-});
+const mockSelect = jest.fn().mockReturnValue({ from: mockSelectFrom });
 
 jest.mock('../../../../db/client', () => ({
   userDb: {
-    insert: mockUserDbInsert,
-    select: mockUserDbSelect,
-    delete: mockUserDbDelete,
+    insert: (...args: unknown[]) => mockInsert(...args),
+    select: (...args: unknown[]) => mockSelect(...args),
+    delete: (...args: unknown[]) => mockDelete(...args),
   },
 }));
 
 // ── Mock drizzle-orm ──
 jest.mock('drizzle-orm', () => ({
-  eq: jest.fn((col, val) => ({ col, val, type: 'eq' })),
+  eq: jest.fn((col: unknown, val: unknown) => ({ col, val, type: 'eq' })),
   and: jest.fn((...args: unknown[]) => ({ args, type: 'and' })),
   sql: jest.fn(),
 }));
@@ -100,14 +99,25 @@ describe('PackManager', () => {
     version: '1.0.0',
     sizeBytes: 50_000_000,
     sha256: 'abc123hash',
-    url: '/packs/nutrition/usda-core-1.0.0.db',
+    url: 'https://r2.example.com/packs/nutrition/usda-core-1.0.0.db',
     description: 'Core USDA nutrition database',
   };
 
   beforeEach(() => {
     jest.clearAllMocks();
-    mockDownloadResumable.downloadAsync.mockResolvedValue({
-      uri: '/mock/documents/packs/nutrition/usda-core/usda-core-1.0.0.db',
+    selectFromResult = [];
+    mockInsertValues.mockResolvedValue(undefined);
+    mockInsert.mockReturnValue({ values: mockInsertValues });
+    mockDeleteWhere.mockResolvedValue(undefined);
+    mockDelete.mockReturnValue({ where: mockDeleteWhere });
+
+    // Mock global fetch for download
+    global.fetch = jest.fn().mockResolvedValue({
+      ok: true,
+      headers: {
+        get: jest.fn().mockReturnValue('50000000'),
+      },
+      arrayBuffer: jest.fn().mockResolvedValue(new ArrayBuffer(1024)),
     });
   });
 
@@ -120,14 +130,18 @@ describe('PackManager', () => {
       expect(result).toBeDefined();
       expect(result.id).toBe('usda-core');
       expect(result.version).toBe('1.0.0');
-      expect(mockDownloadResumable.downloadAsync).toHaveBeenCalled();
-      expect(mockUserDbInsert).toHaveBeenCalled();
+      expect(global.fetch).toHaveBeenCalledWith(
+        testPack.url,
+        expect.objectContaining({ headers: expect.any(Object) })
+      );
+      expect(mockInsert).toHaveBeenCalled();
+      expect(onProgress).toHaveBeenCalled();
     });
   });
 
   describe('getInstalledPacks', () => {
     it('returns list from installed_packs table', async () => {
-      const mockPacks: InstalledPack[] = [
+      selectFromResult = [
         {
           id: 'usda-core',
           name: 'USDA Core',
@@ -142,44 +156,37 @@ describe('PackManager', () => {
         },
       ];
 
-      // Set up the mock chain for select
-      const mockWhere = jest.fn().mockResolvedValue(mockPacks);
-      const mockFrom = jest.fn().mockReturnValue(mockPacks);
-      mockUserDbSelect.mockReturnValue({ from: mockFrom });
-
       const result = await PackManager.getInstalledPacks();
       expect(Array.isArray(result)).toBe(true);
-      expect(mockUserDbSelect).toHaveBeenCalled();
+      expect(result.length).toBe(1);
+      expect(result[0].id).toBe('usda-core');
+      expect(mockSelect).toHaveBeenCalled();
     });
   });
 
   describe('isPackInstalled', () => {
     it('returns true when pack is installed', async () => {
-      const mockPack = {
-        id: 'usda-core',
-        name: 'USDA Core',
-        type: 'nutrition',
-        version: '1.0.0',
-        filePath: '/mock/path',
-        sizeBytes: 50000000,
-        sha256: 'abc123',
-        region: null,
-        installedAt: '2026-01-01T00:00:00Z',
-        lastChecked: null,
-      };
-
-      const mockWhere = jest.fn().mockResolvedValue([mockPack]);
-      const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
-      mockUserDbSelect.mockReturnValue({ from: mockFrom });
+      selectFromResult = [
+        {
+          id: 'usda-core',
+          name: 'USDA Core',
+          type: 'nutrition',
+          version: '1.0.0',
+          filePath: '/mock/path',
+          sizeBytes: 50000000,
+          sha256: 'abc123',
+          region: null,
+          installedAt: '2026-01-01T00:00:00Z',
+          lastChecked: null,
+        },
+      ];
 
       const result = await PackManager.isPackInstalled('usda-core');
       expect(result).toBe(true);
     });
 
     it('returns false when pack is not installed', async () => {
-      const mockWhere = jest.fn().mockResolvedValue([]);
-      const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
-      mockUserDbSelect.mockReturnValue({ from: mockFrom });
+      selectFromResult = [];
 
       const result = await PackManager.isPackInstalled('nonexistent');
       expect(result).toBe(false);
@@ -188,21 +195,26 @@ describe('PackManager', () => {
 
   describe('deletePack', () => {
     it('removes file and installed_packs record', async () => {
-      // Mock getInstalledPack to return a pack
-      const mockPack = {
-        id: 'usda-core',
-        filePath: '/mock/documents/packs/nutrition/usda-core/usda-core.db',
-      };
-      const mockWhere = jest.fn().mockResolvedValue([mockPack]);
-      const mockFrom = jest.fn().mockReturnValue({ where: mockWhere });
-      mockUserDbSelect.mockReturnValue({ from: mockFrom });
-
-      const FileSystem = require('expo-file-system');
+      selectFromResult = [
+        {
+          id: 'usda-core',
+          name: 'USDA Core',
+          type: 'nutrition',
+          version: '1.0.0',
+          filePath: '/mock/documents/packs/nutrition/usda-core/usda-core.db',
+          sizeBytes: 50000000,
+          sha256: 'abc123',
+          region: null,
+          installedAt: '2026-01-01T00:00:00Z',
+          lastChecked: null,
+        },
+      ];
 
       await PackManager.deletePack('usda-core');
 
-      expect(FileSystem.deleteAsync).toHaveBeenCalled();
-      expect(mockUserDbDelete).toHaveBeenCalled();
+      const { File: FileMock } = require('expo-file-system');
+      expect(FileMock).toHaveBeenCalled();
+      expect(mockDelete).toHaveBeenCalled();
     });
   });
 });
@@ -249,7 +261,6 @@ describe('PackManifest', () => {
 
   describe('fetchManifest', () => {
     it('parses JSON manifest into PackManifest type', async () => {
-      // Mock global fetch
       global.fetch = jest.fn().mockResolvedValue({
         ok: true,
         json: jest.fn().mockResolvedValue(testManifest),
@@ -261,7 +272,6 @@ describe('PackManifest', () => {
       expect(result.packs).toHaveLength(3);
       expect(result.packs[0].id).toBe('usda-core');
 
-      // Check API key header was sent
       expect(global.fetch).toHaveBeenCalledWith(
         'https://example.com/manifest.json',
         expect.objectContaining({
@@ -280,7 +290,7 @@ describe('PackManifest', () => {
           id: 'usda-core',
           name: 'USDA Core',
           type: 'nutrition',
-          version: '1.0.0', // older than manifest 2.0.0
+          version: '1.0.0',
           filePath: '/path',
           sizeBytes: 50000000,
           sha256: 'oldhash',
@@ -291,10 +301,7 @@ describe('PackManifest', () => {
       ];
 
       const updates = getAvailableUpdates(testManifest, installed);
-
-      // usda-core has an update (1.0.0 -> 2.0.0)
       expect(updates.some((p) => p.id === 'usda-core')).toBe(true);
-      // afcd is not installed so it should NOT be in updates
       expect(updates.some((p) => p.id === 'afcd')).toBe(false);
     });
   });
