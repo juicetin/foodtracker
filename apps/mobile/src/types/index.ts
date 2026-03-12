@@ -14,7 +14,7 @@ export type MainTabParamList = {
 export interface Photo {
   id: string;
   uri: string;
-  gcsUrl?: string;
+  localPath?: string;
   timestamp: Date;
   metadata?: {
     width: number;
@@ -35,6 +35,8 @@ export interface Ingredient {
   protein: number;
   carbs: number;
   fat: number;
+  fiber?: number;
+  sugar?: number;
   sourceSegment?: {
     x: number;
     y: number;
@@ -43,13 +45,21 @@ export interface Ingredient {
   };
   aiConfidence?: number;
   userModified: boolean;
-  databaseSource: 'AFCD' | 'USDA' | 'CNF' | 'CoFID' | 'CIQUAL' | 'OpenFoodFacts';
+  databaseSource:
+    | 'AFCD'
+    | 'USDA'
+    | 'CNF'
+    | 'CoFID'
+    | 'CIQUAL'
+    | 'OpenFoodFacts'
+    | 'branded';
+  originalQuantity?: number;
 }
 
 export interface FoodEntry {
   id: string;
-  userId: string;
-  createdAt: Date;
+  createdAt: string;
+  entryDate: string;
   mealType: 'breakfast' | 'lunch' | 'dinner' | 'snack';
   photos: Photo[];
   ingredients: Ingredient[];
@@ -57,6 +67,10 @@ export interface FoodEntry {
   totalProtein: number;
   totalCarbs: number;
   totalFat: number;
+  notes?: string;
+  updatedAt: string;
+  isSynced: boolean;
+  isDeleted: boolean;
   modificationHistory?: ModificationEvent[];
 }
 
@@ -73,8 +87,6 @@ export interface AIProcessingResult {
   photos: Photo[];
   detectedItems: DetectedItem[];
   scaleWeight?: ScaleReading;
-  branches?: HypothesisBranch[];
-  selectedBranch?: string;
 }
 
 export interface DetectedItem {
@@ -97,15 +109,6 @@ export interface ScaleReading {
   photoId: string;
 }
 
-export interface HypothesisBranch {
-  id: string;
-  name: string;
-  description: string;
-  foodWeight: number;
-  error: number;
-  ingredients: Ingredient[];
-}
-
 // User preferences
 export interface UserPreferences {
   region: 'AU' | 'US' | 'CA' | 'UK' | 'FR' | 'global';
@@ -117,11 +120,4 @@ export interface UserPreferences {
     fat: number;
   };
   darkMode: boolean;
-}
-
-// API response types
-export interface APIResponse<T> {
-  success: boolean;
-  data?: T;
-  error?: string;
 }
