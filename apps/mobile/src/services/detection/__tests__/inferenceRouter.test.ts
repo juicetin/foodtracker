@@ -1,6 +1,9 @@
 /**
  * Tests for inference router: three-stage pipeline orchestration
  * (binary gate -> detection -> classification).
+ *
+ * Updated for dual-buffer signature (detectBuffer + classifyBuffer)
+ * and AIY Food V1 binary gate (max over 2024 class probabilities).
  */
 
 // ── Mock modelLoader ──
@@ -31,7 +34,9 @@ function createMockModel(output: Float32Array[]) {
 
 describe('inferenceRouter', () => {
   const classNames = ['apple', 'banana', 'rice'];
-  const imageBuffer = new Float32Array([1, 2, 3]).buffer;
+  // Dual buffers: detect at 640x640, classify at 192x192
+  const detectBuffer = new Float32Array([1, 2, 3]).buffer;
+  const classifyBuffer = new Float32Array([4, 5, 6]).buffer;
   const imageWidth = 640;
   const imageHeight = 640;
 
@@ -39,10 +44,11 @@ describe('inferenceRouter', () => {
     jest.clearAllMocks();
   });
 
-  describe('runDetectionPipeline', () => {
+  describe('runDetectionPipeline - dual buffer signature', () => {
     it('returns empty items when binary gate says not food', async () => {
-      // Binary gate output: single value below 0.5 = not food
-      const binaryModel = createMockModel([new Float32Array([0.2])]);
+      // Binary gate output: 2024-element array with all values below 0.5
+      const binaryOutput = new Float32Array(2024).fill(0.2);
+      const binaryModel = createMockModel([binaryOutput]);
       const detectModel = createMockModel([new Float32Array(0)]);
       const classifyModel = createMockModel([new Float32Array(0)]);
 
@@ -52,23 +58,29 @@ describe('inferenceRouter', () => {
         classify: classifyModel,
       });
 
-      const result = await runDetectionPipeline(imageBuffer, imageWidth, imageHeight, classNames);
+      const result = await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
 
       expect(result.items).toHaveLength(0);
-      // Binary model was called
+      // Binary model was called with classifyBuffer (192x192)
       expect(binaryModel.run).toHaveBeenCalledTimes(1);
-      // Detect and classify should NOT be called
+      expect(binaryModel.run).toHaveBeenCalledWith([classifyBuffer]);
+      // Detect and classify should NOT be called (short-circuited)
       expect(detectModel.run).toHaveBeenCalledTimes(0);
       expect(classifyModel.run).toHaveBeenCalledTimes(0);
     });
 
     it('returns detected items when food is present', async () => {
-      // Binary gate: food detected (>0.5)
-      const binaryModel = createMockModel([new Float32Array([0.95])]);
-      // Detection model: returns fake tensor (will be decoded by mocked postProcess)
-      const detectOutput = new Float32Array(6 * 2); // 6 rows (4 bbox + 2 classes) x 2 predictions
+      // Binary gate: AIY-like output with 2024 values, high confidence food
+      const binaryOutput = new Float32Array(2024).fill(0.01);
+      binaryOutput[500] = 0.95; // High confidence at class index 500
+      const binaryModel = createMockModel([binaryOutput]);
+
+      // Detection model: returns fake tensor
+      const detectOutput = new Float32Array(6 * 2);
       const detectModel = createMockModel([detectOutput]);
-      // Classify model: returns class scores for each detection
+      // Classify model
       const classifyModel = createMockModel([new Float32Array([0.85, 0.1, 0.05])]);
 
       mockGetModelSet.mockReturnValue({
@@ -77,14 +89,15 @@ describe('inferenceRouter', () => {
         classify: classifyModel,
       });
 
-      // Mock postProcess to return 2 raw detections
       const rawDetections: RawDetection[] = [
         { x: 0.1, y: 0.2, w: 0.3, h: 0.3, confidence: 0.9, classId: 0, className: 'apple' },
         { x: 0.5, y: 0.6, w: 0.2, h: 0.2, confidence: 0.7, classId: 1, className: 'banana' },
       ];
       mockDecodeYoloOutput.mockReturnValue(rawDetections);
 
-      const result = await runDetectionPipeline(imageBuffer, imageWidth, imageHeight, classNames);
+      const result = await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
 
       expect(result.items).toHaveLength(2);
       expect(result.items[0].className).toBe('apple');
@@ -102,8 +115,39 @@ describe('inferenceRouter', () => {
       expect(result.items[0].isRemoved).toBe(false);
     });
 
+    it('passes detectBuffer to detect stage and classifyBuffer to binary/classify', async () => {
+      const binaryOutput = new Float32Array(2024).fill(0.01);
+      binaryOutput[100] = 0.9;
+      const binaryModel = createMockModel([binaryOutput]);
+      const detectModel = createMockModel([new Float32Array(0)]);
+      const classifyModel = createMockModel([new Float32Array([0.8])]);
+
+      mockGetModelSet.mockReturnValue({
+        binary: binaryModel,
+        detect: detectModel,
+        classify: classifyModel,
+      });
+
+      mockDecodeYoloOutput.mockReturnValue([
+        { x: 0.1, y: 0.2, w: 0.3, h: 0.3, confidence: 0.8, classId: 0, className: 'apple' },
+      ]);
+
+      await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
+
+      // Binary gate gets classifyBuffer (192x192 input)
+      expect(binaryModel.run).toHaveBeenCalledWith([classifyBuffer]);
+      // Detection gets detectBuffer (640x640 input)
+      expect(detectModel.run).toHaveBeenCalledWith([detectBuffer]);
+      // Classify gets classifyBuffer (192x192 input)
+      expect(classifyModel.run).toHaveBeenCalledWith([classifyBuffer]);
+    });
+
     it('records timing for each stage', async () => {
-      const binaryModel = createMockModel([new Float32Array([0.9])]);
+      const binaryOutput = new Float32Array(2024).fill(0.01);
+      binaryOutput[0] = 0.9;
+      const binaryModel = createMockModel([binaryOutput]);
       const detectModel = createMockModel([new Float32Array(0)]);
       const classifyModel = createMockModel([new Float32Array(0)]);
 
@@ -117,22 +161,21 @@ describe('inferenceRouter', () => {
         { x: 0.1, y: 0.2, w: 0.3, h: 0.3, confidence: 0.8, classId: 0, className: 'apple' },
       ]);
 
-      const result = await runDetectionPipeline(imageBuffer, imageWidth, imageHeight, classNames);
+      const result = await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
 
       expect(result.pipelineStages).toBeDefined();
       expect(result.pipelineStages.length).toBeGreaterThanOrEqual(2);
 
-      // Binary stage should always be present
       const binaryStage = result.pipelineStages.find(s => s.stage === 'binary');
       expect(binaryStage).toBeDefined();
       expect(typeof binaryStage!.timeMs).toBe('number');
       expect(binaryStage!.timeMs).toBeGreaterThanOrEqual(0);
 
-      // Detect stage should be present when food detected
       const detectStage = result.pipelineStages.find(s => s.stage === 'detect');
       expect(detectStage).toBeDefined();
 
-      // Total inference time should be a number
       expect(typeof result.inferenceTimeMs).toBe('number');
       expect(result.inferenceTimeMs).toBeGreaterThanOrEqual(0);
     });
@@ -140,10 +183,13 @@ describe('inferenceRouter', () => {
     it('runs pipeline sequentially: binary -> detect -> classify', async () => {
       const callOrder: string[] = [];
 
+      const binaryOutput = new Float32Array(2024).fill(0.01);
+      binaryOutput[0] = 0.9;
+
       const binaryModel = {
         run: jest.fn().mockImplementation(async () => {
           callOrder.push('binary');
-          return [new Float32Array([0.9])];
+          return [binaryOutput];
         }),
         runSync: jest.fn(),
         inputs: [],
@@ -181,13 +227,12 @@ describe('inferenceRouter', () => {
         { x: 0.1, y: 0.2, w: 0.3, h: 0.3, confidence: 0.8, classId: 0, className: 'apple' },
       ]);
 
-      await runDetectionPipeline(imageBuffer, imageWidth, imageHeight, classNames);
+      await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
 
-      // Verify sequential order
       expect(callOrder[0]).toBe('binary');
       expect(callOrder[1]).toBe('detect');
-      // classify may or may not be called depending on implementation
-      // but binary must be before detect
       expect(callOrder.indexOf('binary')).toBeLessThan(callOrder.indexOf('detect'));
     });
 
@@ -195,8 +240,82 @@ describe('inferenceRouter', () => {
       mockGetModelSet.mockReturnValue(null);
 
       await expect(
-        runDetectionPipeline(imageBuffer, imageWidth, imageHeight, classNames),
+        runDetectionPipeline(detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames),
       ).rejects.toThrow();
+    });
+  });
+
+  describe('binary gate - AIY Food V1 max-over-classes', () => {
+    it('takes MAX of all 2024 class scores (not just index 0)', async () => {
+      // All scores are low EXCEPT one at a non-zero index
+      const binaryOutput = new Float32Array(2024).fill(0.01);
+      binaryOutput[500] = 0.85; // High confidence at index 500 (some food class)
+      const binaryModel = createMockModel([binaryOutput]);
+      const detectModel = createMockModel([new Float32Array(0)]);
+      const classifyModel = createMockModel([new Float32Array(0)]);
+
+      mockGetModelSet.mockReturnValue({
+        binary: binaryModel,
+        detect: detectModel,
+        classify: classifyModel,
+      });
+
+      mockDecodeYoloOutput.mockReturnValue([]);
+
+      const result = await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
+
+      // Binary gate should pass (max=0.85 > 0.5), so detect stage runs
+      expect(detectModel.run).toHaveBeenCalledTimes(1);
+    });
+
+    it('returns items=[] when all 2024 class scores are below threshold', async () => {
+      // All 2024 values below 0.5
+      const binaryOutput = new Float32Array(2024).fill(0.3);
+      const binaryModel = createMockModel([binaryOutput]);
+      const detectModel = createMockModel([new Float32Array(0)]);
+      const classifyModel = createMockModel([new Float32Array(0)]);
+
+      mockGetModelSet.mockReturnValue({
+        binary: binaryModel,
+        detect: detectModel,
+        classify: classifyModel,
+      });
+
+      const result = await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
+
+      expect(result.items).toHaveLength(0);
+      // Should NOT call detect or classify stages
+      expect(detectModel.run).toHaveBeenCalledTimes(0);
+      expect(classifyModel.run).toHaveBeenCalledTimes(0);
+    });
+
+    it('handles 2024-element Float32Array correctly for binary output', async () => {
+      // Verify no stack overflow or issues with large array
+      const binaryOutput = new Float32Array(2024);
+      // Set a single high value at the last index
+      binaryOutput[2023] = 0.92;
+      const binaryModel = createMockModel([binaryOutput]);
+      const detectModel = createMockModel([new Float32Array(0)]);
+      const classifyModel = createMockModel([new Float32Array(0)]);
+
+      mockGetModelSet.mockReturnValue({
+        binary: binaryModel,
+        detect: detectModel,
+        classify: classifyModel,
+      });
+
+      mockDecodeYoloOutput.mockReturnValue([]);
+
+      const result = await runDetectionPipeline(
+        detectBuffer, classifyBuffer, imageWidth, imageHeight, classNames,
+      );
+
+      // Binary gate passes (max=0.92 at index 2023 > 0.5)
+      expect(detectModel.run).toHaveBeenCalledTimes(1);
     });
   });
 });
