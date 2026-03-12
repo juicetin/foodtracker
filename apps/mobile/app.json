@@ -28,6 +28,12 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": []
+    "plugins": [
+      "expo-localization",
+      ["react-native-fast-tflite", {
+        "enableCoreMLDelegate": true,
+        "enableAndroidGpuLibraries": true
+      }]
+    ]
   }
 }
