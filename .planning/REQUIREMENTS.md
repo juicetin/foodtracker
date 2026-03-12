@@ -9,7 +9,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Detection
 
-- [ ] **DET-01**: User can photograph food and get on-device identification of food items with bounding boxes via YOLO (CoreML/LiteRT)
+- [x] **DET-01**: User can photograph food and get on-device identification of food items with bounding boxes via YOLO (CoreML/LiteRT)
 - [ ] **DET-02**: User's device automatically selects the appropriate VLM tier (SmolVLM-256M / Moondream 0.5B / Gemma 3n E2B) based on device capability, downloaded post-install
 - [ ] **DET-03**: User on a supported device (Pixel 8+, Galaxy S24+, etc.) gets opportunistic Gemini Nano inference for food identification via AICore
 - [ ] **DET-04**: User sees inferred hidden ingredients from dish identification via knowledge graph lookup (e.g., "carbonara" -> egg, pancetta, parmesan)
@@ -102,7 +102,7 @@ Deferred to future release. Tracked but not in current roadmap.
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DET-01 | Phase 2 | Pending |
+| DET-01 | Phase 2 | Complete |
 | DET-02 | Phase 5 | Pending |
 | DET-03 | Phase 5 | Pending |
 | DET-04 | Phase 5 | Pending |

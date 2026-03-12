@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Phase 2 context gathered
-last_updated: "2026-03-12T11:20:13.167Z"
-last_activity: 2026-03-12 -- Completed Plan 01-04 (importCustomPack gap closure)
+status: in-progress
+stopped_at: Completed 02-01 (detection type contracts and TFLite config)
+last_updated: "2026-03-12T12:18:32.083Z"
+last_activity: 2026-03-12 -- Completed Plan 02-01 (detection type contracts and TFLite config)
 progress:
   total_phases: 6
   completed_phases: 1
-  total_plans: 4
-  completed_plans: 4
+  total_plans: 9
+  completed_plans: 5
   percent: 70
 ---
 
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 1: Infrastructure + Data Foundation
+**Current focus:** Phase 2: On-Device Detection Pipeline
 
 ## Current Position
 
-Phase: 1 of 6 (Infrastructure + Data Foundation) -- COMPLETE
-Plan: 4 of 4 in current phase (all plans complete, including gap closure)
-Status: Phase Complete
-Last activity: 2026-03-12 -- Completed Plan 01-04 (importCustomPack gap closure)
+Phase: 2 of 6 (On-Device Detection Pipeline)
+Plan: 1 of 5 in current phase (02-01 complete)
+Status: In Progress
+Last activity: 2026-03-12 -- Completed Plan 02-01 (detection type contracts and TFLite config)
 
-Progress: [███████░░░] 70%
+Progress: [█████░░░░░] 53%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 6 (3 carried from pre-pivot + 3 new)
-- Average duration: 16min
-- Total execution time: ~1.6 hours
+- Total plans completed: 7 (3 carried from pre-pivot + 3 new + 1 phase 2)
+- Average duration: 15min
+- Total execution time: ~1.65 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,11 +53,11 @@ Progress: [███████░░░] 70%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 19min, 7min, 4min
-- Trend: Stable (gap closure plan was small)
+- Last 3 plans: 7min, 4min, 3min
+- Trend: Accelerating (foundation plans becoming smaller scoped)
 
 *Updated after each plan completion*
-| Phase 01 P04 | 4min | 1 tasks | 2 files |
+| Phase 02 P01 | 3min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -87,6 +87,9 @@ Recent decisions affecting current work:
 - [01-04]: importCustomPack composes existing primitives (validatePackSchema + file copy + DB insert + addDatabase) -- no new infrastructure
 - [01-04]: Schema validation failure throws before any file copy or DB registration -- no partial state on error
 - [Phase 01]: importCustomPack composes existing primitives (validatePackSchema + file copy + DB insert + addDatabase) -- no new infrastructure
+- [02-01]: TFLiteModel interface uses ArrayBufferLike[] matching react-native-fast-tflite's TensorflowModel shape
+- [02-01]: FP16 quantisation only (no INT8) -- avoids calibration dataset and preserves food colour accuracy
+- [02-01]: NMS performed in JavaScript, not baked into TFLite model -- cross-platform portability
 
 ### Pending Todos
 
@@ -102,6 +105,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T11:20:13.164Z
-Stopped at: Phase 2 context gathered
-Resume file: .planning/phases/02-on-device-detection-pipeline/02-CONTEXT.md
+Last session: 2026-03-12T12:17:32Z
+Stopped at: Completed 02-01 (detection type contracts and TFLite config)
+Resume file: .planning/phases/02-on-device-detection-pipeline/02-01-SUMMARY.md
