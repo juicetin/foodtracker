@@ -209,3 +209,13 @@ export const modelCache = sqliteTable('model_cache', {
   sizeBytes: integer('size_bytes'),
   downloadedAt: text('downloaded_at').default(sql`(datetime('now'))`),
 });
+
+// ── Correction History (new -- Phase 2, DET-05) ──
+
+export const correctionHistory = sqliteTable('correction_history', {
+  id: text('id').primaryKey(),
+  originalClassName: text('original_class_name').notNull(),
+  correctedClassName: text('corrected_class_name').notNull(),
+  confidence: real('confidence').notNull(),
+  correctedAt: text('corrected_at').default(sql`(datetime('now'))`),
+});
