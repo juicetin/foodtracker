@@ -130,12 +130,12 @@ Plans:
   3. New model exported to INT8 TFLite (<6MB) and deployed to app replacing the 335-class model
   4. Labels and nutrition mappings updated for all new classes
   5. Previously-uncovered cuisines (Indian beyond samosa/curry, African, regional Chinese) are correctly classified on-device
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 02.4-01: TBD
-- [ ] 02.4-02: TBD
-- [ ] 02.4-03: TBD
+- [ ] 02.4-01-PLAN.md -- Dataset acquisition and merge: download 14 datasets (CNFOOD-241, Khana, THFOOD-50, etc.), deduplicate classes, create merged_v2 with 700+ classes
+- [ ] 02.4-02-PLAN.md -- Retrain and export: EfficientNet-Lite0 on merged_v2, 30 epochs on RX 7900 XT, export INT8 TFLite
+- [ ] 02.4-03-PLAN.md -- Deploy to app: swap classify.tflite and labels, update manifest and constants, verify tests pass
 
 ### Phase 2.5: Nutrition & Metadata Enrichment (INSERTED)
 
