@@ -1,9 +1,9 @@
 {
-  "version": "1.0.0",
-  "exportedAt": "2026-03-12T20:59:51.154107+00:00",
-  "pipeline": "three-stage",
+  "version": "1.1.0",
+  "exportedAt": "2026-03-13T14:05:00.000000+00:00",
+  "pipeline": "three-stage-with-fallback",
   "quantisation": "mixed",
-  "notes": "Pre-trained baseline models. AIY Food V1 for binary gate + classify (no custom training). YOLO26n COCO FP16 for detection. NMS is performed in JavaScript, not baked into models.",
+  "notes": "Pre-trained baseline models. AIY Food V1 for binary gate + classify (no custom training). YOLO26n COCO FP16 for detection. Food-101 MobileNetV1 0.5x int8 as fallback classifier when AIY V1 confidence < 60%. NMS is performed in JavaScript, not baked into models.",
   "models": [
     {
       "id": "yolo-binary-v1",
@@ -62,6 +62,25 @@
       ],
       "name": "AIY Food V1 (Classification)",
       "description": "Google AIY Food V1 model for 2024-class food classification."
+    },
+    {
+      "id": "food101-fallback-v1",
+      "stage": "classify-fallback",
+      "version": "1.0.0",
+      "file": "food101.tflite",
+      "sizeBytes": 1033952,
+      "format": "tflite",
+      "quantisation": "int8_quantized",
+      "inputSize": 224,
+      "numClasses": 101,
+      "inputNormalization": "uint8_quantized",
+      "inputDtype": "uint8",
+      "outputShape": [
+        1,
+        101
+      ],
+      "name": "Food-101 MobileNetV1 0.5x (Fallback)",
+      "description": "STMicroelectronics MobileNetV1 alpha=0.5 trained on Food-101 (101 classes, 80.64% top-1 accuracy). Used as fallback when AIY Food V1 confidence < 60%. Int8 quantized, ~1MB."
     }
   ]
 }

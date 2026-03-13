@@ -25,6 +25,13 @@ const mockClassifyModel = {
   outputs: [],
   delegate: 'default' as const,
 };
+const mockFood101Model = {
+  run: jest.fn().mockResolvedValue([new Float32Array(101)]),
+  runSync: jest.fn().mockReturnValue([new Float32Array(101)]),
+  inputs: [],
+  outputs: [],
+  delegate: 'default' as const,
+};
 
 const mockLoadTensorflowModel = jest.fn();
 
@@ -92,7 +99,8 @@ describe('modelLoader', () => {
       mockLoadTensorflowModel
         .mockResolvedValueOnce(mockBinaryModel)
         .mockResolvedValueOnce(mockDetectModel)
-        .mockResolvedValueOnce(mockClassifyModel);
+        .mockResolvedValueOnce(mockClassifyModel)
+        .mockResolvedValueOnce(mockFood101Model);
 
       const modelSet = await loadModelSet();
 
@@ -101,8 +109,8 @@ describe('modelLoader', () => {
       expect(modelSet.detect).toBe(mockDetectModel);
       expect(modelSet.classify).toBe(mockClassifyModel);
 
-      // Verify file:// prefix is used
-      expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(3);
+      // Verify file:// prefix is used for the 3 main models + 1 bundled food101
+      expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(4);
       expect(mockLoadTensorflowModel).toHaveBeenCalledWith(
         expect.objectContaining({ url: expect.stringContaining('file://') }),
         expect.any(String),
@@ -129,14 +137,15 @@ describe('modelLoader', () => {
       mockLoadTensorflowModel
         .mockResolvedValueOnce(mockBinaryModel)
         .mockResolvedValueOnce(mockDetectModel)
-        .mockResolvedValueOnce(mockClassifyModel);
+        .mockResolvedValueOnce(mockClassifyModel)
+        .mockResolvedValueOnce(mockFood101Model);
 
       const firstCall = await loadModelSet();
       const secondCall = await loadModelSet();
 
       expect(firstCall).toBe(secondCall);
-      // loadTensorflowModel should only be called 3 times total (not 6)
-      expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(3);
+      // loadTensorflowModel should only be called 4 times total (not 8)
+      expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(4);
     });
   });
 
@@ -155,7 +164,8 @@ describe('modelLoader', () => {
       mockLoadTensorflowModel
         .mockResolvedValueOnce(mockBinaryModel)
         .mockResolvedValueOnce(mockDetectModel)
-        .mockResolvedValueOnce(mockClassifyModel);
+        .mockResolvedValueOnce(mockClassifyModel)
+        .mockResolvedValueOnce(mockFood101Model);
 
       await loadModelSet();
 

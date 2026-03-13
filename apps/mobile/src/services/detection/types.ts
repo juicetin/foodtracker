@@ -77,9 +77,9 @@ export interface DetectedItem {
 // Inference pipeline
 // ---------------------------------------------------------------------------
 
-/** Stage timing for the three-stage pipeline. */
+/** Stage timing for the detection pipeline. */
 export interface PipelineStage {
-  stage: 'binary' | 'detect' | 'classify';
+  stage: 'binary' | 'detect' | 'classify' | 'food101-fallback';
   timeMs: number;
 }
 
@@ -126,6 +126,8 @@ export interface ModelSet {
   binary: TFLiteModel;
   detect: TFLiteModel;
   classify: TFLiteModel;
+  /** Food-101 fallback classifier (MobileNetV1 0.5x int8, 224x224). Optional. */
+  food101?: TFLiteModel;
 }
 
 // ---------------------------------------------------------------------------

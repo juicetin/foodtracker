@@ -11,6 +11,8 @@
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const foodV1Labels = require('../../../assets/models/labels_food_v1.json');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const food101Labels = require('../../../assets/models/labels_food101.json');
 
 /**
  * Full 80-class COCO names array (indices 0-79).
@@ -59,8 +61,22 @@ export const DETECT_INPUT_SIZE = 640;
 export const CLASSIFY_INPUT_SIZE = 192;
 
 /**
+ * Input size for the Food-101 fallback classifier (MobileNetV1 0.5x int8).
+ * STMicroelectronics model trained at 224x224.
+ */
+export const FOOD101_INPUT_SIZE = 224;
+
+/**
  * AIY Food V1 class names (2024 entries).
  * Index 0 is '__background__'. Some entries are Google KG IDs (start with '/').
  * Used by the classify stage to label detected food items.
  */
 export const FOOD_V1_CLASS_NAMES: string[] = foodV1Labels.classNames;
+
+/**
+ * Food-101 class names (101 entries, 0-indexed).
+ * Source: STMicroelectronics stm32ai-modelzoo MobileNetV1 0.5x trained on Food-101.
+ * Order matches the model's training config (alphabetical with cheesecake before cheese_plate).
+ * Used by the fallback classify stage when AIY Food V1 confidence is low.
+ */
+export const FOOD_101_CLASS_NAMES: string[] = food101Labels.classNames;

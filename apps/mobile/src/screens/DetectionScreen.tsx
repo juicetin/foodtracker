@@ -20,6 +20,7 @@ import { preprocessImageForModel } from '../services/detection/imagePreprocess';
 import {
   BINARY_INPUT_SIZE,
   DETECT_INPUT_SIZE,
+  FOOD101_INPUT_SIZE,
 } from '../services/detection/constants';
 import {
   estimatePortion,
@@ -193,10 +194,12 @@ export function DetectionScreen() {
       // Load models if not already loaded
       await loadModelSet();
 
-      // Preprocess at both sizes: 640x640 for detection, 192x192 for binary gate + classify
-      const [detectPixels, classifyPixels] = await Promise.all([
+      // Preprocess at three sizes: 640x640 for detection, 192x192 for binary gate + classify,
+      // 224x224 for Food-101 fallback classifier.
+      const [detectPixels, classifyPixels, food101Pixels] = await Promise.all([
         preprocessImageForModel(uri, DETECT_INPUT_SIZE),
         preprocessImageForModel(uri, BINARY_INPUT_SIZE),
+        preprocessImageForModel(uri, FOOD101_INPUT_SIZE),
       ]);
 
       // Pass Float32Array directly (not .buffer) — react-native-fast-tflite expects TypedArray
@@ -206,6 +209,7 @@ export function DetectionScreen() {
       const result = await runDetectionPipeline(
         detectPixels,
         classifyPixels,
+        food101Pixels,
         DETECT_INPUT_SIZE,
         DETECT_INPUT_SIZE,
         COCO_CLASS_NAMES,

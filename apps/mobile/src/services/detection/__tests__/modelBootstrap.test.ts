@@ -27,6 +27,13 @@ const mockClassifyModel = {
   outputs: [],
   delegate: 'default' as const,
 };
+const mockFood101Model = {
+  run: jest.fn().mockResolvedValue([new Float32Array(101)]),
+  runSync: jest.fn().mockReturnValue([new Float32Array(101)]),
+  inputs: [],
+  outputs: [],
+  delegate: 'default' as const,
+};
 
 const mockLoadTensorflowModel = jest.fn();
 
@@ -90,7 +97,8 @@ describe('modelLoader - bundled model fallback', () => {
     mockLoadTensorflowModel
       .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+      .mockResolvedValueOnce(mockClassifyModel)
+      .mockResolvedValueOnce(mockFood101Model);
 
     const modelSet = await loadModelSet();
 
@@ -99,11 +107,10 @@ describe('modelLoader - bundled model fallback', () => {
     expect(modelSet.detect).toBeDefined();
     expect(modelSet.classify).toBeDefined();
 
-    // Should have called loadTensorflowModel 3 times for bundled models
-    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(3);
+    // Should have called loadTensorflowModel 4 times for bundled models (3 main + 1 food101)
+    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(4);
 
-    // Should NOT have been called with { url: ... } pattern (that's the installed_packs path)
-    // Bundled models use require() number values, not { url: string }
+    // All calls should use require() number values, not { url: string }
     for (const call of mockLoadTensorflowModel.mock.calls) {
       // The first argument should be a number (require() result) not an object
       expect(typeof call[0]).toBe('number');
@@ -116,7 +123,8 @@ describe('modelLoader - bundled model fallback', () => {
     mockLoadTensorflowModel
       .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+      .mockResolvedValueOnce(mockClassifyModel)
+      .mockResolvedValueOnce(mockFood101Model);
 
     const modelSet = await loadModelSet();
 
@@ -140,7 +148,8 @@ describe('modelLoader - bundled model fallback', () => {
     mockLoadTensorflowModel
       .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+      .mockResolvedValueOnce(mockClassifyModel)
+      .mockResolvedValueOnce(mockFood101Model);
 
     const modelSet = await loadModelSet();
 
@@ -158,12 +167,13 @@ describe('modelLoader - bundled model fallback', () => {
     mockLoadTensorflowModel
       .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+      .mockResolvedValueOnce(mockClassifyModel)
+      .mockResolvedValueOnce(mockFood101Model);
 
     const first = await loadModelSet();
     const second = await loadModelSet();
 
     expect(first).toBe(second);
-    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(3);
+    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(4);
   });
 });

@@ -27,6 +27,9 @@ const BUNDLED_BINARY = require('../../../assets/models/binary.tflite');
 const BUNDLED_DETECT = require('../../../assets/models/detect.tflite');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const BUNDLED_CLASSIFY = require('../../../assets/models/classify.tflite');
+// Food-101 fallback classifier (MobileNetV1 0.5x int8, 224x224, 101 classes).
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const BUNDLED_FOOD101 = require('../../../assets/models/food101.tflite');
 
 /** Module-level cache for loaded models. */
 let cachedModelSet: ModelSet | null = null;
@@ -83,15 +86,19 @@ export async function loadModelSet(): Promise<ModelSet> {
 
   // If no packs are installed at all, fall back to bundled models
   if (!binaryPath && !detectPath && !classifyPath) {
-    const [binary, detect, classify] = await Promise.all([
+    const [binary, detect, classify, food101] = await Promise.all([
       loadTensorflowModel(BUNDLED_BINARY, 'default'),
       loadTensorflowModel(BUNDLED_DETECT, 'default'),
       loadTensorflowModel(BUNDLED_CLASSIFY, 'default'),
+      loadTensorflowModel(BUNDLED_FOOD101, 'default').catch(() => null),
     ]);
     cachedModelSet = {
       binary: binary as unknown as ModelSet['binary'],
       detect: detect as unknown as ModelSet['detect'],
       classify: classify as unknown as ModelSet['classify'],
+      food101: food101
+        ? (food101 as unknown as ModelSet['food101'])
+        : undefined,
     };
     return cachedModelSet;
   }
@@ -107,16 +114,20 @@ export async function loadModelSet(): Promise<ModelSet> {
     );
   }
 
-  const [binary, detect, classify] = await Promise.all([
+  const [binary, detect, classify, food101] = await Promise.all([
     loadTensorflowModel({ url: ensureFilePrefix(binaryPath) }, 'default'),
     loadTensorflowModel({ url: ensureFilePrefix(detectPath) }, 'default'),
     loadTensorflowModel({ url: ensureFilePrefix(classifyPath) }, 'default'),
+    loadTensorflowModel(BUNDLED_FOOD101, 'default').catch(() => null),
   ]);
 
   cachedModelSet = {
     binary: binary as unknown as ModelSet['binary'],
     detect: detect as unknown as ModelSet['detect'],
     classify: classify as unknown as ModelSet['classify'],
+    food101: food101
+      ? (food101 as unknown as ModelSet['food101'])
+      : undefined,
   };
 
   return cachedModelSet;
