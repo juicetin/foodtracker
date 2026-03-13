@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02.3-03-PLAN.md (Phase 02.3 complete)
-last_updated: "2026-03-13T18:25:46.485Z"
-last_activity: 2026-03-14 -- Completed Plan 02.3-03 (APK build and multi-dish detection verification)
+status: in_progress
+stopped_at: Completed 02.4-01-PLAN.md
+last_updated: "2026-03-14T06:08:07Z"
+last_activity: 2026-03-14 -- Completed Plan 02.4-01 (Dataset download and merge)
 progress:
   total_phases: 11
   completed_phases: 4
   total_plans: 24
-  completed_plans: 17
-  percent: 71
+  completed_plans: 18
+  percent: 75
 ---
 
 # Project State
@@ -21,22 +21,22 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.3 complete, ready for Phase 2.4: Global Cuisine Training Expansion
+**Current focus:** Phase 02.4 in progress: Global Cuisine Training Expansion
 
 ## Current Position
 
-Phase: 02.3 of 7 (Food-Specific YOLO Detection) -- COMPLETE
-Plan: 3 of 3 in current phase (all complete)
-Status: Phase Complete -- ready for Phase 2.4
-Last activity: 2026-03-14 -- Completed Plan 02.3-03 (APK build and multi-dish detection verification)
+Phase: 02.4 of 7 (Global Cuisine Training Expansion)
+Plan: 1 of 3 in current phase (1 complete)
+Status: In Progress
+Last activity: 2026-03-14 -- Completed Plan 02.4-01 (Dataset download and merge)
 
-Progress: [███████░░░] 71%
+Progress: [████████░░] 75%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 19 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3)
-- Average duration: 10min
+- Total plans completed: 20 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 1 phase 02.4)
+- Average duration: 11min
 - Total execution time: ~2.7 hours
 
 **Previous Phase 1 (carried forward):**
@@ -53,8 +53,8 @@ Progress: [███████░░░] 71%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 7min, 4min, 3min
-- Trend: Fast (model deployment + pipeline wiring + verification)
+- Last 3 plans: 4min, 3min, 35min
+- Trend: Varied (pipeline wiring fast, data acquisition slow due to download times)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -73,6 +73,8 @@ Progress: [███████░░░] 71%
 | Phase 02.3 P01 | 12min | 2 tasks | 5 files |
 | Phase 02.3 P02 | 4min | 2 tasks | 3 files |
 | Phase 02.3 P03 | 3min | 2 tasks | 0 files |
+
+| Phase 02.4 P01 | 35min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -150,6 +152,10 @@ Recent decisions affecting current work:
 - [02.3-03]: Clean install required when swapping bundled models -- stale installed_packs DB entries cause old model to load
 - [02.3-03]: modelLoader pack-path priority bug deferred to future phase (needs version check/migration)
 - [02.3-03]: GGCD component-level detection for composite dishes is expected behavior, not a bug
+- [02.4-01]: Conservative fuzzy matching (Levenshtein 1 for names >= 10 chars) to avoid false food merges
+- [02.4-01]: Manual dedup map for cross-dataset duplicates (burger/hamburger, pakora/pakode, etc.)
+- [02.4-01]: Symlink-based merge -- all merged_v2 images are os.symlink() to source datasets, zero duplication
+- [02.4-01]: merged_v2 at 370 classes (expandable to 700+ after Kaggle auth and re-run)
 
 ### Roadmap Evolution
 
@@ -169,6 +175,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T18:21:39Z
-Stopped at: Completed 02.3-03-PLAN.md (Phase 02.3 complete)
-Resume file: .planning/phases/02.3-food-specific-yolo-detection/02.3-03-SUMMARY.md
+Last session: 2026-03-14T06:08:07Z
+Stopped at: Completed 02.4-01-PLAN.md
+Resume file: .planning/phases/02.4-global-cuisine-training-expansion/02.4-01-SUMMARY.md
