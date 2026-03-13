@@ -18,10 +18,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2.2: Deploy Custom 335-Class Classifier** - Replace AIY with trained EfficientNet-Lite0 (335 classes, 3.9MB)
 - [x] **Phase 2.3: Food-Specific YOLO Detection** - Replace COCO YOLO with GGCD YOLOv8n (241 food classes)
 - [ ] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
-- [ ] **Phase 2.5: Nutrition & Metadata Enrichment** - Open Food Facts, Nutrition5k, WorldCuisines multilingual labels
+- [ ] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge
+- [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
-- [ ] **Phase 5: Enhanced Detection + Scale OCR** - VLM integration, hidden ingredient inference, scale reading, container weights, UX modes, notifications
+- [ ] **Phase 5: Scale OCR + Notifications + Health Data** - Kitchen scale reading, container weights, daily macro notifications, Apple Health/Google Fit
 - [ ] **Phase 6: Sync + Distribution** - Google Drive and iCloud sync, Play for On-Device AI, iOS On-Demand Resources, Gemini Nano adapter
 
 ## Phase Details
@@ -94,7 +95,7 @@ Plans:
   1. EfficientNet-Lite0 INT8 TFLite (3.9MB) replaces AIY Food V1 as the primary classifier in the bundled model set
   2. Preprocessing updated from 192x192 uint8 to 224x224 float32 with ImageNet normalization (mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
   3. Labels file updated to 335 merged classes (Food-101 + UEC-256) with correct index mapping
-  4. Food-101 fallback classifier removed (no longer needed — its 101 classes are a subset of the new 335)
+  4. Food-101 fallback classifier removed (no longer needed -- its 101 classes are a subset of the new 335)
   5. APK builds and classifier correctly identifies ramen, pad thai, bibimbap, and other previously-misclassified foods on-device
 **Plans:** 2 plans
 
@@ -138,27 +139,50 @@ Plans:
 - [ ] 02.4-02-PLAN.md -- Retrain and export: EfficientNet-Lite0 on merged_v2, 30 epochs on RX 7900 XT, export INT8 TFLite
 - [ ] 02.4-03-PLAN.md -- Deploy to app: swap classify.tflite and labels, update manifest and constants, verify tests pass
 
-### Phase 2.5: Nutrition & Metadata Enrichment (INSERTED)
+### Phase 2.5: Food Knowledge Graph (INSERTED -- replaces prior Nutrition & Metadata Enrichment)
 
-**Goal:** Enrich the nutrition database with Open Food Facts (4.4M products), Nutrition5k calorie data, and WorldCuisines multilingual metadata so every classified food returns accurate nutrition info and cultural context
-**Requirements**: ML-04, ML-05
+**Goal:** Build a compact on-device food knowledge graph (SQLite, <70MB) that maps dishes to canonical recipes with ingredient-level USDA nutrition, enabling recipe-based nutrition decomposition to replace the hardcoded 1.5 kcal/g proxy in the detection pipeline
+**Requirements**: ML-04, ML-05, NUT-01
 **Depends on:** Phase 2.4, Phase 1
 **Success Criteria** (what must be TRUE):
-  1. Open Food Facts product database filtered and imported for food nutrition lookup (packaged foods with barcodes + generic food items)
-  2. Nutrition5k per-dish calorie/macro data integrated for ground-truth nutrition estimates on common dishes
-  3. WorldCuisines food-kb used to add multilingual labels (30+ languages), cuisine tags, and country associations to classified foods
-  4. Every class in the 700+ classifier has a nutrition mapping (direct match, category fallback, or USDA proxy)
-  5. App displays cuisine context (e.g., "Thai", "Ethiopian") alongside food names in the detection results UI
+  1. Knowledge graph schema implemented: cuisine -> dish_category -> dish -> dish_alias -> recipe -> recipe_ingredient -> usda_food, with FTS5 indexes on dish names and aliases
+  2. KG seeded with 5K-10K dishes across 50+ cuisines from RecipeDB/RecipeNLG/curated data, each with canonical recipe(s) linking ingredients to USDA nutrition entries
+  3. Multilingual dish aliases (transliterations, colloquial names, translations) populated from WorldCuisines food-kb (30+ languages)
+  4. TypeScript KnowledgeGraphService on mobile provides: searchDish (FTS5 + SymSpell fuzzy matching), getCanonicalRecipe, calculateDishNutrition (recipe -> per-ingredient USDA lookup -> aggregated macros)
+  5. Detection pipeline uses KG-derived nutrition instead of hardcoded proxies: YOLO className -> KG dish lookup -> recipe decomposition -> portion-scaled macros
+  6. KG exported as a downloadable pack via PackManager (new 'knowledge-graph' pack type) or bundled in APK if under 50MB
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02.5-01-PLAN.md -- OFF + Nutrition5k build pipelines: CSV/HuggingFace-to-SQLite matching nutrition pack schema
-- [ ] 02.5-02-PLAN.md -- WorldCuisines metadata pipeline: multilingual labels, cuisine tags, country associations
-- [ ] 02.5-03-PLAN.md -- Class-to-nutrition mapping + app integration: ClassNutritionMapper service, cuisine context in detection results
+- [ ] 02.5-01-PLAN.md -- Python KG pipeline: hierarchical schema, RecipeNLG + generate_dishes seeding, USDA SR Legacy embedding, SymSpell pre-computation
+- [ ] 02.5-02-PLAN.md -- TypeScript KnowledgeGraphService + SymSpellIndex: FTS5 + fuzzy search, recipe decomposition, pack type extension
+- [ ] 02.5-03-PLAN.md -- Detection pipeline wiring: KG nutrition replaces flat-rate proxy, three-tier fallback chain, human verification
+
+### Phase 2.6: On-Device VLM Integration (INSERTED)
+
+**Goal:** Integrate an on-device vision-language model (SmolVLM family via llama.rn) that refines YOLO food identification using multimodal image+text understanding, with optional free-form text input, producing structured food identification grounded in the knowledge graph
+**Requirements**: DET-02, DET-03
+**Depends on:** Phase 2.5
+**Success Criteria** (what must be TRUE):
+  1. llama.rn integrated with Expo dev client build; VlmService loads SmolVLM GGUF + mmproj and produces grammar-constrained JSON food identifications from image + optional text input
+  2. Device RAM detected via expo-device; appropriate VLM tier auto-selected: SmolVLM-256M (4GB devices, ~280MB), SmolVLM-500M (6GB, ~500MB), SmolVLM2-2.2B Q4 (8GB+, ~1.2GB)
+  3. PackManager upgraded for large file streaming downloads (no OOM on 300MB+ files), paired file support (model + mmproj GGUF), and 'vlm' pack type with download progress UI
+  4. Progressive refinement pipeline: YOLO gives instant bounding boxes (50-80ms) -> VLM refines identification asynchronously (1-3s) -> labels update in-place with animation; UI shows "Refining..." badge during VLM processing
+  5. Optional "Describe your meal" text input on DetectionScreen; user text injected into VLM prompt alongside image for text-guided disambiguation (e.g., "massaman" + curry photo -> massaman curry)
+  6. VLM output (dish names, ingredients, modifiers) fed into KG for recipe-based nutrition lookup; fallback chain: VLM+KG -> YOLO+KG -> YOLO+flat-rate proxy
+**Plans:** TBD (to be created via /gsd:plan-phase)
+
+Plans:
+- [ ] 02.6-01: TBD
+- [ ] 02.6-02: TBD
+- [ ] 02.6-03: TBD
+- [ ] 02.6-04: TBD
+- [ ] 02.6-05: TBD
+- [ ] 02.6-06: TBD
 
 ### Phase 3: Nutrition Resolution + Diary
 **Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
-**Depends on**: Phase 2
+**Depends on**: Phase 2.5, Phase 2.6
 **Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08
 **Success Criteria** (what must be TRUE):
   1. User views a daily food diary organized by meal (breakfast/lunch/dinner/snacks) showing per-meal and daily macro totals
@@ -188,16 +212,15 @@ Plans:
 - [ ] 04-01: TBD
 - [ ] 04-02: TBD
 
-### Phase 5: Enhanced Detection + Scale OCR
-**Goal**: Users get higher accuracy through VLM for complex dishes, hidden ingredient inference, and kitchen scale weight reading
-**Depends on**: Phase 2, Phase 4
-**Requirements**: DET-02, DET-03, DET-04, SCL-01, SCL-02, SCL-03, NTF-01, NTF-02
+### Phase 5: Scale OCR + Notifications + Health Data
+**Goal**: Users get precise portion weights via kitchen scale OCR, daily macro summaries via push notifications, and weight trend tracking via health platform integration
+**Depends on**: Phase 2.6, Phase 4
+**Requirements**: DET-04, SCL-01, SCL-02, SCL-03, NTF-01, NTF-02
 **Success Criteria** (what must be TRUE):
-  1. Device automatically selects and downloads the appropriate VLM tier (SmolVLM-256M / Moondream 0.5B / Gemma 3n) based on device capability, and on supported devices (Pixel 8+, Galaxy S24+) Gemini Nano provides opportunistic inference
-  2. User sees inferred hidden ingredients for identified dishes (e.g., "carbonara" shows egg, pancetta, parmesan) via knowledge graph lookup
-  3. When a kitchen scale is visible in a food photo, the app reads the displayed weight via 7-segment OCR and user can manage container tare weights (save, auto-subtract, and the app learns frequently used containers over time)
-  4. User receives a configurable end-of-day push notification summarizing daily macros, which can also serve as a trigger to bring the app to foreground for gallery processing
-  5. User can import weight data from Apple Health / Google Fit and view a smoothed weight trend
+  1. When a kitchen scale is visible in a food photo, the app reads the displayed weight via 7-segment OCR and user can manage container tare weights (save, auto-subtract, and the app learns frequently used containers over time)
+  2. User receives a configurable end-of-day push notification summarizing daily macros, which can also serve as a trigger to bring the app to foreground for gallery processing
+  3. User can import weight data from Apple Health / Google Fit and view a smoothed weight trend
+  4. On supported devices (Pixel 8+, Galaxy S24+) Gemini Nano provides opportunistic inference enhancement via AICore
 **Plans**: TBD
 
 Plans:
@@ -223,18 +246,19 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure + Data Foundation | 4/4 | Complete | 2026-03-12 |
 | 2. On-Device Detection Pipeline | 5/6 | Gap closure | - |
 | 2.1. Pre-trained Model Acquisition | 2/3 | In progress | - |
-| 2.2. Deploy Custom 335-Class Classifier | 0/2 | Not started | - |
+| 2.2. Deploy Custom 335-Class Classifier | 2/2 | Complete | 2026-03-13 |
 | 2.3. Food-Specific YOLO Detection | 3/3 | Complete | 2026-03-14 |
-| 2.4. Global Cuisine Training Expansion | 0/3 | Not started | - |
-| 2.5. Nutrition & Metadata Enrichment | 0/3 | Not started | - |
+| 2.4. Global Cuisine Training Expansion | 1/3 | In progress | - |
+| 2.5. Food Knowledge Graph | 0/3 | Not started | - |
+| 2.6. On-Device VLM Integration | 0/6 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
-| 5. Enhanced Detection + Scale OCR | 0/3 | Not started | - |
+| 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
 | 6. Sync + Distribution | 0/2 | Not started | - |
