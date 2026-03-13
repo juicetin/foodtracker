@@ -1,25 +1,25 @@
 {
-  "version": "2.0.0",
-  "exportedAt": "2026-03-13T19:04:00.000000+00:00",
+  "version": "3.0.0",
+  "exportedAt": "2026-03-14T00:06:00.000000+00:00",
   "pipeline": "two-stage",
   "quantisation": "mixed",
-  "notes": "Simplified two-stage pipeline: YOLO11n COCO FP16 for detection, EfficientNet-Lite0 INT8 for 335-class food classification. Binary gate removed (EfficientNet-Lite0 is food-only trained). Food-101 fallback removed (101 classes are a subset of 335). NMS is performed in JavaScript, not baked into models.",
+  "notes": "Two-stage food pipeline: GGCD YOLOv8n INT8 for 241-class food detection, EfficientNet-Lite0 INT8 for 335-class food classification. All detection classes are food-specific (no COCO filtering needed). NMS is performed in JavaScript, not baked into models.",
   "models": [
     {
-      "id": "yolo-detect-v1",
+      "id": "ggcd-detect-v1",
       "stage": "detect",
       "version": "1.0.0",
       "file": "detect.tflite",
-      "sizeBytes": 5458174,
+      "sizeBytes": 3640872,
       "format": "tflite",
-      "quantisation": "fp16",
+      "quantisation": "int8",
       "inputSize": 640,
-      "numClasses": 80,
+      "numClasses": 241,
       "inputNormalization": "float32_0_1",
       "inputDtype": "float32",
-      "outputShape": [1, 84, 8400],
-      "name": "YOLO26n COCO Detection",
-      "description": "YOLO26n pre-trained on COCO. 80 classes including 10 food items. NMS performed in JavaScript."
+      "outputShape": [1, 245, 8400],
+      "name": "GGCD YOLOv8n (241-Class Food Detection)",
+      "description": "YOLOv8n trained on Global Gastronomic Culinary Dataset. 241 food-specific classes spanning Central Asian, South Asian, East Asian, Middle Eastern, European, and American cuisines. INT8 quantized for mobile. NMS performed in JavaScript."
     },
     {
       "id": "efficientnet-classify-v1",
