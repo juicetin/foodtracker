@@ -148,12 +148,12 @@ Plans:
   3. WorldCuisines food-kb used to add multilingual labels (30+ languages), cuisine tags, and country associations to classified foods
   4. Every class in the 700+ classifier has a nutrition mapping (direct match, category fallback, or USDA proxy)
   5. App displays cuisine context (e.g., "Thai", "Ethiopian") alongside food names in the detection results UI
-**Plans:** TBD
+**Plans:** 3 plans
 
 Plans:
-- [ ] 02.5-01: TBD
-- [ ] 02.5-02: TBD
-- [ ] 02.5-03: TBD
+- [ ] 02.5-01-PLAN.md -- OFF + Nutrition5k build pipelines: CSV/HuggingFace-to-SQLite matching nutrition pack schema
+- [ ] 02.5-02-PLAN.md -- WorldCuisines metadata pipeline: multilingual labels, cuisine tags, country associations
+- [ ] 02.5-03-PLAN.md -- Class-to-nutrition mapping + app integration: ClassNutritionMapper service, cuisine context in detection results
 
 ### Phase 3: Nutrition Resolution + Diary
 **Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
