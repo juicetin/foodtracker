@@ -16,7 +16,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2: On-Device Detection Pipeline** - YOLO training completion, model export, mobile ML integration, inference router (gap closure in progress)
 - [ ] **Phase 2.1: Pre-trained Model Acquisition** - AIY Food V1, YOLO26n COCO, TFLite pipeline wiring
 - [ ] **Phase 2.2: Deploy Custom 335-Class Classifier** - Replace AIY with trained EfficientNet-Lite0 (335 classes, 3.9MB)
-- [ ] **Phase 2.3: Food-Specific YOLO Detection** - Replace COCO YOLO with GGCD YOLOv8n (241 food classes)
+- [x] **Phase 2.3: Food-Specific YOLO Detection** - Replace COCO YOLO with GGCD YOLOv8n (241 food classes)
 - [ ] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
 - [ ] **Phase 2.5: Nutrition & Metadata Enrichment** - Open Food Facts, Nutrition5k, WorldCuisines multilingual labels
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
@@ -116,9 +116,9 @@ Plans:
 **Plans:** 3 plans
 
 Plans:
-- [ ] 02.3-01-PLAN.md -- Export GGCD YOLOv8n to TFLite, deploy model and labels, update manifest and constants
-- [ ] 02.3-02-PLAN.md -- Pipeline wiring: remove COCO filtering, use 241 GGCD food classes, per-box YOLO labels, update tests
-- [ ] 02.3-03-PLAN.md -- APK build and emulator smoke-test of multi-dish detection
+- [x] 02.3-01-PLAN.md -- Export GGCD YOLOv8n to TFLite, deploy model and labels, update manifest and constants
+- [x] 02.3-02-PLAN.md -- Pipeline wiring: remove COCO filtering, use 241 GGCD food classes, per-box YOLO labels, update tests
+- [x] 02.3-03-PLAN.md -- APK build and emulator smoke-test of multi-dish detection
 
 ### Phase 2.4: Global Cuisine Training Expansion (INSERTED)
 
@@ -231,7 +231,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 3 
 | 2. On-Device Detection Pipeline | 5/6 | Gap closure | - |
 | 2.1. Pre-trained Model Acquisition | 2/3 | In progress | - |
 | 2.2. Deploy Custom 335-Class Classifier | 0/2 | Not started | - |
-| 2.3. Food-Specific YOLO Detection | 0/3 | Not started | - |
+| 2.3. Food-Specific YOLO Detection | 3/3 | Complete | 2026-03-14 |
 | 2.4. Global Cuisine Training Expansion | 0/3 | Not started | - |
 | 2.5. Nutrition & Metadata Enrichment | 0/3 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
