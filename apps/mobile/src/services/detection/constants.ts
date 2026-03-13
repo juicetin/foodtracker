@@ -2,17 +2,15 @@
  * Detection pipeline constants.
  *
  * COCO 80 class names at correct indices, food-specific class IDs,
- * AIY Food V1 class names (2024 entries), and model input sizes
- * for the three-stage pipeline.
+ * EfficientNet-Lite0 class names (335 entries), and model input sizes
+ * for the two-stage pipeline (detect + classify).
  *
- * AIY Food V1 actual input: 192x192 uint8 (discovered in Plan 01).
+ * EfficientNet-Lite0 input: 224x224 float32 with ImageNet normalization.
  * YOLO11n COCO input: 640x640 float32.
  */
 
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const foodV1Labels = require('../../../assets/models/labels_food_v1.json');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const food101Labels = require('../../../assets/models/labels_food101.json');
+const classifyLabels = require('../../../assets/models/labels_classify.json');
 
 /**
  * Full 80-class COCO names array (indices 0-79).
@@ -44,39 +42,24 @@ export const COCO_FOOD_CLASS_IDS: Set<number> = new Set([
 ]);
 
 /**
- * Input size for the binary gate and classify models (AIY Food V1).
- * Actual model requires 192x192 (not 224x224 as originally planned).
- */
-export const BINARY_INPUT_SIZE = 192;
-
-/**
  * Input size for the detection model (YOLO11n COCO).
  */
 export const DETECT_INPUT_SIZE = 640;
 
 /**
- * Input size for the classification model (AIY Food V1).
- * Same model as binary gate, same input size.
+ * Input size for the classification model (EfficientNet-Lite0).
+ * 224x224 float32 with ImageNet normalization.
  */
-export const CLASSIFY_INPUT_SIZE = 192;
+export const CLASSIFY_INPUT_SIZE = 224;
 
 /**
- * Input size for the Food-101 fallback classifier (MobileNetV1 0.5x int8).
- * STMicroelectronics model trained at 224x224.
+ * EfficientNet-Lite0 class names (335 food-specific entries).
+ * Index-aligned with model output logits.
+ * Trained on Food-101 + UEC-256 merged dataset.
  */
-export const FOOD101_INPUT_SIZE = 224;
+export const CLASSIFY_CLASS_NAMES: string[] = classifyLabels.labels;
 
-/**
- * AIY Food V1 class names (2024 entries).
- * Index 0 is '__background__'. Some entries are Google KG IDs (start with '/').
- * Used by the classify stage to label detected food items.
- */
-export const FOOD_V1_CLASS_NAMES: string[] = foodV1Labels.classNames;
-
-/**
- * Food-101 class names (101 entries, 0-indexed).
- * Source: STMicroelectronics stm32ai-modelzoo MobileNetV1 0.5x trained on Food-101.
- * Order matches the model's training config (alphabetical with cheesecake before cheese_plate).
- * Used by the fallback classify stage when AIY Food V1 confidence is low.
- */
-export const FOOD_101_CLASS_NAMES: string[] = food101Labels.classNames;
+/** ImageNet normalization mean (RGB channels). */
+export const IMAGENET_MEAN: [number, number, number] = [0.485, 0.456, 0.406];
+/** ImageNet normalization std (RGB channels). */
+export const IMAGENET_STD: [number, number, number] = [0.229, 0.224, 0.225];
