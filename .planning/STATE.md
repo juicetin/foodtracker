@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02.2-02-PLAN.md (Phase 02.2 complete)
-last_updated: "2026-03-13T11:55:15.054Z"
-last_activity: 2026-03-13 -- Completed Plan 02.2-02 (Wire EfficientNet-Lite0 classifier into 2-stage detection pipeline)
+status: in-progress
+stopped_at: Completed 02.3-01-PLAN.md
+last_updated: "2026-03-14T13:10:40Z"
+last_activity: 2026-03-14 -- Completed Plan 02.3-01 (Export GGCD YOLOv8n to INT8 TFLite and update constants)
 progress:
   total_phases: 11
   completed_phases: 3
   total_plans: 23
-  completed_plans: 14
-  percent: 59
+  completed_plans: 15
+  percent: 63
 ---
 
 # Project State
@@ -21,16 +21,16 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.2: Deploy Custom 335-Class Classifier
+**Current focus:** Phase 02.3: Food-Specific YOLO Detection
 
 ## Current Position
 
-Phase: 02.2 of 7 (Deploy Custom 335-Class Classifier)
-Plan: 2 of 2 in current phase
-Status: Complete (Phase 02.2 finished -- all 2 plans done)
-Last activity: 2026-03-13 -- Completed Plan 02.2-02 (Wire EfficientNet-Lite0 classifier into 2-stage detection pipeline)
+Phase: 02.3 of 7 (Food-Specific YOLO Detection)
+Plan: 1 of 3 in current phase
+Status: In Progress (Plan 01 complete, 2 remaining)
+Last activity: 2026-03-14 -- Completed Plan 02.3-01 (Export GGCD YOLOv8n to INT8 TFLite and update constants)
 
-Progress: [██████░░░░] 59%
+Progress: [██████░░░░] 63%
 
 ## Performance Metrics
 
@@ -69,6 +69,8 @@ Progress: [██████░░░░] 59%
 
 | Phase 02.2 P01 | 4min | 2 tasks | 9 files |
 | Phase 02.2 P02 | 7min | 2 tasks | 7 files |
+
+| Phase 02.3 P01 | 12min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -137,6 +139,9 @@ Recent decisions affecting current work:
 - [02.2-02]: CLASSIFY_CONFIDENCE_THRESHOLD=0.15 for fallback label -- items always returned, labeled 'Food Item' when low confidence
 - [02.2-02]: formatClassLabel generalizes formatFood101Label for any snake_case class name to Title Case
 - [02.2-02]: preprocessImageForModel gains 'imagenet' normalization mode parameter for classifier input
+- [02.3-01]: Docker-based onnx2tf conversion because TensorFlow has no Python 3.14 wheels
+- [02.3-01]: Dynamic range INT8 quantization (3.6MB) -- float32 IO compatible with existing pipeline
+- [02.3-01]: DETECT_CLASS_NAMES loaded from labels_detect.json (same pattern as CLASSIFY_CLASS_NAMES)
 
 ### Roadmap Evolution
 
@@ -156,6 +161,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-13T11:48:38Z
-Stopped at: Completed 02.2-02-PLAN.md (Phase 02.2 complete)
-Resume file: .planning/phases/02.2-deploy-custom-335-class-classifier/02.2-02-SUMMARY.md
+Last session: 2026-03-14T13:10:40Z
+Stopped at: Completed 02.3-01-PLAN.md
+Resume file: .planning/phases/02.3-food-specific-yolo-detection/02.3-01-SUMMARY.md
