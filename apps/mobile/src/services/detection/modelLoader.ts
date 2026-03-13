@@ -1,8 +1,8 @@
 /**
- * Model loader: loads three-stage pipeline models from PackManager file paths.
+ * Model loader: loads two-stage pipeline models from PackManager file paths.
  *
  * Queries the installed_packs table for model-type packs matching the
- * yolo-binary-*, yolo-detect-*, yolo-classify-* naming convention.
+ * yolo-detect-* and efficientnet-classify-* (or yolo-classify-*) naming convention.
  * Models are loaded via react-native-fast-tflite and cached for reuse.
  *
  * When no packs are installed, falls back to bundled models loaded via
@@ -20,16 +20,11 @@ import { installedPacks } from '../../../db/schema';
 import type { ModelSet } from './types';
 
 // Bundled models -- resolved at build time by Metro bundler.
-// These are the pre-trained baseline models (AIY Food V1 + YOLO11n COCO).
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const BUNDLED_BINARY = require('../../../assets/models/binary.tflite');
+// These are the pre-trained baseline models (YOLO11n COCO + EfficientNet-Lite0).
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const BUNDLED_DETECT = require('../../../assets/models/detect.tflite');
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const BUNDLED_CLASSIFY = require('../../../assets/models/classify.tflite');
-// Food-101 fallback classifier (MobileNetV1 0.5x int8, 224x224, 101 classes).
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const BUNDLED_FOOD101 = require('../../../assets/models/food101.tflite');
 
 /** Module-level cache for loaded models. */
 let cachedModelSet: ModelSet | null = null;
@@ -63,71 +58,58 @@ async function findModelPackPath(idPrefix: string): Promise<string | null> {
 }
 
 /**
- * Load all three pipeline models from installed pack file paths.
+ * Load both pipeline models from installed pack file paths.
  *
  * Queries installedPacks for model-type packs with IDs matching:
- * - yolo-binary-*  (binary gate: is this food?)
  * - yolo-detect-*  (detection: where is the food?)
- * - yolo-classify-* (classification: what food is it?)
+ * - efficientnet-classify-* or yolo-classify-*  (classification: what food is it?)
  *
  * Models are loaded with the default delegate. On iOS the Expo config
  * plugin enables the CoreML delegate automatically.
  *
  * @throws If any required model pack is not installed
- * @returns Cached ModelSet with binary, detect, and classify models
+ * @returns Cached ModelSet with detect and classify models
  */
 export async function loadModelSet(): Promise<ModelSet> {
   // Return cached models if already loaded
   if (cachedModelSet !== null) return cachedModelSet;
 
-  const binaryPath = await findModelPackPath('yolo-binary-');
   const detectPath = await findModelPackPath('yolo-detect-');
-  const classifyPath = await findModelPackPath('yolo-classify-');
+  const classifyPath =
+    (await findModelPackPath('efficientnet-classify-')) ??
+    (await findModelPackPath('yolo-classify-'));
 
   // If no packs are installed at all, fall back to bundled models
-  if (!binaryPath && !detectPath && !classifyPath) {
-    const [binary, detect, classify, food101] = await Promise.all([
-      loadTensorflowModel(BUNDLED_BINARY, 'default'),
+  if (!detectPath && !classifyPath) {
+    const [detect, classify] = await Promise.all([
       loadTensorflowModel(BUNDLED_DETECT, 'default'),
       loadTensorflowModel(BUNDLED_CLASSIFY, 'default'),
-      loadTensorflowModel(BUNDLED_FOOD101, 'default').catch(() => null),
     ]);
     cachedModelSet = {
-      binary: binary as unknown as ModelSet['binary'],
       detect: detect as unknown as ModelSet['detect'],
       classify: classify as unknown as ModelSet['classify'],
-      food101: food101
-        ? (food101 as unknown as ModelSet['food101'])
-        : undefined,
     };
     return cachedModelSet;
   }
 
   // Partial install: some but not all packs found -- error
-  if (!binaryPath || !detectPath || !classifyPath) {
+  if (!detectPath || !classifyPath) {
     const missing: string[] = [];
-    if (!binaryPath) missing.push('yolo-binary-*');
     if (!detectPath) missing.push('yolo-detect-*');
-    if (!classifyPath) missing.push('yolo-classify-*');
+    if (!classifyPath) missing.push('efficientnet-classify-* / yolo-classify-*');
     throw new Error(
       `Required model pack(s) not installed: ${missing.join(', ')}. Download required.`,
     );
   }
 
-  const [binary, detect, classify, food101] = await Promise.all([
-    loadTensorflowModel({ url: ensureFilePrefix(binaryPath) }, 'default'),
+  const [detect, classify] = await Promise.all([
     loadTensorflowModel({ url: ensureFilePrefix(detectPath) }, 'default'),
     loadTensorflowModel({ url: ensureFilePrefix(classifyPath) }, 'default'),
-    loadTensorflowModel(BUNDLED_FOOD101, 'default').catch(() => null),
   ]);
 
   cachedModelSet = {
-    binary: binary as unknown as ModelSet['binary'],
     detect: detect as unknown as ModelSet['detect'],
     classify: classify as unknown as ModelSet['classify'],
-    food101: food101
-      ? (food101 as unknown as ModelSet['food101'])
-      : undefined,
   };
 
   return cachedModelSet;

@@ -1,31 +1,23 @@
 /**
- * Three-stage inference pipeline router: binary -> detect -> classify (+ fallback).
+ * Two-stage inference pipeline router: detect -> classify.
  *
  * Orchestrates the detection pipeline sequentially:
- * 1. Binary gate: is this image food? (short-circuits if not)
- * 2. Detection: where are the food items? (YOLO bounding boxes)
- * 3. Classification: what food is each item? (per-detection labels)
- *    3b. Fallback: if AIY Food V1 confidence < 60%, run Food-101 classifier
- *        and use the higher-confidence label.
+ * 1. Detection: where are the food items? (YOLO bounding boxes, filtered to COCO food classes)
+ * 2. Classification: what food is each item? (EfficientNet-Lite0 335-class labels)
  *
- * Anti-pattern: do NOT run stages in parallel. The binary gate exists
- * to save compute when the image is not food.
+ * The binary gate is no longer needed because EfficientNet-Lite0 is trained
+ * exclusively on food images -- a confidence threshold on its output serves
+ * the same purpose. Food-101 fallback is unnecessary because its 101 classes
+ * are a strict subset of the new 335 classes.
  *
- * Binary gate uses AIY Food V1 which outputs 2024 class probabilities.
- * The max confidence across all classes is used as the food score.
- * Uses manual loop (not Math.max(...array)) to avoid stack overflow
- * on 2024-element arrays.
- *
- * Accepts three buffers: detectBuffer (640x640) for the detection stage,
- * classifyBuffer (192x192) for the binary gate and classify stages,
- * and food101Buffer (224x224) for the Food-101 fallback classifier.
+ * Accepts two buffers: detectBuffer (640x640) for the detection stage,
+ * classifyBuffer (224x224, ImageNet-normalized) for the classify stage.
  */
 
 import { getModelSet } from './modelLoader';
 import { decodeYoloOutput } from './postProcess';
 import {
-  FOOD_V1_CLASS_NAMES,
-  FOOD_101_CLASS_NAMES,
+  CLASSIFY_CLASS_NAMES,
   COCO_FOOD_CLASS_IDS,
 } from './constants';
 import type {
@@ -35,16 +27,12 @@ import type {
   PortionEstimate,
 } from './types';
 
-/** Binary gate threshold: above this = food detected. */
-const BINARY_THRESHOLD = 0.5;
-
 /**
- * AIY Food V1 confidence threshold below which the Food-101
- * fallback classifier is consulted. If AIY V1 is this uncertain,
- * a second opinion from the 101-class model may produce a better label
- * (e.g. "ramen" instead of "quesadilla").
+ * Classify confidence threshold. Below this, the classifier result is treated
+ * as "not confident enough" and items get a generic "Food Item" fallback label.
+ * This is NOT a binary gate -- all COCO food detections are returned regardless.
  */
-const FOOD101_FALLBACK_THRESHOLD = 0.6;
+const CLASSIFY_CONFIDENCE_THRESHOLD = 0.15;
 
 /** Counter for generating unique detection IDs within a session. */
 let detectionCounter = 0;
@@ -74,11 +62,11 @@ function defaultPortionEstimate(): PortionEstimate {
 }
 
 /**
- * Format a Food-101 snake_case class name into a readable title-case label.
- * e.g. "pad_thai" → "Pad Thai", "ramen" → "Ramen",
- *      "grilled_cheese_sandwich" → "Grilled Cheese Sandwich"
+ * Format a snake_case class name into a readable title-case label.
+ * e.g. "pad_thai" -> "Pad Thai", "ramen" -> "Ramen",
+ *      "grilled_cheese_sandwich" -> "Grilled Cheese Sandwich"
  */
-function formatFood101Label(rawLabel: string): string {
+function formatClassLabel(rawLabel: string): string {
   return rawLabel
     .split('_')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -89,8 +77,7 @@ function formatFood101Label(rawLabel: string): string {
  * Run the detection pipeline on preprocessed image buffers.
  *
  * @param detectBuffer   - Float32Array preprocessed at 640x640 for detection stage
- * @param classifyBuffer - Float32Array preprocessed at 192x192 for binary gate + classify
- * @param food101Buffer  - Float32Array preprocessed at 224x224 for Food-101 fallback
+ * @param classifyBuffer - Float32Array preprocessed at 224x224 with ImageNet normalization
  * @param imageWidth     - Width of the detection image (e.g. 640)
  * @param imageHeight    - Height of the detection image (e.g. 640)
  * @param classNames     - Array of class labels for detection output decoding
@@ -100,7 +87,6 @@ function formatFood101Label(rawLabel: string): string {
 export async function runDetectionPipeline(
   detectBuffer: Float32Array,
   classifyBuffer: Float32Array,
-  food101Buffer: Float32Array,
   imageWidth: number,
   imageHeight: number,
   classNames: string[],
@@ -115,35 +101,7 @@ export async function runDetectionPipeline(
   const pipelineStart = performance.now();
   const pipelineStages: PipelineStage[] = [];
 
-  // ── Stage 1: Binary gate ──
-  // Uses classifyBuffer (192x192) since AIY Food V1 expects that input size.
-  const binaryStart = performance.now();
-  const binaryOutput = await models.binary.run([classifyBuffer]);
-  const binaryTimeMs = performance.now() - binaryStart;
-  pipelineStages.push({ stage: 'binary', timeMs: binaryTimeMs });
-
-  // Interpret binary output: AIY Food V1 outputs 2024 class probabilities.
-  // Max confidence across all classes = food score.
-  // Manual loop avoids stack overflow on 2024-element array (no Math.max(...spread)).
-  // model.run() returns TypedArray[] — convert to Float32Array for uniform access.
-  const binaryScores = binaryOutput[0] instanceof Float32Array
-    ? binaryOutput[0]
-    : new Float32Array(binaryOutput[0] as ArrayBuffer);
-  let binaryScore = 0;
-  for (let i = 0; i < binaryScores.length; i++) {
-    if (binaryScores[i] > binaryScore) binaryScore = binaryScores[i];
-  }
-  const isFood = binaryScore > BINARY_THRESHOLD;
-
-  if (!isFood) {
-    return {
-      items: [],
-      inferenceTimeMs: performance.now() - pipelineStart,
-      pipelineStages,
-    };
-  }
-
-  // ── Stage 2: Detection ──
+  // ── Stage 1: Detection ──
   // Uses detectBuffer (640x640) since YOLO expects that input size.
   const detectStart = performance.now();
   const detectOutput = await models.detect.run([detectBuffer]);
@@ -175,82 +133,40 @@ export async function runDetectionPipeline(
     COCO_FOOD_CLASS_IDS.has(det.classId),
   );
 
-  // ── Stage 3: Classification ──
-  // Uses AIY Food V1 (192x192) to get a proper food label for detected items.
+  // ── Stage 2: Classification ──
+  // Uses EfficientNet-Lite0 (224x224 with ImageNet normalization) to get
+  // a proper food label for detected items.
   // COCO only has 10 food classes (banana, apple, pizza, etc.) which produce
-  // misleading labels. AIY Food V1 has 2024 food-specific classes.
+  // misleading labels. EfficientNet-Lite0 has 335 food-specific classes.
   const classifyStart = performance.now();
-  let topFoodLabel = 'Food item';
-  let aiyTopConf = 0;
+  let topFoodLabel = 'Food Item';
   if (foodDetections.length > 0) {
     const classifyOutput = await models.classify.run([classifyBuffer]);
     const classifyScores = classifyOutput[0] instanceof Float32Array
       ? classifyOutput[0]
       : new Float32Array(classifyOutput[0] as ArrayBuffer);
 
-    // Find top valid food label from AIY Food V1's 2024 classes.
-    // Skip index 0 (__background__) and Google KG IDs (start with '/').
+    // Find top class from EfficientNet-Lite0's 335 output logits.
+    let topConf = 0;
     let topIdx = 0;
-    for (let i = 1; i < classifyScores.length; i++) {
-      if (classifyScores[i] > aiyTopConf) {
-        const label = FOOD_V1_CLASS_NAMES[i];
-        if (label && !label.startsWith('/')) {
-          aiyTopConf = classifyScores[i];
-          topIdx = i;
-        }
+    for (let i = 0; i < classifyScores.length; i++) {
+      if (classifyScores[i] > topConf) {
+        topConf = classifyScores[i];
+        topIdx = i;
       }
     }
-    if (topIdx > 0 && aiyTopConf > 0.01) {
-      topFoodLabel = FOOD_V1_CLASS_NAMES[topIdx];
+
+    if (topConf >= CLASSIFY_CONFIDENCE_THRESHOLD && topIdx < CLASSIFY_CLASS_NAMES.length) {
+      topFoodLabel = formatClassLabel(CLASSIFY_CLASS_NAMES[topIdx]);
     }
   }
   const classifyTimeMs = performance.now() - classifyStart;
   pipelineStages.push({ stage: 'classify', timeMs: classifyTimeMs });
 
-  // ── Stage 3b: Food-101 fallback ──
-  // When AIY Food V1 confidence is below threshold, consult the Food-101
-  // classifier (MobileNetV1 0.5x, 101 classes) for a second opinion.
-  // If Food-101 returns a higher confidence, use its label instead.
-  // This addresses misclassifications like ramen → "quesadilla" where
-  // AIY V1's 2024 broad classes produce low-confidence wrong labels.
-  if (
-    foodDetections.length > 0 &&
-    aiyTopConf < FOOD101_FALLBACK_THRESHOLD &&
-    models.food101
-  ) {
-    const fallbackStart = performance.now();
-    try {
-      const food101Output = await models.food101.run([food101Buffer]);
-      const food101Scores = food101Output[0] instanceof Float32Array
-        ? food101Output[0]
-        : new Float32Array(food101Output[0] as ArrayBuffer);
-
-      // Find top Food-101 class
-      let food101TopConf = 0;
-      let food101TopIdx = 0;
-      for (let i = 0; i < food101Scores.length; i++) {
-        if (food101Scores[i] > food101TopConf) {
-          food101TopConf = food101Scores[i];
-          food101TopIdx = i;
-        }
-      }
-
-      // Use Food-101 label if it's more confident than AIY V1
-      if (food101TopConf > aiyTopConf && food101TopIdx < FOOD_101_CLASS_NAMES.length) {
-        const rawLabel = FOOD_101_CLASS_NAMES[food101TopIdx];
-        topFoodLabel = formatFood101Label(rawLabel);
-        aiyTopConf = food101TopConf; // Update confidence to reflect the winning model
-      }
-    } catch {
-      // Food-101 model failed — silently fall through to AIY V1 label.
-      // This is a fallback, not a critical path.
-    }
-    const fallbackTimeMs = performance.now() - fallbackStart;
-    pipelineStages.push({ stage: 'food101-fallback', timeMs: fallbackTimeMs });
-  }
-
   // ── Build DetectedItem array ──
-  // Uses the best label (AIY Food V1 or Food-101 fallback) for food items.
+  // All COCO food detections are returned with the classify label.
+  // If multiple food boxes are detected, they all share the same classify
+  // label (whole-image classification, same as before).
   const items: DetectedItem[] = foodDetections.map((det) => ({
     id: generateDetectionId(),
     className: topFoodLabel,

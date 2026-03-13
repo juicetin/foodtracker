@@ -1,28 +1,36 @@
 /**
  * Image-to-tensor bridge: resize + pixel extraction + normalization.
  *
- * Converts a photo URI into a Float32Array suitable for YOLO model input.
+ * Converts a photo URI into a Float32Array suitable for model input.
  * Uses expo-image-manipulator for resize and base64 extraction.
  *
  * Pipeline: photo URI -> resize to modelInputSize x modelInputSize -> base64
- *   -> decode to RGBA bytes -> extract RGB channels -> normalize to 0-1.
+ *   -> decode to RGBA bytes -> extract RGB channels -> normalize.
+ *
+ * Supports two normalization modes:
+ * - 'zero_one' (default): pixel / 255 (for YOLO detection)
+ * - 'imagenet': (pixel / 255 - mean) / std (for EfficientNet-Lite0 classification)
  */
 
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
 import { inflate } from 'pako';
+import { IMAGENET_MEAN, IMAGENET_STD } from './constants';
 
 /**
  * Preprocess an image for model inference.
  *
  * @param photoUri - Local file URI of the photo to process
  * @param modelInputSize - Target dimension (image will be resized to size x size)
+ * @param normalization - Normalization mode: 'zero_one' (default, for YOLO) or
+ *                        'imagenet' (for EfficientNet-Lite0 classification)
  * @returns Float32Array of length `modelInputSize * modelInputSize * 3` with
- *          RGB pixel values normalised to 0-1.
+ *          RGB pixel values normalized per the chosen mode.
  * @throws If the URI is empty/invalid or the image cannot be processed.
  */
 export async function preprocessImageForModel(
   photoUri: string,
   modelInputSize: number,
+  normalization: 'zero_one' | 'imagenet' = 'zero_one',
 ): Promise<Float32Array> {
   if (!photoUri || photoUri.trim().length === 0) {
     throw new Error('Invalid photo URI: URI must not be empty.');
@@ -53,15 +61,24 @@ export async function preprocessImageForModel(
   // implementation, we parse the raw PNG bytes to extract pixel data.
   const pixelData = decodePngPixels(rawBytes, modelInputSize, modelInputSize);
 
-  // Step 4: Convert RGBA -> RGB Float32Array normalised to 0-1.
+  // Step 4: Convert RGBA -> RGB Float32Array with chosen normalization.
   const totalPixels = modelInputSize * modelInputSize;
   const rgbBuffer = new Float32Array(totalPixels * 3);
 
-  for (let i = 0; i < totalPixels; i++) {
-    rgbBuffer[i * 3] = pixelData[i * 4] / 255;       // R
-    rgbBuffer[i * 3 + 1] = pixelData[i * 4 + 1] / 255; // G
-    rgbBuffer[i * 3 + 2] = pixelData[i * 4 + 2] / 255; // B
-    // Skip alpha channel (i * 4 + 3)
+  if (normalization === 'imagenet') {
+    // ImageNet normalization: (pixel / 255 - mean) / std
+    for (let i = 0; i < totalPixels; i++) {
+      rgbBuffer[i * 3] = (pixelData[i * 4] / 255 - IMAGENET_MEAN[0]) / IMAGENET_STD[0];
+      rgbBuffer[i * 3 + 1] = (pixelData[i * 4 + 1] / 255 - IMAGENET_MEAN[1]) / IMAGENET_STD[1];
+      rgbBuffer[i * 3 + 2] = (pixelData[i * 4 + 2] / 255 - IMAGENET_MEAN[2]) / IMAGENET_STD[2];
+    }
+  } else {
+    // Zero-one normalization: pixel / 255 (default for YOLO)
+    for (let i = 0; i < totalPixels; i++) {
+      rgbBuffer[i * 3] = pixelData[i * 4] / 255;
+      rgbBuffer[i * 3 + 1] = pixelData[i * 4 + 1] / 255;
+      rgbBuffer[i * 3 + 2] = pixelData[i * 4 + 2] / 255;
+    }
   }
 
   return rgbBuffer;
