@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 02.1-02-PLAN.md
-last_updated: "2026-03-12T21:14:16Z"
-last_activity: "2026-03-13 -- Completed Plan 02.1-02 (Pipeline wiring: bundled fallback, binary gate fix, dual-buffer, COCO names)"
+stopped_at: Completed 02.2-01-PLAN.md
+last_updated: "2026-03-13T11:37:20Z"
+last_activity: "2026-03-13 -- Completed Plan 02.2-01 (Deploy EfficientNet-Lite0 INT8 model, 335-class labels, simplified type contracts)"
 progress:
-  total_phases: 7
+  total_phases: 11
   completed_phases: 2
-  total_plans: 13
-  completed_plans: 12
-  percent: 85
+  total_plans: 23
+  completed_plans: 14
+  percent: 55
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.1: Pre-trained Model Acquisition and TFLite Integration
+**Current focus:** Phase 02.2: Deploy Custom 335-Class Classifier
 
 ## Current Position
 
-Phase: 02.1 of 7 (Pre-trained Model Acquisition and TFLite Integration)
-Plan: 2 of 3 in current phase
-Status: In Progress (Plan 02.1-02 complete, 1 plan remaining)
-Last activity: 2026-03-13 -- Completed Plan 02.1-02 (Pipeline wiring: bundled model fallback, binary gate fix, dual-buffer, COCO names)
+Phase: 02.2 of 7 (Deploy Custom 335-Class Classifier)
+Plan: 1 of 2 in current phase
+Status: In Progress (Plan 02.2-01 complete, 1 plan remaining)
+Last activity: 2026-03-13 -- Completed Plan 02.2-01 (Deploy EfficientNet-Lite0 INT8 model, 335-class labels, simplified type contracts)
 
-Progress: [████████░░] 85%
+Progress: [██████░░░░] 55%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 15 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1)
-- Average duration: 12min
-- Total execution time: ~2.5 hours
+- Total plans completed: 16 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 1 phase 02.2)
+- Average duration: 11min
+- Total execution time: ~2.6 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,8 +53,8 @@ Progress: [████████░░] 85%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 4min, 19min, 7min
-- Trend: Stable (pipeline wiring plan fast -- mostly code changes and tests)
+- Last 3 plans: 19min, 7min, 4min
+- Trend: Fast (model deployment plan -- binary file copies + type contract updates)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -66,6 +66,8 @@ Progress: [████████░░] 85%
 
 | Phase 02.1 P01 | 19min | 1 task | 6 files |
 | Phase 02.1 P02 | 7min | 2 tasks | 8 files |
+
+| Phase 02.2 P01 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -127,6 +129,10 @@ Recent decisions affecting current work:
 - [02.1-02]: Dual-buffer pipeline: detectBuffer (640x640) for YOLO, classifyBuffer (192x192) for AIY binary gate + classify
 - [02.1-02]: Food-only post-filter in DetectionScreen using COCO_FOOD_CLASS_IDS with __DEV__ debug logging
 - [02.1-02]: tfliteAsset.js mock (returns numeric 1) for Jest .tflite moduleNameMapper
+- [02.2-01]: EfficientNet-Lite0 INT8 (3.9MB) replaces AIY Food V1 (21MB) -- 5.4x smaller, food-only trained
+- [02.2-01]: Binary gate removed -- EfficientNet-Lite0 is food-only so no food-vs-not-food step needed
+- [02.2-01]: Food-101 fallback removed -- 101 classes are strict subset of new 335
+- [02.2-01]: ImageNet normalization constants (IMAGENET_MEAN, IMAGENET_STD) exported for classify preprocessing
 
 ### Roadmap Evolution
 
@@ -146,6 +152,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-12T21:14:16Z
-Stopped at: Completed 02.1-02-PLAN.md
-Resume file: .planning/phases/02.1-pre-trained-model-acquisition-and-tflite-integration/02.1-02-SUMMARY.md
+Last session: 2026-03-13T11:37:20Z
+Stopped at: Completed 02.2-01-PLAN.md
+Resume file: .planning/phases/02.2-deploy-custom-335-class-classifier/02.2-01-SUMMARY.md

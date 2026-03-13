@@ -99,7 +99,7 @@ Plans:
 **Plans:** 2 plans
 
 Plans:
-- [ ] 02.2-01-PLAN.md -- Deploy model assets and update type contracts: swap classify.tflite, deploy 335-class labels, simplify ModelSet to 2-stage
+- [x] 02.2-01-PLAN.md -- Deploy model assets and update type contracts: swap classify.tflite, deploy 335-class labels, simplify ModelSet to 2-stage
 - [ ] 02.2-02-PLAN.md -- Pipeline wiring: rewrite inferenceRouter as 2-stage (detect+classify), add ImageNet normalization, update tests
 
 ### Phase 2.3: Food-Specific YOLO Detection (INSERTED)

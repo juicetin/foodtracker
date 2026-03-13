@@ -62,7 +62,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### ML Pipeline Expansion
 
-- [ ] **ML-01**: App uses a custom-trained 335+ class food classifier (EfficientNet-Lite0) replacing the generic AIY Food V1 model, with ImageNet-normalized 224x224 input
+- [x] **ML-01**: App uses a custom-trained 335+ class food classifier (EfficientNet-Lite0) replacing the generic AIY Food V1 model, with ImageNet-normalized 224x224 input
 - [ ] **ML-02**: Detection pipeline uses a food-specific YOLO model (241 food classes) instead of COCO YOLO (10 food classes) for accurate multi-dish separation
 - [ ] **ML-03**: Classifier covers 700+ food classes spanning all major global cuisines (East Asian, South Asian, Southeast Asian, African, Middle Eastern, European, Americas) via merged training datasets
 - [ ] **ML-04**: Nutrition database is enriched with Open Food Facts product data (4.4M products), Nutrition5k per-dish calorie data, and curated regional nutrition tables
@@ -143,7 +143,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | MDL-01 | Phase 6 | Pending |
 | MDL-02 | Phase 6 | Pending |
 
-| ML-01 | Phase 2.2 | Pending |
+| ML-01 | Phase 2.2 | Complete |
 | ML-02 | Phase 2.3 | Pending |
 | ML-03 | Phase 2.4 | Pending |
 | ML-04 | Phase 2.5 | Pending |
