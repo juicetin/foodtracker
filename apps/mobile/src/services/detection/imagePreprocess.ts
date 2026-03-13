@@ -9,6 +9,7 @@
  */
 
 import { manipulateAsync, SaveFormat } from 'expo-image-manipulator';
+import { inflate } from 'pako';
 
 /**
  * Preprocess an image for model inference.
@@ -169,20 +170,8 @@ function decodePngChunks(
     pos += chunk.length;
   }
 
-  // Decompress using DEFLATE (zlib format)
-  // In React Native, we use a manual inflate. In Node/Jest, we can use zlib.
-  let rawScanlines: Uint8Array;
-  try {
-    // Node.js / Jest environment
-    // eslint-disable-next-line @typescript-eslint/no-var-requires
-    const zlib = require('zlib');
-    rawScanlines = zlib.inflateSync(Buffer.from(compressedData));
-  } catch {
-    // React Native fallback: return zeroed pixels.
-    // On-device, a native module handles decompression via the model runtime.
-    // TODO: validate pixel extraction on-device with real model packs
-    return new Uint8Array(width * height * 4);
-  }
+  // Decompress using DEFLATE (zlib format) via pako (works in both RN and Node)
+  const rawScanlines = inflate(compressedData);
 
   // Channels per pixel based on color type
   const channels = colorType === 6 ? 4 : colorType === 2 ? 3 : 4;

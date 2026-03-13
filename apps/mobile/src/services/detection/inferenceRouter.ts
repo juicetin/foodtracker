@@ -60,8 +60,8 @@ function defaultPortionEstimate(): PortionEstimate {
 /**
  * Run the three-stage detection pipeline on preprocessed image buffers.
  *
- * @param detectBuffer   - Raw image data preprocessed at 640x640 for detection stage
- * @param classifyBuffer - Raw image data preprocessed at 192x192 for binary gate + classify
+ * @param detectBuffer   - Float32Array preprocessed at 640x640 for detection stage
+ * @param classifyBuffer - Float32Array preprocessed at 192x192 for binary gate + classify
  * @param imageWidth     - Width of the detection image (e.g. 640)
  * @param imageHeight    - Height of the detection image (e.g. 640)
  * @param classNames     - Array of class labels for detection output decoding
@@ -69,8 +69,8 @@ function defaultPortionEstimate(): PortionEstimate {
  * @throws If models are not loaded (call loadModelSet() first)
  */
 export async function runDetectionPipeline(
-  detectBuffer: ArrayBufferLike,
-  classifyBuffer: ArrayBufferLike,
+  detectBuffer: Float32Array,
+  classifyBuffer: Float32Array,
   imageWidth: number,
   imageHeight: number,
   classNames: string[],
@@ -95,7 +95,10 @@ export async function runDetectionPipeline(
   // Interpret binary output: AIY Food V1 outputs 2024 class probabilities.
   // Max confidence across all classes = food score.
   // Manual loop avoids stack overflow on 2024-element array (no Math.max(...spread)).
-  const binaryScores = new Float32Array(binaryOutput[0] as ArrayBuffer);
+  // model.run() returns TypedArray[] — convert to Float32Array for uniform access.
+  const binaryScores = binaryOutput[0] instanceof Float32Array
+    ? binaryOutput[0]
+    : new Float32Array(binaryOutput[0] as ArrayBuffer);
   let binaryScore = 0;
   for (let i = 0; i < binaryScores.length; i++) {
     if (binaryScores[i] > binaryScore) binaryScore = binaryScores[i];
@@ -118,8 +121,10 @@ export async function runDetectionPipeline(
   pipelineStages.push({ stage: 'detect', timeMs: detectTimeMs });
 
   // Decode YOLO output tensor into raw detections
-  // react-native-fast-tflite returns ArrayBuffer at runtime; cast is safe.
-  const detectTensor = new Float32Array(detectOutput[0] as ArrayBuffer);
+  // model.run() returns TypedArray[] — convert to Float32Array for uniform access.
+  const detectTensor = detectOutput[0] instanceof Float32Array
+    ? detectOutput[0]
+    : new Float32Array(detectOutput[0] as ArrayBuffer);
 
   // Determine number of predictions from output shape
   // YOLO output shape: [1, 4+nc, numPredictions]

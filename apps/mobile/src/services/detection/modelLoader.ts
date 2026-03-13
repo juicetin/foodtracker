@@ -42,15 +42,21 @@ function ensureFilePrefix(path: string): string {
 /**
  * Find an installed pack whose ID starts with the given prefix.
  * Returns the filePath or null if not found.
+ * Returns null if the installed_packs table doesn't exist yet (no migration run).
  */
 async function findModelPackPath(idPrefix: string): Promise<string | null> {
-  const rows = await userDb
-    .select()
-    .from(installedPacks)
-    .where(eq(installedPacks.type, 'model'));
+  try {
+    const rows = await userDb
+      .select()
+      .from(installedPacks)
+      .where(eq(installedPacks.type, 'model'));
 
-  const match = rows.find((row) => row.id.startsWith(idPrefix));
-  return match?.filePath ?? null;
+    const match = rows.find((row) => row.id.startsWith(idPrefix));
+    return match?.filePath ?? null;
+  } catch {
+    // Table may not exist yet if migrations haven't run — fall through to bundled models
+    return null;
+  }
 }
 
 /**

@@ -1,61 +1,16 @@
 import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
 import { HomeScreenNavigationProp } from '../navigation/types';
-import { PhotoPicker, BatchPhotoGrid } from '../components';
 import { useFoodLogStore } from '../store';
-import { Photo } from '../types';
 
 interface HomeScreenProps {
   navigation: HomeScreenNavigationProp;
 }
 
 export default function HomeScreen({ navigation }: HomeScreenProps) {
-  const {
-    selectedPhotos,
-    setSelectedPhotos,
-    clearSelectedPhotos,
-    isProcessing,
-    setIsProcessing,
-    getTodayTotals,
-  } = useFoodLogStore();
+  const { getTodayTotals } = useFoodLogStore();
 
   const todayTotals = getTodayTotals();
-
-  const handlePhotosSelected = (photos: Photo[]) => {
-    setSelectedPhotos([...selectedPhotos, ...photos]);
-  };
-
-  const handleRemovePhoto = (photoId: string) => {
-    setSelectedPhotos(selectedPhotos.filter(p => p.id !== photoId));
-  };
-
-  const handleProcessPhotos = async () => {
-    if (selectedPhotos.length === 0) {
-      Alert.alert('No Photos', 'Please select photos first.');
-      return;
-    }
-
-    setIsProcessing(true);
-
-    // TODO: Call AI service to process photos
-    Alert.alert(
-      'Processing Photos',
-      `Processing ${selectedPhotos.length} photo${selectedPhotos.length !== 1 ? 's' : ''}...\n\nThis will connect to the AI service to analyze your food.`,
-      [
-        {
-          text: 'OK',
-          onPress: () => {
-            // Simulate processing
-            setTimeout(() => {
-              setIsProcessing(false);
-              Alert.alert('Success', 'Photos processed! (Demo mode)');
-              clearSelectedPhotos();
-            }, 2000);
-          },
-        },
-      ]
-    );
-  };
 
   return (
     <ScrollView style={styles.container}>
@@ -63,35 +18,12 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
         <Text style={styles.title}>Food Tracker</Text>
         <Text style={styles.subtitle}>Track your meals with AI-powered photo analysis</Text>
 
-        <PhotoPicker onPhotosSelected={handlePhotosSelected} maxPhotos={20} />
-
-        {selectedPhotos.length > 0 && (
-          <>
-            <BatchPhotoGrid
-              photos={selectedPhotos}
-              onRemovePhoto={handleRemovePhoto}
-            />
-
-            <View style={styles.actionButtons}>
-              <TouchableOpacity
-                style={[styles.secondaryButton, { flex: 1, marginRight: 8 }]}
-                onPress={clearSelectedPhotos}
-              >
-                <Text style={styles.secondaryButtonText}>Clear All</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={[styles.primaryButton, { flex: 2 }]}
-                onPress={handleProcessPhotos}
-                disabled={isProcessing}
-              >
-                <Text style={styles.primaryButtonText}>
-                  {isProcessing ? 'Processing...' : `Process ${selectedPhotos.length} Photo${selectedPhotos.length !== 1 ? 's' : ''}`}
-                </Text>
-              </TouchableOpacity>
-            </View>
-          </>
-        )}
+        <TouchableOpacity
+          style={styles.primaryButton}
+          onPress={() => navigation.navigate('Detection')}
+        >
+          <Text style={styles.primaryButtonText}>Detect Food</Text>
+        </TouchableOpacity>
 
         <View style={styles.statsSection}>
           <Text style={styles.statsTitle}>Today's Totals</Text>

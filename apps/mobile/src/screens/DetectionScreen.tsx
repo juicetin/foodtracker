@@ -200,9 +200,10 @@ export function DetectionScreen() {
         preprocessImageForModel(uri, BINARY_INPUT_SIZE),
       ]);
 
+      // Pass Float32Array directly (not .buffer) — react-native-fast-tflite expects TypedArray
       const result = await runDetectionPipeline(
-        detectPixels.buffer,
-        classifyPixels.buffer,
+        detectPixels,
+        classifyPixels,
         DETECT_INPUT_SIZE,
         DETECT_INPUT_SIZE,
         COCO_CLASS_NAMES,
