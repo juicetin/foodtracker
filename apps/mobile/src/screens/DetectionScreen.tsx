@@ -18,9 +18,9 @@ import { runDetectionPipeline } from '../services/detection/inferenceRouter';
 import { loadModelSet } from '../services/detection/modelLoader';
 import { preprocessImageForModel } from '../services/detection/imagePreprocess';
 import {
-  BINARY_INPUT_SIZE,
+  COCO_CLASS_NAMES,
+  CLASSIFY_INPUT_SIZE,
   DETECT_INPUT_SIZE,
-  FOOD101_INPUT_SIZE,
 } from '../services/detection/constants';
 import {
   estimatePortion,
@@ -58,8 +58,8 @@ const CARB_PER_GRAM = 0.2;
 const FAT_PER_GRAM = 0.08;
 
 // Input sizes imported from constants.ts:
-// BINARY_INPUT_SIZE (192), DETECT_INPUT_SIZE (640).
-// COCO food filtering and AIY Food V1 labelling are handled in inferenceRouter.
+// DETECT_INPUT_SIZE (640), CLASSIFY_INPUT_SIZE (224).
+// COCO food filtering and EfficientNet-Lite0 labelling are handled in inferenceRouter.
 
 // ---------------------------------------------------------------------------
 // Component
@@ -194,29 +194,25 @@ export function DetectionScreen() {
       // Load models if not already loaded
       await loadModelSet();
 
-      // Preprocess at three sizes: 640x640 for detection, 192x192 for binary gate + classify,
-      // 224x224 for Food-101 fallback classifier.
-      const [detectPixels, classifyPixels, food101Pixels] = await Promise.all([
+      // Preprocess at two sizes: 640x640 for detection, 224x224 for classification
+      const [detectPixels, classifyPixels] = await Promise.all([
         preprocessImageForModel(uri, DETECT_INPUT_SIZE),
-        preprocessImageForModel(uri, BINARY_INPUT_SIZE),
-        preprocessImageForModel(uri, FOOD101_INPUT_SIZE),
+        preprocessImageForModel(uri, CLASSIFY_INPUT_SIZE, 'imagenet'),
       ]);
 
       // Pass Float32Array directly (not .buffer) — react-native-fast-tflite expects TypedArray
       // COCO_CLASS_NAMES is passed for YOLO decoding; the router handles
-      // COCO food-class filtering and AIY Food V1 relabelling internally.
-      const { COCO_CLASS_NAMES } = await import('../services/detection/constants');
+      // COCO food-class filtering and EfficientNet-Lite0 relabelling internally.
       const result = await runDetectionPipeline(
         detectPixels,
         classifyPixels,
-        food101Pixels,
         DETECT_INPUT_SIZE,
         DETECT_INPUT_SIZE,
         COCO_CLASS_NAMES,
       );
 
       // Enrich each detected item with portion estimates.
-      // Items are already food-only and labelled with AIY Food V1 class names.
+      // Items are already food-only and labelled with EfficientNet-Lite0 class names.
       const imageSize: ImageSize = { width: imgWidth, height: imgHeight };
       const enrichedItems = result.items.map((item) => ({
         ...item,

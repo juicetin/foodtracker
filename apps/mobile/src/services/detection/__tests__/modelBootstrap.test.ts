@@ -117,8 +117,8 @@ describe('modelLoader - bundled model fallback (2-model)', () => {
     expect(typeof modelSet.classify.runSync).toBe('function');
 
     // ModelSet should NOT have binary or food101 properties
-    expect((modelSet as Record<string, unknown>).binary).toBeUndefined();
-    expect((modelSet as Record<string, unknown>).food101).toBeUndefined();
+    expect((modelSet as unknown as Record<string, unknown>).binary).toBeUndefined();
+    expect((modelSet as unknown as Record<string, unknown>).food101).toBeUndefined();
   });
 
   it('still uses installed_packs path when packs exist', async () => {
