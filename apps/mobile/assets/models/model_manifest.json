@@ -1,29 +1,10 @@
 {
-  "version": "1.1.0",
-  "exportedAt": "2026-03-13T14:05:00.000000+00:00",
-  "pipeline": "three-stage-with-fallback",
+  "version": "2.0.0",
+  "exportedAt": "2026-03-13T19:04:00.000000+00:00",
+  "pipeline": "two-stage",
   "quantisation": "mixed",
-  "notes": "Pre-trained baseline models. AIY Food V1 for binary gate + classify (no custom training). YOLO26n COCO FP16 for detection. Food-101 MobileNetV1 0.5x int8 as fallback classifier when AIY V1 confidence < 60%. NMS is performed in JavaScript, not baked into models.",
+  "notes": "Simplified two-stage pipeline: YOLO11n COCO FP16 for detection, EfficientNet-Lite0 INT8 for 335-class food classification. Binary gate removed (EfficientNet-Lite0 is food-only trained). Food-101 fallback removed (101 classes are a subset of 335). NMS is performed in JavaScript, not baked into models.",
   "models": [
-    {
-      "id": "yolo-binary-v1",
-      "stage": "binary",
-      "version": "1.0.0",
-      "file": "binary.tflite",
-      "sizeBytes": 21151551,
-      "format": "tflite",
-      "quantisation": "uint8_quantized",
-      "inputSize": 192,
-      "numClasses": 2024,
-      "inputNormalization": "uint8_quantized",
-      "inputDtype": "uint8",
-      "outputShape": [
-        1,
-        2024
-      ],
-      "name": "AIY Food V1 (Binary Gate)",
-      "description": "Google AIY Food V1 model repurposed as binary gate. Max confidence across 2024 food classes > threshold = food detected."
-    },
     {
       "id": "yolo-detect-v1",
       "stage": "detect",
@@ -36,51 +17,25 @@
       "numClasses": 80,
       "inputNormalization": "float32_0_1",
       "inputDtype": "float32",
-      "outputShape": [
-        1,
-        84,
-        8400
-      ],
+      "outputShape": [1, 84, 8400],
       "name": "YOLO26n COCO Detection",
       "description": "YOLO26n pre-trained on COCO. 80 classes including 10 food items. NMS performed in JavaScript."
     },
     {
-      "id": "yolo-classify-v1",
+      "id": "efficientnet-classify-v1",
       "stage": "classify",
       "version": "1.0.0",
       "file": "classify.tflite",
-      "sizeBytes": 21151551,
+      "sizeBytes": 4129464,
       "format": "tflite",
-      "quantisation": "uint8_quantized",
-      "inputSize": 192,
-      "numClasses": 2024,
-      "inputNormalization": "uint8_quantized",
-      "inputDtype": "uint8",
-      "outputShape": [
-        1,
-        2024
-      ],
-      "name": "AIY Food V1 (Classification)",
-      "description": "Google AIY Food V1 model for 2024-class food classification."
-    },
-    {
-      "id": "food101-fallback-v1",
-      "stage": "classify-fallback",
-      "version": "1.0.0",
-      "file": "food101.tflite",
-      "sizeBytes": 1033952,
-      "format": "tflite",
-      "quantisation": "int8_quantized",
+      "quantisation": "int8",
       "inputSize": 224,
-      "numClasses": 101,
-      "inputNormalization": "uint8_quantized",
-      "inputDtype": "uint8",
-      "outputShape": [
-        1,
-        101
-      ],
-      "name": "Food-101 MobileNetV1 0.5x (Fallback)",
-      "description": "STMicroelectronics MobileNetV1 alpha=0.5 trained on Food-101 (101 classes, 80.64% top-1 accuracy). Used as fallback when AIY Food V1 confidence < 60%. Int8 quantized, ~1MB."
+      "numClasses": 335,
+      "inputNormalization": "imagenet",
+      "inputDtype": "float32",
+      "outputShape": [1, 335],
+      "name": "EfficientNet-Lite0 (335-Class Food Classifier)",
+      "description": "Custom-trained EfficientNet-Lite0 on Food-101 + UEC-256 merged dataset. 335 food-specific classes, 74.17% top-1, 92.14% top-5. INT8 quantized."
     }
   ]
 }
