@@ -18,7 +18,7 @@ import { runDetectionPipeline } from '../services/detection/inferenceRouter';
 import { loadModelSet } from '../services/detection/modelLoader';
 import { preprocessImageForModel } from '../services/detection/imagePreprocess';
 import {
-  COCO_CLASS_NAMES,
+  DETECT_CLASS_NAMES,
   CLASSIFY_INPUT_SIZE,
   DETECT_INPUT_SIZE,
 } from '../services/detection/constants';
@@ -59,7 +59,8 @@ const FAT_PER_GRAM = 0.08;
 
 // Input sizes imported from constants.ts:
 // DETECT_INPUT_SIZE (640), CLASSIFY_INPUT_SIZE (224).
-// COCO food filtering and EfficientNet-Lite0 labelling are handled in inferenceRouter.
+// DETECT_CLASS_NAMES (241 GGCD food classes) for YOLO decoding.
+// Per-item YOLO labelling and EfficientNet-Lite0 classification handled in inferenceRouter.
 
 // ---------------------------------------------------------------------------
 // Component
@@ -200,19 +201,19 @@ export function DetectionScreen() {
         preprocessImageForModel(uri, CLASSIFY_INPUT_SIZE, 'imagenet'),
       ]);
 
-      // Pass Float32Array directly (not .buffer) — react-native-fast-tflite expects TypedArray
-      // COCO_CLASS_NAMES is passed for YOLO decoding; the router handles
-      // COCO food-class filtering and EfficientNet-Lite0 relabelling internally.
+      // Pass Float32Array directly (not .buffer) -- react-native-fast-tflite expects TypedArray
+      // DETECT_CLASS_NAMES (241 GGCD food names) is passed for YOLO decoding.
+      // All classes are food-specific -- no filtering needed.
       const result = await runDetectionPipeline(
         detectPixels,
         classifyPixels,
         DETECT_INPUT_SIZE,
         DETECT_INPUT_SIZE,
-        COCO_CLASS_NAMES,
+        DETECT_CLASS_NAMES,
       );
 
       // Enrich each detected item with portion estimates.
-      // Items are already food-only and labelled with EfficientNet-Lite0 class names.
+      // Items are food-only (241 GGCD classes) with per-box YOLO food labels.
       const imageSize: ImageSize = { width: imgWidth, height: imgHeight };
       const enrichedItems = result.items.map((item) => ({
         ...item,
