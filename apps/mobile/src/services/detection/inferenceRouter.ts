@@ -2,13 +2,12 @@
  * Two-stage inference pipeline router: detect -> classify.
  *
  * Orchestrates the detection pipeline sequentially:
- * 1. Detection: where are the food items? (YOLO bounding boxes, filtered to COCO food classes)
+ * 1. Detection: where are the food items? (GGCD YOLO 241 food-specific classes)
  * 2. Classification: what food is each item? (EfficientNet-Lite0 335-class labels)
  *
- * The binary gate is no longer needed because EfficientNet-Lite0 is trained
- * exclusively on food images -- a confidence threshold on its output serves
- * the same purpose. Food-101 fallback is unnecessary because its 101 classes
- * are a strict subset of the new 335 classes.
+ * All 241 YOLO classes are food-specific (trained on GGCD dataset), so no
+ * COCO food-class filtering is needed. Each detected item carries its own
+ * YOLO-assigned food class name as the primary label.
  *
  * Accepts two buffers: detectBuffer (640x640) for the detection stage,
  * classifyBuffer (224x224, ImageNet-normalized) for the classify stage.
@@ -18,7 +17,6 @@ import { getModelSet } from './modelLoader';
 import { decodeYoloOutput } from './postProcess';
 import {
   CLASSIFY_CLASS_NAMES,
-  COCO_FOOD_CLASS_IDS,
 } from './constants';
 import type {
   InferenceResult,
@@ -29,8 +27,9 @@ import type {
 
 /**
  * Classify confidence threshold. Below this, the classifier result is treated
- * as "not confident enough" and items get a generic "Food Item" fallback label.
- * This is NOT a binary gate -- all COCO food detections are returned regardless.
+ * as "not confident enough". Since YOLO now provides meaningful per-box food
+ * labels, this threshold only affects whether the classifier's secondary
+ * label is logged for debugging.
  */
 const CLASSIFY_CONFIDENCE_THRESHOLD = 0.15;
 
@@ -62,13 +61,18 @@ function defaultPortionEstimate(): PortionEstimate {
 }
 
 /**
- * Format a snake_case class name into a readable title-case label.
- * e.g. "pad_thai" -> "Pad Thai", "ramen" -> "Ramen",
- *      "grilled_cheese_sandwich" -> "Grilled Cheese Sandwich"
+ * Format a food label into a readable title-case string.
+ * Handles hyphens, underscores, and spaces in GGCD and classifier names.
+ *
+ * Examples:
+ *   "airan-katyk"                 -> "Airan Katyk"
+ *   "pad_thai"                    -> "Pad Thai"
+ *   "vegetable based cooked food" -> "Vegetable Based Cooked Food"
+ *   "grilled-cheese_sandwich"     -> "Grilled Cheese Sandwich"
  */
-function formatClassLabel(rawLabel: string): string {
+export function formatFoodLabel(rawLabel: string): string {
   return rawLabel
-    .split('_')
+    .split(/[-_\s]+/)
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(' ');
 }
@@ -80,7 +84,7 @@ function formatClassLabel(rawLabel: string): string {
  * @param classifyBuffer - Float32Array preprocessed at 224x224 with ImageNet normalization
  * @param imageWidth     - Width of the detection image (e.g. 640)
  * @param imageHeight    - Height of the detection image (e.g. 640)
- * @param classNames     - Array of class labels for detection output decoding
+ * @param classNames     - Array of 241 GGCD food class labels for detection output decoding
  * @returns InferenceResult with detected items and timing metrics
  * @throws If models are not loaded (call loadModelSet() first)
  */
@@ -109,7 +113,7 @@ export async function runDetectionPipeline(
   pipelineStages.push({ stage: 'detect', timeMs: detectTimeMs });
 
   // Decode YOLO output tensor into raw detections
-  // model.run() returns TypedArray[] — convert to Float32Array for uniform access.
+  // model.run() returns TypedArray[] -- convert to Float32Array for uniform access.
   const detectTensor = detectOutput[0] instanceof Float32Array
     ? detectOutput[0]
     : new Float32Array(detectOutput[0] as ArrayBuffer);
@@ -128,18 +132,15 @@ export async function runDetectionPipeline(
     classNames,
   );
 
-  // Filter to COCO food class detections only (remove person, car, chair, etc.)
-  const foodDetections = rawDetections.filter((det) =>
-    COCO_FOOD_CLASS_IDS.has(det.classId),
-  );
+  // All 241 GGCD classes are food -- no COCO filtering needed.
+  // Every detection is a food item.
+  const foodDetections = rawDetections;
 
   // ── Stage 2: Classification ──
-  // Uses EfficientNet-Lite0 (224x224 with ImageNet normalization) to get
-  // a proper food label for detected items.
-  // COCO only has 10 food classes (banana, apple, pizza, etc.) which produce
-  // misleading labels. EfficientNet-Lite0 has 335 food-specific classes.
+  // Uses EfficientNet-Lite0 (224x224 with ImageNet normalization) for a
+  // secondary food label. With GGCD YOLO providing meaningful per-box
+  // food names, the classifier serves as confirmation/refinement.
   const classifyStart = performance.now();
-  let topFoodLabel = 'Food Item';
   if (foodDetections.length > 0) {
     const classifyOutput = await models.classify.run([classifyBuffer]);
     const classifyScores = classifyOutput[0] instanceof Float32Array
@@ -156,20 +157,23 @@ export async function runDetectionPipeline(
       }
     }
 
-    if (topConf >= CLASSIFY_CONFIDENCE_THRESHOLD && topIdx < CLASSIFY_CLASS_NAMES.length) {
-      topFoodLabel = formatClassLabel(CLASSIFY_CLASS_NAMES[topIdx]);
+    // Log classifier result for debugging -- YOLO label is primary.
+    if (__DEV__) {
+      if (topConf >= CLASSIFY_CONFIDENCE_THRESHOLD && topIdx < CLASSIFY_CLASS_NAMES.length) {
+        const classifyLabel = formatFoodLabel(CLASSIFY_CLASS_NAMES[topIdx]);
+        console.log(`[Detection] Classifier secondary label: ${classifyLabel} (${(topConf * 100).toFixed(1)}%)`);
+      }
     }
   }
   const classifyTimeMs = performance.now() - classifyStart;
   pipelineStages.push({ stage: 'classify', timeMs: classifyTimeMs });
 
   // ── Build DetectedItem array ──
-  // All COCO food detections are returned with the classify label.
-  // If multiple food boxes are detected, they all share the same classify
-  // label (whole-image classification, same as before).
+  // Each detection uses its own YOLO-assigned food class name (from GGCD).
+  // The per-box YOLO label is the primary className for each item.
   const items: DetectedItem[] = foodDetections.map((det) => ({
     id: generateDetectionId(),
-    className: topFoodLabel,
+    className: formatFoodLabel(det.className),
     confidence: det.confidence,
     bbox: {
       x: det.x,
