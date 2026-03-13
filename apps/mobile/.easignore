@@ -1,0 +1,29 @@
+# EAS Build ignore file
+# Inherits from .gitignore by default, but we need to INCLUDE
+# bundled .tflite models that are gitignored (too large for git).
+
+# Virtual environments
+.venv/
+
+# Model weights and export artifacts (training-side only)
+*.pt
+*.onnx
+*.mlmodel
+*.mlpackage
+*_saved_model/
+calibration_image_sample_data_*.npy
+training/exports/
+
+# NOTE: *.tflite is deliberately NOT listed here.
+# The bundled models in assets/models/*.tflite must be included in the build.
+
+# Python
+__pycache__/
+*.pyc
+
+# IDE
+.idea/
+.vscode/
+
+# Claude Code
+.claude/settings.local.json

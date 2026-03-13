@@ -18,8 +18,6 @@ import { runDetectionPipeline } from '../services/detection/inferenceRouter';
 import { loadModelSet } from '../services/detection/modelLoader';
 import { preprocessImageForModel } from '../services/detection/imagePreprocess';
 import {
-  COCO_CLASS_NAMES,
-  COCO_FOOD_CLASS_IDS,
   BINARY_INPUT_SIZE,
   DETECT_INPUT_SIZE,
 } from '../services/detection/constants';
@@ -58,9 +56,9 @@ const CARB_PER_GRAM = 0.2;
 /** Rough fat-per-gram (Phase 2 proxy). */
 const FAT_PER_GRAM = 0.08;
 
-// Class names and input sizes imported from constants.ts:
-// COCO_CLASS_NAMES (80 entries), COCO_FOOD_CLASS_IDS (10 food class IDs),
+// Input sizes imported from constants.ts:
 // BINARY_INPUT_SIZE (192), DETECT_INPUT_SIZE (640).
+// COCO food filtering and AIY Food V1 labelling are handled in inferenceRouter.
 
 // ---------------------------------------------------------------------------
 // Component
@@ -80,7 +78,7 @@ const FAT_PER_GRAM = 0.08;
  */
 export function DetectionScreen() {
   const navigation = useNavigation();
-  const { width: screenWidth } = useWindowDimensions();
+  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
   // -- Store hooks -----------------------------------------------------------
   const {
@@ -118,7 +116,8 @@ export function DetectionScreen() {
   // -- Photo dimensions for display -----------------------------------------
   const aspectRatio = photoWidth > 0 ? photoHeight / photoWidth : 1;
   const displayWidth = screenWidth;
-  const displayHeight = Math.min(screenWidth * aspectRatio, screenWidth * 0.65);
+  // Cap photo at 35% of screen height so results are visible below
+  const displayHeight = Math.min(screenWidth * aspectRatio, screenHeight * 0.35);
 
   // -- Active items ----------------------------------------------------------
   const active = activeItems();
@@ -201,6 +200,9 @@ export function DetectionScreen() {
       ]);
 
       // Pass Float32Array directly (not .buffer) — react-native-fast-tflite expects TypedArray
+      // COCO_CLASS_NAMES is passed for YOLO decoding; the router handles
+      // COCO food-class filtering and AIY Food V1 relabelling internally.
+      const { COCO_CLASS_NAMES } = await import('../services/detection/constants');
       const result = await runDetectionPipeline(
         detectPixels,
         classifyPixels,
@@ -209,23 +211,10 @@ export function DetectionScreen() {
         COCO_CLASS_NAMES,
       );
 
-      // Post-filter: only keep food detections from COCO 80 classes.
-      // Non-food items (person, car, etc.) are logged for debug but hidden from UI.
-      const foodItems = result.items.filter((item) => {
-        const classIdx = COCO_CLASS_NAMES.indexOf(item.className);
-        if (classIdx >= 0 && !COCO_FOOD_CLASS_IDS.has(classIdx)) {
-          // Non-food COCO detection -- skip from results
-          if (__DEV__) {
-            console.debug(`[Detection] Filtered non-food: ${item.className} (class ${classIdx})`);
-          }
-          return false;
-        }
-        return true;
-      });
-
-      // Enrich each detected item with portion estimates
+      // Enrich each detected item with portion estimates.
+      // Items are already food-only and labelled with AIY Food V1 class names.
       const imageSize: ImageSize = { width: imgWidth, height: imgHeight };
-      const enrichedItems = foodItems.map((item) => ({
+      const enrichedItems = result.items.map((item) => ({
         ...item,
         portionEstimate: estimatePortion(
           item.bbox,
@@ -449,9 +438,18 @@ export function DetectionScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.resultsContainer}>
-        {/* Annotated photo with bounding boxes (~50% screen height) */}
+        {/* Header with dismiss button */}
+        <View style={styles.resultsHeader}>
+          <Pressable onPress={handleGoBack} style={styles.dismissButton}>
+            <Text style={styles.dismissButtonText}>Cancel</Text>
+          </Pressable>
+          <Text style={styles.resultsTitle}>Detection Results</Text>
+          <View style={styles.dismissButtonPlaceholder} />
+        </View>
+
+        {/* Annotated photo with bounding boxes */}
         {photoUri && (
-          <View style={{ height: displayHeight }}>
+          <View style={{ height: displayHeight, overflow: 'hidden' }}>
             <AnnotatedPhoto
               photoUri={photoUri}
               photoWidth={photoWidth}
@@ -615,5 +613,32 @@ const styles = StyleSheet.create({
   // -- Results --
   resultsContainer: {
     flex: 1,
+  },
+  resultsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E0E0E0',
+    backgroundColor: '#FAFAFA',
+  },
+  dismissButton: {
+    paddingVertical: 4,
+    paddingHorizontal: 8,
+  },
+  dismissButtonText: {
+    fontSize: 16,
+    color: '#007AFF',
+    fontWeight: '500',
+  },
+  resultsTitle: {
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#1A1A1A',
+  },
+  dismissButtonPlaceholder: {
+    width: 60,
   },
 });

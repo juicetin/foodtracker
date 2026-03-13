@@ -2,11 +2,15 @@
  * Detection pipeline constants.
  *
  * COCO 80 class names at correct indices, food-specific class IDs,
- * and model input sizes for the three-stage pipeline.
+ * AIY Food V1 class names (2024 entries), and model input sizes
+ * for the three-stage pipeline.
  *
  * AIY Food V1 actual input: 192x192 uint8 (discovered in Plan 01).
  * YOLO11n COCO input: 640x640 float32.
  */
+
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const foodV1Labels = require('../../../assets/models/labels_food_v1.json');
 
 /**
  * Full 80-class COCO names array (indices 0-79).
@@ -53,3 +57,10 @@ export const DETECT_INPUT_SIZE = 640;
  * Same model as binary gate, same input size.
  */
 export const CLASSIFY_INPUT_SIZE = 192;
+
+/**
+ * AIY Food V1 class names (2024 entries).
+ * Index 0 is '__background__'. Some entries are Google KG IDs (start with '/').
+ * Used by the classify stage to label detected food items.
+ */
+export const FOOD_V1_CLASS_NAMES: string[] = foodV1Labels.classNames;

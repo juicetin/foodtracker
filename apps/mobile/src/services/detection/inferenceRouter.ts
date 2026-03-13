@@ -20,6 +20,7 @@
 
 import { getModelSet } from './modelLoader';
 import { decodeYoloOutput } from './postProcess';
+import { FOOD_V1_CLASS_NAMES, COCO_FOOD_CLASS_IDS } from './constants';
 import type {
   InferenceResult,
   DetectedItem,
@@ -140,22 +141,48 @@ export async function runDetectionPipeline(
     classNames,
   );
 
+  // Filter to COCO food class detections only (remove person, car, chair, etc.)
+  const foodDetections = rawDetections.filter((det) =>
+    COCO_FOOD_CLASS_IDS.has(det.classId),
+  );
+
   // ── Stage 3: Classification ──
-  // Uses classifyBuffer (192x192) for AIY Food V1 classification.
-  // For a single-pass YOLO detector, classification is already done in the
-  // detection output (class scores per anchor). The classify model refines
-  // class predictions for each detected region. If no detections, skip.
+  // Uses AIY Food V1 (192x192) to get a proper food label for detected items.
+  // COCO only has 10 food classes (banana, apple, pizza, etc.) which produce
+  // misleading labels. AIY Food V1 has 2024 food-specific classes.
   const classifyStart = performance.now();
-  if (rawDetections.length > 0) {
-    await models.classify.run([classifyBuffer]);
+  let topFoodLabel = 'Food item';
+  if (foodDetections.length > 0) {
+    const classifyOutput = await models.classify.run([classifyBuffer]);
+    const classifyScores = classifyOutput[0] instanceof Float32Array
+      ? classifyOutput[0]
+      : new Float32Array(classifyOutput[0] as ArrayBuffer);
+
+    // Find top valid food label from AIY Food V1's 2024 classes.
+    // Skip index 0 (__background__) and Google KG IDs (start with '/').
+    let topConf = 0;
+    let topIdx = 0;
+    for (let i = 1; i < classifyScores.length; i++) {
+      if (classifyScores[i] > topConf) {
+        const label = FOOD_V1_CLASS_NAMES[i];
+        if (label && !label.startsWith('/')) {
+          topConf = classifyScores[i];
+          topIdx = i;
+        }
+      }
+    }
+    if (topIdx > 0 && topConf > 0.01) {
+      topFoodLabel = FOOD_V1_CLASS_NAMES[topIdx];
+    }
   }
   const classifyTimeMs = performance.now() - classifyStart;
   pipelineStages.push({ stage: 'classify', timeMs: classifyTimeMs });
 
   // ── Build DetectedItem array ──
-  const items: DetectedItem[] = rawDetections.map((det) => ({
+  // Uses AIY Food V1 label instead of COCO class names for food items.
+  const items: DetectedItem[] = foodDetections.map((det) => ({
     id: generateDetectionId(),
-    className: det.className,
+    className: topFoodLabel,
     confidence: det.confidence,
     bbox: {
       x: det.x,
