@@ -113,11 +113,11 @@ Plans:
   3. Post-processing (NMS, bounding box decode) updated for YOLOv8 output format if different from YOLO11n
   4. Multi-dish photos (e.g., rice + curry + salad) produce separate bounding boxes per dish instead of one large box
   5. APK builds and detection correctly separates multiple food items in test photos on-device
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02.3-01: TBD
-- [ ] 02.3-02: TBD
+- [ ] 02.3-01-PLAN.md -- Export GGCD YOLOv8n to TFLite, deploy model and labels, update manifest and constants
+- [ ] 02.3-02-PLAN.md -- Pipeline wiring: remove COCO filtering, use 241 GGCD food classes, per-box YOLO labels, update tests
 
 ### Phase 2.4: Global Cuisine Training Expansion (INSERTED)
 
