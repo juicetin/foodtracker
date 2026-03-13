@@ -3,16 +3,11 @@
  *
  * When installed_packs has no model entries, modelLoader should fall back
  * to loading models via require() bundled assets.
+ *
+ * Updated for two-model loading (detect + classify only, no binary or food101).
  */
 
 // ── Mock react-native-fast-tflite ──
-const mockBinaryModel = {
-  run: jest.fn().mockResolvedValue([new Float32Array(0)]),
-  runSync: jest.fn().mockReturnValue([new Float32Array(0)]),
-  inputs: [],
-  outputs: [],
-  delegate: 'default' as const,
-};
 const mockDetectModel = {
   run: jest.fn().mockResolvedValue([new Float32Array(0)]),
   runSync: jest.fn().mockReturnValue([new Float32Array(0)]),
@@ -23,13 +18,6 @@ const mockDetectModel = {
 const mockClassifyModel = {
   run: jest.fn().mockResolvedValue([new Float32Array(0)]),
   runSync: jest.fn().mockReturnValue([new Float32Array(0)]),
-  inputs: [],
-  outputs: [],
-  delegate: 'default' as const,
-};
-const mockFood101Model = {
-  run: jest.fn().mockResolvedValue([new Float32Array(101)]),
-  runSync: jest.fn().mockReturnValue([new Float32Array(101)]),
   inputs: [],
   outputs: [],
   delegate: 'default' as const,
@@ -83,7 +71,7 @@ jest.mock('../../../../db/schema', () => ({
 
 import { loadModelSet, getModelSet, releaseModels } from '../modelLoader';
 
-describe('modelLoader - bundled model fallback', () => {
+describe('modelLoader - bundled model fallback (2-model)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     releaseModels();
@@ -95,61 +83,54 @@ describe('modelLoader - bundled model fallback', () => {
     selectFromResult = [];
 
     mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel)
-      .mockResolvedValueOnce(mockFood101Model);
+      .mockResolvedValueOnce(mockClassifyModel);
 
     const modelSet = await loadModelSet();
 
     expect(modelSet).toBeDefined();
-    expect(modelSet.binary).toBeDefined();
     expect(modelSet.detect).toBeDefined();
     expect(modelSet.classify).toBeDefined();
 
-    // Should have called loadTensorflowModel 4 times for bundled models (3 main + 1 food101)
-    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(4);
+    // Should have called loadTensorflowModel exactly 2 times (detect + classify)
+    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(2);
 
     // All calls should use require() number values, not { url: string }
     for (const call of mockLoadTensorflowModel.mock.calls) {
-      // The first argument should be a number (require() result) not an object
       expect(typeof call[0]).toBe('number');
     }
   });
 
-  it('returns valid ModelSet with all three models from bundled fallback', async () => {
+  it('returns valid ModelSet with exactly 2 models (detect + classify)', async () => {
     selectFromResult = [];
 
     mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel)
-      .mockResolvedValueOnce(mockFood101Model);
+      .mockResolvedValueOnce(mockClassifyModel);
 
     const modelSet = await loadModelSet();
 
     // Each model should have run/runSync methods
-    expect(typeof modelSet.binary.run).toBe('function');
-    expect(typeof modelSet.binary.runSync).toBe('function');
     expect(typeof modelSet.detect.run).toBe('function');
     expect(typeof modelSet.detect.runSync).toBe('function');
     expect(typeof modelSet.classify.run).toBe('function');
     expect(typeof modelSet.classify.runSync).toBe('function');
+
+    // ModelSet should NOT have binary or food101 properties
+    expect((modelSet as Record<string, unknown>).binary).toBeUndefined();
+    expect((modelSet as Record<string, unknown>).food101).toBeUndefined();
   });
 
   it('still uses installed_packs path when packs exist', async () => {
-    // installed_packs has all three models
+    // installed_packs has detect and classify models
     selectFromResult = [
-      { id: 'yolo-binary-v1', name: 'Binary', type: 'model', version: '1.0.0', filePath: '/data/binary.tflite', sizeBytes: 5000000, sha256: 'h1', region: null, installedAt: '2026-01-01', lastChecked: null },
       { id: 'yolo-detect-v1', name: 'Detect', type: 'model', version: '1.0.0', filePath: '/data/detect.tflite', sizeBytes: 10000000, sha256: 'h2', region: null, installedAt: '2026-01-01', lastChecked: null },
-      { id: 'yolo-classify-v1', name: 'Classify', type: 'model', version: '1.0.0', filePath: '/data/classify.tflite', sizeBytes: 8000000, sha256: 'h3', region: null, installedAt: '2026-01-01', lastChecked: null },
+      { id: 'efficientnet-classify-v1', name: 'Classify', type: 'model', version: '1.0.0', filePath: '/data/classify.tflite', sizeBytes: 4000000, sha256: 'h3', region: null, installedAt: '2026-01-01', lastChecked: null },
     ];
 
     mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel)
-      .mockResolvedValueOnce(mockFood101Model);
+      .mockResolvedValueOnce(mockClassifyModel);
 
     const modelSet = await loadModelSet();
 
@@ -165,15 +146,13 @@ describe('modelLoader - bundled model fallback', () => {
     selectFromResult = [];
 
     mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockBinaryModel)
       .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel)
-      .mockResolvedValueOnce(mockFood101Model);
+      .mockResolvedValueOnce(mockClassifyModel);
 
     const first = await loadModelSet();
     const second = await loadModelSet();
 
     expect(first).toBe(second);
-    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(4);
+    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(2);
   });
 });
