@@ -96,11 +96,11 @@ Plans:
   3. Labels file updated to 335 merged classes (Food-101 + UEC-256) with correct index mapping
   4. Food-101 fallback classifier removed (no longer needed — its 101 classes are a subset of the new 335)
   5. APK builds and classifier correctly identifies ramen, pad thai, bibimbap, and other previously-misclassified foods on-device
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 02.2-01: TBD
-- [ ] 02.2-02: TBD
+- [ ] 02.2-01-PLAN.md -- Deploy model assets and update type contracts: swap classify.tflite, deploy 335-class labels, simplify ModelSet to 2-stage
+- [ ] 02.2-02-PLAN.md -- Pipeline wiring: rewrite inferenceRouter as 2-stage (detect+classify), add ImageNet normalization, update tests
 
 ### Phase 2.3: Food-Specific YOLO Detection (INSERTED)
 
