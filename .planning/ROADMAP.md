@@ -14,6 +14,11 @@ Decimal phases appear between their surrounding integers in numeric order.
 
 - [ ] **Phase 1: Infrastructure + Data Foundation** - Local SQLite storage, dev build workflow, bundled nutrition DB, schema migrations
 - [ ] **Phase 2: On-Device Detection Pipeline** - YOLO training completion, model export, mobile ML integration, inference router (gap closure in progress)
+- [ ] **Phase 2.1: Pre-trained Model Acquisition** - AIY Food V1, YOLO26n COCO, TFLite pipeline wiring
+- [ ] **Phase 2.2: Deploy Custom 335-Class Classifier** - Replace AIY with trained EfficientNet-Lite0 (335 classes, 3.9MB)
+- [ ] **Phase 2.3: Food-Specific YOLO Detection** - Replace COCO YOLO with GGCD YOLOv8n (241 food classes)
+- [ ] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
+- [ ] **Phase 2.5: Nutrition & Metadata Enrichment** - Open Food Facts, Nutrition5k, WorldCuisines multilingual labels
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
 - [ ] **Phase 5: Enhanced Detection + Scale OCR** - VLM integration, hidden ingredient inference, scale reading, container weights, UX modes, notifications
@@ -79,6 +84,76 @@ Plans:
 - [ ] 02.1-01-PLAN.md -- Python acquisition script: download AIY Food V1, export YOLO26n to TFLite, validate, copy to assets
 - [ ] 02.1-02-PLAN.md -- TypeScript pipeline wiring: bundled model fallback, binary gate fix, COCO constants, dual input sizes
 - [ ] 02.1-03-PLAN.md -- EAS build config, APK build, on-device human verification of detection pipeline
+
+### Phase 2.2: Deploy Custom 335-Class Classifier (INSERTED)
+
+**Goal:** Replace AIY Food V1 (2024 generic classes) with our trained EfficientNet-Lite0 (335 food-specific classes, 3.9MB INT8) in the app, producing a testable APK with dramatically improved food classification
+**Requirements**: ML-01
+**Depends on:** Phase 2.1
+**Success Criteria** (what must be TRUE):
+  1. EfficientNet-Lite0 INT8 TFLite (3.9MB) replaces AIY Food V1 as the primary classifier in the bundled model set
+  2. Preprocessing updated from 192x192 uint8 to 224x224 float32 with ImageNet normalization (mean=[0.485,0.456,0.406], std=[0.229,0.224,0.225])
+  3. Labels file updated to 335 merged classes (Food-101 + UEC-256) with correct index mapping
+  4. Food-101 fallback classifier removed (no longer needed — its 101 classes are a subset of the new 335)
+  5. APK builds and classifier correctly identifies ramen, pad thai, bibimbap, and other previously-misclassified foods on-device
+**Plans:** TBD
+
+Plans:
+- [ ] 02.2-01: TBD
+- [ ] 02.2-02: TBD
+
+### Phase 2.3: Food-Specific YOLO Detection (INSERTED)
+
+**Goal:** Replace COCO YOLO11n (10 food classes out of 80) with GGCD YOLOv8n (241 food-specific classes) for dramatically better multi-dish detection and separation
+**Requirements**: ML-02
+**Depends on:** Phase 2.2
+**Success Criteria** (what must be TRUE):
+  1. GGCD YOLOv8n (6.7MB) is converted to TFLite INT8 format suitable for react-native-fast-tflite
+  2. Detection pipeline uses food-specific YOLO with 241 class labels instead of COCO 80-class with food filtering
+  3. Post-processing (NMS, bounding box decode) updated for YOLOv8 output format if different from YOLO11n
+  4. Multi-dish photos (e.g., rice + curry + salad) produce separate bounding boxes per dish instead of one large box
+  5. APK builds and detection correctly separates multiple food items in test photos on-device
+**Plans:** TBD
+
+Plans:
+- [ ] 02.3-01: TBD
+- [ ] 02.3-02: TBD
+
+### Phase 2.4: Global Cuisine Training Expansion (INSERTED)
+
+**Goal:** Expand the food classifier from 335 to 700+ classes covering all major global cuisines by merging additional datasets, retraining, and deploying
+**Requirements**: ML-03
+**Depends on:** Phase 2.2
+**Success Criteria** (what must be TRUE):
+  1. Additional datasets downloaded and merged: Indian (bharat-raghunathan 15 classes, rajistics 20 classes, Khana 80 classes), Chinese (CNFOOD-241), Ethiopian (Tinsae 11 classes), Thai (THFOOD-50), Vietnamese (VietFood67), Taiwanese (Taiwanese Food 101), and others from HuggingFace/Kaggle research
+  2. EfficientNet-Lite0 retrained on merged dataset with 700+ unique classes, achieving >70% top-1 validation accuracy
+  3. New model exported to INT8 TFLite (<6MB) and deployed to app replacing the 335-class model
+  4. Labels and nutrition mappings updated for all new classes
+  5. Previously-uncovered cuisines (Indian beyond samosa/curry, African, regional Chinese) are correctly classified on-device
+**Plans:** TBD
+
+Plans:
+- [ ] 02.4-01: TBD
+- [ ] 02.4-02: TBD
+- [ ] 02.4-03: TBD
+
+### Phase 2.5: Nutrition & Metadata Enrichment (INSERTED)
+
+**Goal:** Enrich the nutrition database with Open Food Facts (4.4M products), Nutrition5k calorie data, and WorldCuisines multilingual metadata so every classified food returns accurate nutrition info and cultural context
+**Requirements**: ML-04, ML-05
+**Depends on:** Phase 2.4, Phase 1
+**Success Criteria** (what must be TRUE):
+  1. Open Food Facts product database filtered and imported for food nutrition lookup (packaged foods with barcodes + generic food items)
+  2. Nutrition5k per-dish calorie/macro data integrated for ground-truth nutrition estimates on common dishes
+  3. WorldCuisines food-kb used to add multilingual labels (30+ languages), cuisine tags, and country associations to classified foods
+  4. Every class in the 700+ classifier has a nutrition mapping (direct match, category fallback, or USDA proxy)
+  5. App displays cuisine context (e.g., "Thai", "Ethiopian") alongside food names in the detection results UI
+**Plans:** TBD
+
+Plans:
+- [ ] 02.5-01: TBD
+- [ ] 02.5-02: TBD
+- [ ] 02.5-03: TBD
 
 ### Phase 3: Nutrition Resolution + Diary
 **Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
@@ -147,13 +222,17 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
 | 1. Infrastructure + Data Foundation | 4/4 | Complete | 2026-03-12 |
 | 2. On-Device Detection Pipeline | 5/6 | Gap closure | - |
-| 2.1. Pre-trained Model Acquisition | 0/3 | Planning complete | - |
+| 2.1. Pre-trained Model Acquisition | 2/3 | In progress | - |
+| 2.2. Deploy Custom 335-Class Classifier | 0/2 | Not started | - |
+| 2.3. Food-Specific YOLO Detection | 0/2 | Not started | - |
+| 2.4. Global Cuisine Training Expansion | 0/3 | Not started | - |
+| 2.5. Nutrition & Metadata Enrichment | 0/3 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Enhanced Detection + Scale OCR | 0/3 | Not started | - |

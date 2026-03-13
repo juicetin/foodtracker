@@ -60,6 +60,14 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **MDL-01**: Android app delivers ML models via Play for On-Device AI with device targeting by RAM and chipset
 - [ ] **MDL-02**: iOS app delivers optional models via On-Demand Resources or Background Assets API
 
+### ML Pipeline Expansion
+
+- [ ] **ML-01**: App uses a custom-trained 335+ class food classifier (EfficientNet-Lite0) replacing the generic AIY Food V1 model, with ImageNet-normalized 224x224 input
+- [ ] **ML-02**: Detection pipeline uses a food-specific YOLO model (241 food classes) instead of COCO YOLO (10 food classes) for accurate multi-dish separation
+- [ ] **ML-03**: Classifier covers 700+ food classes spanning all major global cuisines (East Asian, South Asian, Southeast Asian, African, Middle Eastern, European, Americas) via merged training datasets
+- [ ] **ML-04**: Nutrition database is enriched with Open Food Facts product data (4.4M products), Nutrition5k per-dish calorie data, and curated regional nutrition tables
+- [ ] **ML-05**: Food labels include multilingual names, cuisine tags, and cultural context from WorldCuisines knowledge base (2,414 dishes, 35+ countries)
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -135,9 +143,15 @@ Deferred to future release. Tracked but not in current roadmap.
 | MDL-01 | Phase 6 | Pending |
 | MDL-02 | Phase 6 | Pending |
 
+| ML-01 | Phase 2.2 | Pending |
+| ML-02 | Phase 2.3 | Pending |
+| ML-03 | Phase 2.4 | Pending |
+| ML-04 | Phase 2.5 | Pending |
+| ML-05 | Phase 2.5 | Pending |
+
 **Coverage:**
-- v1 requirements: 28 total
-- Mapped to phases: 28
+- v1 requirements: 33 total
+- Mapped to phases: 33
 - Unmapped: 0
 
 ---
