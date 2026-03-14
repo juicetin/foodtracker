@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in-progress
-stopped_at: Completed 02.5-04-PLAN.md (gap closure: quantity parsing + full dataset)
-last_updated: "2026-03-14T07:25:50Z"
-last_activity: 2026-03-14 -- Completed 02.5-04 (Quantity parsing + full recipe dataset loading)
+stopped_at: Completed 02.5-05-PLAN.md (gap closure: USDA expansion, fuzzy matching, label coverage)
+last_updated: "2026-03-14T07:35:22Z"
+last_activity: 2026-03-14 -- Completed 02.5-05 (USDA expansion, fuzzy matching, label coverage)
 progress:
   total_phases: 12
   completed_phases: 6
   total_plans: 27
-  completed_plans: 24
-  percent: 80
+  completed_plans: 25
+  percent: 82
 ---
 
 # Project State
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.5 gap closure (plans 04-06). Next: 02.5-05, then 02.5-06, then Phase 02.6
+**Current focus:** Phase 02.5 gap closure (plans 04-06). Next: 02.5-06, then Phase 02.6
 
 ## Current Position
 
 Phase: 02.5 of 7 (Food Knowledge Graph)
-Plan: 4 of 6 in current phase (4 complete, gap closure plans 04-06 added)
+Plan: 5 of 6 in current phase (5 complete, gap closure plans 04-06 added)
 Status: In Progress (gap closure)
-Last activity: 2026-03-14 -- Completed 02.5-04 (Quantity parsing + full recipe dataset loading)
+Last activity: 2026-03-14 -- Completed 02.5-05 (USDA expansion, fuzzy matching, label coverage)
 
-Progress: [████████░░] 80%
+Progress: [████████░░] 82%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 27 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 4 phase 02.5)
+- Total plans completed: 28 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5)
 - Average duration: 10min
 - Total execution time: ~3.1 hours
 
@@ -53,7 +53,7 @@ Progress: [████████░░] 80%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 4min, 5min, 4min
+- Last 3 plans: 5min, 4min, 5min
 - Trend: Fast (KG gap closure plans are focused, quick execution)
 
 *Updated after each plan completion*
@@ -83,6 +83,7 @@ Progress: [████████░░] 80%
 | Phase 02.5 P01 | 14min | 2 tasks | 6 files |
 | Phase 02.5 P03 | 5min | 2 tasks | 8 files |
 | Phase 02.5 P04 | 4min | 2 tasks | 3 files |
+| Phase 02.5 P05 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -185,6 +186,9 @@ Recent decisions affecting current work:
 - [02.5-04]: Ingredient-specific cup/tbsp overrides (flour=120g/cup, oil=218g/cup) instead of single water-default
 - [02.5-04]: parse_quantity_grams returns None for unparseable; caller applies 50g fallback
 - [02.5-04]: All dishes included (no cap, no minimum threshold); tiered confidence for 1-2 vs >=3 recipe counts
+- [02.5-05]: Tiered USDA loading: full CSV (7,793 foods) -> auto-download -> embedded 500-food subset
+- [02.5-05]: Levenshtein fuzzy matching (Strategy 6) as supplement to direct map, invoked only after 5 faster strategies fail
+- [02.5-05]: Classifier/detector labels seeded before recipes; original labels registered as dish_alias type 'model_label'
 
 ### Roadmap Evolution
 
@@ -208,6 +212,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T07:25:50Z
-Stopped at: Completed 02.5-04-PLAN.md (gap closure: quantity parsing + full dataset)
+Last session: 2026-03-14T07:35:22Z
+Stopped at: Completed 02.5-05-PLAN.md (gap closure: USDA expansion, fuzzy matching, label coverage)
 Resume file: None
