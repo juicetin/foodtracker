@@ -156,11 +156,12 @@ export const syncOutbox = sqliteTable('sync_outbox', {
 // ── Installed Packs (new) ──
 
 export const installedPacks = sqliteTable('installed_packs', {
-  id: text('id').primaryKey(), // e.g. 'usda-core'
+  id: text('id').primaryKey(), // e.g. 'usda-core', 'smolvlm-256m'
   name: text('name').notNull(),
-  type: text('type').notNull(), // 'nutrition' | 'model'
+  type: text('type').notNull(), // 'nutrition' | 'model' | 'knowledge-graph' | 'vlm'
   version: text('version').notNull(),
   filePath: text('file_path').notNull(),
+  mmprojFilePath: text('mmproj_file_path'), // Local path to mmproj file (VLM packs only)
   sizeBytes: integer('size_bytes'),
   sha256: text('sha256'),
   region: text('region'),
