@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 02.6-01-PLAN.md (VLM foundation -- deps, types, RAM detector)
-last_updated: "2026-03-14T12:04:33Z"
-last_activity: 2026-03-14 -- Completed 02.6-01 (VLM deps, types, RAM detector)
+status: executing
+stopped_at: Completed 02.6-02-PLAN.md (PackManager streaming download, VLM paired files)
+last_updated: "2026-03-14T12:07:00.614Z"
+last_activity: 2026-03-14 -- Completed 02.6-02 (PackManager streaming download, VLM paired files)
 progress:
   total_phases: 12
   completed_phases: 6
   total_plans: 33
-  completed_plans: 27
-  percent: 83
+  completed_plans: 28
+  percent: 85
 ---
 
 # Project State
@@ -26,11 +26,11 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 02.6 of 7 (On-Device VLM Integration)
-Plan: 1 of 6 in current phase (1 complete)
+Plan: 2 of 6 in current phase (2 complete)
 Status: In Progress
-Last activity: 2026-03-14 -- Completed 02.6-01 (VLM deps, types, RAM detector)
+Last activity: 2026-03-14 -- Completed 02.6-02 (PackManager streaming download, VLM paired files)
 
-Progress: [████████░░] 83%
+Progress: [████████░░] 85%
 
 ## Performance Metrics
 
@@ -87,6 +87,7 @@ Progress: [████████░░] 83%
 | Phase 02.5 P06 | 38min | 2 tasks | 2 files |
 
 | Phase 02.6 P01 | 4min | 2 tasks | 9 files |
+| Phase 02.6 P02 | 5min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -197,6 +198,9 @@ Recent decisions affecting current work:
 - [02.6-01]: llama.rn v0.11.4 with enableEntitlements, forceCxx20, enableOpenCL Expo plugin config
 - [02.6-01]: expo-device getter-based mock pattern for per-test totalMemory mutation in Jest
 - [02.6-01]: SmolVLM family tier configs: budget 256M (365MB), mid 500M (546MB), high 2.2B (1.3GB)
+- [Phase 02.6]: createDownloadResumable from expo-file-system/legacy replaces fetch().arrayBuffer() for streaming to disk -- avoids 300MB+ OOM
+- [Phase 02.6]: All pack types use streaming download (not just VLM) for consistent OOM prevention
+- [Phase 02.6]: VLM paired files: model deleted if mmproj download fails (atomic cleanup)
 
 ### Roadmap Evolution
 
@@ -220,6 +224,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T12:04:33Z
-Stopped at: Completed 02.6-01-PLAN.md (VLM foundation -- deps, types, RAM detector)
+Last session: 2026-03-14T12:06:50.886Z
+Stopped at: Completed 02.6-02-PLAN.md (PackManager streaming download, VLM paired files)
 Resume file: None
