@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2.2: Deploy Custom 335-Class Classifier** - Replace AIY with trained EfficientNet-Lite0 (335 classes, 3.9MB)
 - [x] **Phase 2.3: Food-Specific YOLO Detection** - Replace COCO YOLO with GGCD YOLOv8n (241 food classes)
 - [x] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
-- [x] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge
+- [ ] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge (gap closure in progress)
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
@@ -151,12 +151,15 @@ Plans:
   4. TypeScript KnowledgeGraphService on mobile provides: searchDish (FTS5 + SymSpell fuzzy matching), getCanonicalRecipe, calculateDishNutrition (recipe -> per-ingredient USDA lookup -> aggregated macros)
   5. Detection pipeline uses KG-derived nutrition instead of hardcoded proxies: YOLO className -> KG dish lookup -> recipe decomposition -> portion-scaled macros
   6. KG exported as a downloadable pack via PackManager (new 'knowledge-graph' pack type) or bundled in APK if under 50MB
-**Plans:** 3 plans
+**Plans:** 6 plans (3 complete + 3 gap closure)
 
 Plans:
 - [x] 02.5-01-PLAN.md -- Python KG pipeline: hierarchical schema, RecipeNLG + generate_dishes seeding, USDA SR Legacy embedding, SymSpell pre-computation
 - [x] 02.5-02-PLAN.md -- TypeScript KnowledgeGraphService + SymSpellIndex: FTS5 + fuzzy search, recipe decomposition, pack type extension
 - [x] 02.5-03-PLAN.md -- Detection pipeline wiring: KG nutrition replaces flat-rate proxy, three-tier fallback chain, human verification
+- [ ] 02.5-04-PLAN.md -- Gap closure: ingredient quantity parsing + full dataset loading (all 4 parquet files, no dish cap)
+- [ ] 02.5-05-PLAN.md -- Gap closure: full USDA SR Legacy (7,793 foods), Levenshtein fuzzy matching, classifier/detector label coverage, micronutrient schema
+- [ ] 02.5-06-PLAN.md -- Gap closure: full KG rebuild, export to mobile, verify data quality metrics
 
 ### Phase 2.6: On-Device VLM Integration (INSERTED)
 
@@ -256,7 +259,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.2. Deploy Custom 335-Class Classifier | 2/2 | Complete | 2026-03-13 |
 | 2.3. Food-Specific YOLO Detection | 3/3 | Complete | 2026-03-14 |
 | 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
-| 2.5. Food Knowledge Graph | 3/3 | Complete | 2026-03-14 |
+| 2.5. Food Knowledge Graph | 3/6 | Gap closure | - |
 | 2.6. On-Device VLM Integration | 0/6 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
