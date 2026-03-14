@@ -36,7 +36,8 @@
           "enableCoreMLDelegate": true,
           "enableAndroidGpuLibraries": true
         }
-      ]
+      ],
+      "expo-asset"
     ],
     "extra": {
       "eas": {

@@ -43,3 +43,6 @@ yarn-error.*
 # Build artifacts
 *.apk
 *.aab
+
+# Bundled binary assets (large, built by pipeline)
+assets/data/*.db

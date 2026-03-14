@@ -27,6 +27,10 @@ import {
   type ImageSize,
 } from '../services/detection/portionBridge';
 import type { DetectedItem } from '../services/detection/types';
+import {
+  getKnowledgeGraphService,
+  type MacroResult,
+} from '../services/knowledge-graph';
 
 import {
   AnnotatedPhoto,
@@ -45,22 +49,94 @@ import {
 type FlowState = 'idle' | 'picking' | 'detecting' | 'results' | 'logging';
 
 // ---------------------------------------------------------------------------
-// Constants
+// Constants -- flat-rate proxy (Tier 3 fallback when KG has no data)
 // ---------------------------------------------------------------------------
 
-/** Rough kcal-per-gram (Phase 2 proxy). */
-const KCAL_PER_GRAM = 1.5;
-/** Rough protein-per-gram (Phase 2 proxy). */
-const PROTEIN_PER_GRAM = 0.1;
-/** Rough carbs-per-gram (Phase 2 proxy). */
-const CARB_PER_GRAM = 0.2;
-/** Rough fat-per-gram (Phase 2 proxy). */
-const FAT_PER_GRAM = 0.08;
+/** Flat-rate kcal-per-gram proxy (used when KG has no recipe/dish data). */
+const PROXY_KCAL_PER_GRAM = 1.5;
+/** Flat-rate protein-per-gram proxy. */
+const PROXY_PROTEIN_PER_GRAM = 0.1;
+/** Flat-rate carbs-per-gram proxy. */
+const PROXY_CARB_PER_GRAM = 0.2;
+/** Flat-rate fat-per-gram proxy. */
+const PROXY_FAT_PER_GRAM = 0.08;
 
 // Input sizes imported from constants.ts:
 // DETECT_INPUT_SIZE (640), CLASSIFY_INPUT_SIZE (224).
 // DETECT_CLASS_NAMES (241 GGCD food classes) for YOLO decoding.
 // Per-item YOLO labelling and EfficientNet-Lite0 classification handled in inferenceRouter.
+
+// ---------------------------------------------------------------------------
+// KG-powered nutrition helper
+// ---------------------------------------------------------------------------
+
+/**
+ * Get nutrition for a detected item using the three-tier fallback chain:
+ *   Tier 1: KG recipe decomposition (source='recipe')
+ *   Tier 2: KG dish averages (source='dish_average')
+ *   Tier 3: Flat-rate proxy (source='proxy')
+ *
+ * If the KG service is unavailable (null), goes straight to Tier 3.
+ * Local SQLite queries take <5ms each, so this is fast enough for inline use.
+ */
+async function getNutritionForItem(item: DetectedItem): Promise<MacroResult> {
+  const weightG = item.portionEstimate.weightG * item.portionMultiplier;
+
+  try {
+    const kgService = await getKnowledgeGraphService();
+
+    if (kgService) {
+      // Tier 1: Recipe decomposition (returns MacroResult with source='recipe')
+      // calculateDishNutrition internally tries recipe first, then dish averages
+      const kgResult = await kgService.calculateDishNutrition(
+        item.className,
+        weightG
+      );
+
+      if (kgResult) {
+        if (__DEV__) {
+          console.log(
+            `[KG] ${item.className}: ${kgResult.source} -- ` +
+              `${Math.round(kgResult.calories)} kcal, ` +
+              `${Math.round(kgResult.protein)}g protein, ` +
+              `${Math.round(kgResult.carbs)}g carbs, ` +
+              `${Math.round(kgResult.fat)}g fat`
+          );
+        }
+        return kgResult;
+      }
+    }
+  } catch (err) {
+    if (__DEV__) {
+      console.warn(
+        `[KG] Error querying nutrition for ${item.className}:`,
+        err instanceof Error ? err.message : err
+      );
+    }
+  }
+
+  // Tier 3: Flat-rate proxy (KG not available or dish not found)
+  const proxyResult: MacroResult = {
+    calories: weightG * PROXY_KCAL_PER_GRAM,
+    protein: weightG * PROXY_PROTEIN_PER_GRAM,
+    carbs: weightG * PROXY_CARB_PER_GRAM,
+    fat: weightG * PROXY_FAT_PER_GRAM,
+    weightGrams: weightG,
+    source: 'proxy',
+  };
+
+  if (__DEV__) {
+    console.log(
+      `[KG] ${item.className}: proxy -- ` +
+        `${Math.round(proxyResult.calories)} kcal, ` +
+        `${Math.round(proxyResult.protein)}g protein, ` +
+        `${Math.round(proxyResult.carbs)}g carbs, ` +
+        `${Math.round(proxyResult.fat)}g fat`
+    );
+  }
+
+  return proxyResult;
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -312,18 +388,18 @@ export function DetectionScreen() {
     setFlowState('logging');
 
     try {
-      // Calculate totals from active items
+      // Calculate totals from active items using KG nutrition (three-tier fallback)
       let totalCal = 0;
       let totalProtein = 0;
       let totalCarbs = 0;
       let totalFat = 0;
 
       for (const item of currentActive) {
-        const weightG = item.portionEstimate.weightG * item.portionMultiplier;
-        totalCal += weightG * KCAL_PER_GRAM;
-        totalProtein += weightG * PROTEIN_PER_GRAM;
-        totalCarbs += weightG * CARB_PER_GRAM;
-        totalFat += weightG * FAT_PER_GRAM;
+        const macros = await getNutritionForItem(item);
+        totalCal += macros.calories;
+        totalProtein += macros.protein;
+        totalCarbs += macros.carbs;
+        totalFat += macros.fat;
       }
 
       await addEntry({
