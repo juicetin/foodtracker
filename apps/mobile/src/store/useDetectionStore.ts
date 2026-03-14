@@ -22,8 +22,18 @@ interface DetectionStore extends DetectionSessionState {
   setMealType: (type: MealType) => void;
   selectItem: (id: string | null) => void;
   reset: () => void;
+  // VLM refinement actions
+  setRefining: (refining: boolean) => void;
+  refineItem: (id: string, vlmData: {
+    vlmLabel: string;
+    vlmCuisine?: string;
+    vlmIngredients?: string[];
+    vlmConfidence?: number;
+  }) => void;
+  setUserText: (text: string) => void;
   // Computed
   activeItems: () => DetectedItem[];
+  displayLabel: (item: DetectedItem) => string;
 }
 
 // ---------------------------------------------------------------------------
@@ -38,6 +48,8 @@ const initialState: DetectionSessionState = {
   isDetecting: false,
   mealType: autoDetectMealType(),
   selectedItemId: null,
+  isRefining: false,
+  userMealText: '',
 };
 
 // ---------------------------------------------------------------------------
@@ -114,6 +126,35 @@ export const useDetectionStore = create<DetectionStore>((set, get) => ({
 
   reset: () => set({ ...initialState, mealType: autoDetectMealType() }),
 
+  // -- VLM refinement actions ------------------------------------------------
+
+  setRefining: (refining) =>
+    set((state) => ({
+      isRefining: refining,
+      items: state.items.map((item) => ({
+        ...item,
+        isRefining: refining,
+      })),
+    })),
+
+  refineItem: (id, vlmData) =>
+    set((state) => ({
+      items: state.items.map((item) =>
+        item.id === id
+          ? {
+              ...item,
+              vlmLabel: vlmData.vlmLabel,
+              vlmCuisine: vlmData.vlmCuisine,
+              vlmIngredients: vlmData.vlmIngredients,
+              vlmConfidence: vlmData.vlmConfidence,
+              isRefining: false,
+            }
+          : item,
+      ),
+    })),
+
+  setUserText: (text) => set({ userMealText: text }),
+
   // -- Computed --------------------------------------------------------------
 
   activeItems: () => {
@@ -122,4 +163,6 @@ export const useDetectionStore = create<DetectionStore>((set, get) => ({
       .filter((i) => !i.isRemoved)
       .sort((a, b) => b.confidence - a.confidence);
   },
+
+  displayLabel: (item: DetectedItem) => item.vlmLabel ?? item.className,
 }));
