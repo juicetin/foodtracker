@@ -4,14 +4,18 @@
  * Handles downloading packs from R2, verifying SHA-256 integrity,
  * storing them locally, and tracking installed packs in the user database.
  *
- * This is the GENERIC pack manager -- handles nutrition DBs now and
- * ML model packs in later phases using the same logic.
+ * This is the GENERIC pack manager -- handles nutrition DBs, ML model packs,
+ * and VLM packs (paired model + mmproj files) using the same logic.
+ *
+ * Downloads use expo-file-system/legacy createDownloadResumable for streaming
+ * to disk, avoiding OOM on large files (300MB+ VLM models).
  *
  * Phase 1: Both platforms download from R2 (no platform-native delivery).
  * Phase 6: Platform-native delivery (Play Asset Delivery / iOS ODR) as optimization.
  */
 
 import { Paths, File, Directory } from 'expo-file-system';
+import { createDownloadResumable } from 'expo-file-system/legacy';
 import * as Crypto from 'expo-crypto';
 import { eq } from 'drizzle-orm';
 import { userDb } from '../../../db/client';
@@ -40,10 +44,10 @@ function getPackDir(pack: PackEntry): string {
 }
 
 /**
- * Get the filename from a pack's URL.
+ * Get the filename from a URL.
  */
-function getPackFilename(pack: PackEntry): string {
-  const urlParts = pack.url.split('/');
+function getFilenameFromUrl(url: string): string {
+  const urlParts = url.split('/');
   return urlParts[urlParts.length - 1];
 }
 
@@ -59,6 +63,10 @@ function ensureDirectoryExists(dirUri: string): void {
 
 /**
  * Compute SHA-256 hash of a file's content.
+ *
+ * TODO: For very large files (300MB+ VLM models), this reads the entire file as
+ * base64 then hashes the base64 string. A streaming hash solution should be
+ * considered to reduce peak memory for integrity verification of large files.
  */
 async function hashFile(fileUri: string): Promise<string> {
   const file = new File(fileUri);
@@ -69,19 +77,59 @@ async function hashFile(fileUri: string): Promise<string> {
   );
 }
 
+/**
+ * Stream-download a file to disk using createDownloadResumable.
+ *
+ * Unlike fetch().arrayBuffer() which buffers the entire response in RAM,
+ * this streams directly to disk -- critical for 300MB+ VLM downloads.
+ *
+ * @param url - Remote URL to download
+ * @param destPath - Local file URI to write to
+ * @param headers - HTTP headers (e.g. API key)
+ * @param onProgress - Progress callback with DownloadProgress shape
+ * @throws If download fails or returns null/undefined result
+ */
+async function streamDownloadFile(
+  url: string,
+  destPath: string,
+  headers: Record<string, string>,
+  onProgress?: (progress: DownloadProgress) => void
+): Promise<void> {
+  const resumable = createDownloadResumable(
+    url,
+    destPath,
+    { headers },
+    onProgress
+      ? (data: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => {
+          const expected = data.totalBytesExpectedToWrite > 0 ? data.totalBytesExpectedToWrite : 1;
+          onProgress({
+            totalBytesWritten: data.totalBytesWritten,
+            totalBytesExpected: data.totalBytesExpectedToWrite,
+            fraction: data.totalBytesWritten / expected,
+          });
+        }
+      : undefined
+  );
+
+  const result = await resumable.downloadAsync();
+  if (!result) {
+    throw new Error(`Streaming download failed for ${url}: result is null/undefined`);
+  }
+}
+
 export const PackManager = {
   /**
    * Download a pack from R2, verify its integrity, and record it.
    *
-   * Uses fetch API for download with manual progress tracking via
-   * Content-Length header. Files are written using expo-file-system v19
-   * File API.
+   * Uses streaming download via createDownloadResumable to avoid OOM
+   * on large files (300MB+ VLM models). For VLM packs, downloads both
+   * the model GGUF and companion mmproj GGUF as paired files.
    *
    * @param pack - Pack entry from the manifest
    * @param onProgress - Progress callback
    * @param apiKey - Optional API key for R2 access
    * @returns The installed pack record
-   * @throws If download fails or SHA-256 hash mismatches
+   * @throws If download fails, SHA-256 hash mismatches, or VLM mmproj download fails
    */
   async downloadPack(
     pack: PackEntry,
@@ -89,7 +137,7 @@ export const PackManager = {
     apiKey?: string
   ): Promise<InstalledPack> {
     const packDir = getPackDir(pack);
-    const filename = getPackFilename(pack);
+    const filename = getFilenameFromUrl(pack.url);
     const fileUri = `${packDir}${filename}`;
 
     // Ensure directory exists
@@ -103,38 +151,92 @@ export const PackManager = {
       headers[API_KEY_HEADER] = apiKey;
     }
 
-    // Download file
-    const response = await fetch(pack.url, { headers });
-    if (!response.ok) {
-      throw new Error(`Download failed for pack ${pack.id}: ${response.status}`);
-    }
+    // For VLM packs with paired files, compute combined progress weights
+    const isVlmPairedPack = pack.type === 'vlm' && pack.mmprojUrl;
+    const modelSize = pack.sizeBytes;
+    const mmprojSize = pack.mmprojSizeBytes ?? 0;
+    const totalCombinedSize = isVlmPairedPack ? modelSize + mmprojSize : modelSize;
 
-    const contentLength = parseInt(response.headers.get('content-length') ?? '0', 10);
-    const totalExpected = contentLength || pack.sizeBytes;
+    // Stream download model file
+    await streamDownloadFile(
+      pack.url,
+      fileUri,
+      headers,
+      isVlmPairedPack
+        ? (progress) => {
+            // Weight model progress by its fraction of total combined size
+            const modelWeight = modelSize / totalCombinedSize;
+            onProgress({
+              totalBytesWritten: progress.totalBytesWritten,
+              totalBytesExpected: totalCombinedSize,
+              fraction: progress.fraction * modelWeight,
+            });
+          }
+        : onProgress
+    );
 
-    // Read the response as ArrayBuffer and convert to Uint8Array for writing
-    const arrayBuffer = await response.arrayBuffer();
-    const bytes = new Uint8Array(arrayBuffer);
-
-    // Report progress (complete after data is read)
-    onProgress({
-      totalBytesWritten: bytes.byteLength,
-      totalBytesExpected: totalExpected,
-      fraction: 1,
-    });
-
-    // Write bytes to file
-    const file = new File(fileUri);
-    file.write(bytes);
-
-    // Verify SHA-256 hash
+    // Verify model SHA-256 hash
     const fileHash = await hashFile(fileUri);
     if (fileHash !== pack.sha256) {
-      // Delete the corrupt file
-      file.delete();
+      const modelFile = new File(fileUri);
+      modelFile.delete();
       throw new Error(
         `SHA-256 hash mismatch for pack ${pack.id}: expected ${pack.sha256}, got ${fileHash}`
       );
+    }
+
+    // Handle VLM paired mmproj download
+    let mmprojFileUri: string | undefined;
+    if (isVlmPairedPack && pack.mmprojUrl) {
+      const mmprojFilename = getFilenameFromUrl(pack.mmprojUrl);
+      mmprojFileUri = `${packDir}${mmprojFilename}`;
+
+      try {
+        await streamDownloadFile(
+          pack.mmprojUrl,
+          mmprojFileUri,
+          headers,
+          (progress) => {
+            // Weight mmproj progress: model portion complete + mmproj fraction
+            const modelWeight = modelSize / totalCombinedSize;
+            const mmprojWeight = mmprojSize / totalCombinedSize;
+            onProgress({
+              totalBytesWritten: modelSize + progress.totalBytesWritten,
+              totalBytesExpected: totalCombinedSize,
+              fraction: modelWeight + progress.fraction * mmprojWeight,
+            });
+          }
+        );
+
+        // Verify mmproj SHA-256 if provided
+        if (pack.mmprojSha256) {
+          const mmprojHash = await hashFile(mmprojFileUri);
+          if (mmprojHash !== pack.mmprojSha256) {
+            // Clean up both files on integrity failure
+            const mmprojFile = new File(mmprojFileUri);
+            mmprojFile.delete();
+            const modelFile = new File(fileUri);
+            modelFile.delete();
+            throw new Error(
+              `SHA-256 hash mismatch for mmproj of pack ${pack.id}: expected ${pack.mmprojSha256}, got ${mmprojHash}`
+            );
+          }
+        }
+      } catch (error) {
+        // Clean up model file if mmproj download/verification fails (atomic pair)
+        const modelFile = new File(fileUri);
+        if (modelFile.exists) {
+          modelFile.delete();
+        }
+        // Also clean up partial mmproj file
+        if (mmprojFileUri) {
+          const mmprojFile = new File(mmprojFileUri);
+          if (mmprojFile.exists) {
+            mmprojFile.delete();
+          }
+        }
+        throw error;
+      }
     }
 
     // Record in installed_packs table
@@ -145,6 +247,7 @@ export const PackManager = {
       type: pack.type,
       version: pack.version,
       filePath: fileUri,
+      ...(mmprojFileUri ? { mmprojFilePath: mmprojFileUri } : {}),
       sizeBytes: pack.sizeBytes,
       sha256: pack.sha256,
       region: pack.region ?? null,
@@ -158,6 +261,7 @@ export const PackManager = {
       type: record.type,
       version: record.version,
       filePath: record.filePath,
+      mmprojFilePath: record.mmprojFilePath ?? null,
       sizeBytes: record.sizeBytes,
       sha256: record.sha256,
       region: record.region,
@@ -199,14 +303,23 @@ export const PackManager = {
   },
 
   /**
-   * Delete a pack: remove the file and the database record.
+   * Delete a pack: remove the file(s) and the database record.
+   * For VLM packs, also removes the companion mmproj file.
    */
   async deletePack(packId: string): Promise<void> {
     const pack = await PackManager.getInstalledPack(packId);
     if (pack) {
+      // Delete main model/data file
       const file = new File(pack.filePath);
       if (file.exists) {
         file.delete();
+      }
+      // Delete companion mmproj file if present (VLM packs)
+      if (pack.mmprojFilePath) {
+        const mmprojFile = new File(pack.mmprojFilePath);
+        if (mmprojFile.exists) {
+          mmprojFile.delete();
+        }
       }
     }
     // Remove from database
@@ -229,9 +342,10 @@ function mapRowToInstalledPack(row: typeof installedPacks.$inferSelect): Install
   return {
     id: row.id,
     name: row.name,
-    type: row.type as 'nutrition' | 'model',
+    type: row.type as InstalledPack['type'],
     version: row.version,
     filePath: row.filePath,
+    ...(row.mmprojFilePath ? { mmprojFilePath: row.mmprojFilePath } : {}),
     sizeBytes: row.sizeBytes ?? null,
     sha256: row.sha256 ?? null,
     region: row.region ?? null,

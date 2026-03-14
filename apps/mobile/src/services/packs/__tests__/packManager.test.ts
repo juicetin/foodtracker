@@ -122,7 +122,13 @@ describe('PackManager', () => {
     mockDeleteWhere.mockResolvedValue(undefined);
     mockDelete.mockReturnValue({ where: mockDeleteWhere });
 
-    // Mock global fetch for download
+    // Reset createDownloadResumable mock to default (streaming download)
+    mockDownloadAsync.mockResolvedValue({ uri: '/mock/downloaded', status: 200 });
+    mockCreateDownloadResumable.mockReturnValue({
+      downloadAsync: mockDownloadAsync,
+    });
+
+    // Mock global fetch (no longer used for pack download, but needed for manifest tests)
     global.fetch = jest.fn().mockResolvedValue({
       ok: true,
       headers: {
@@ -133,7 +139,7 @@ describe('PackManager', () => {
   });
 
   describe('downloadPack', () => {
-    it('downloads file and records in installed_packs table', async () => {
+    it('downloads file via streaming and records in installed_packs table', async () => {
       const onProgress = jest.fn();
 
       const result = await PackManager.downloadPack(testPack, onProgress);
@@ -141,12 +147,14 @@ describe('PackManager', () => {
       expect(result).toBeDefined();
       expect(result.id).toBe('usda-core');
       expect(result.version).toBe('1.0.0');
-      expect(global.fetch).toHaveBeenCalledWith(
+      // Uses streaming createDownloadResumable instead of fetch().arrayBuffer()
+      expect(mockCreateDownloadResumable).toHaveBeenCalledWith(
         testPack.url,
-        expect.objectContaining({ headers: expect.any(Object) })
+        expect.stringContaining('usda-core-1.0.0.db'),
+        expect.objectContaining({ headers: expect.any(Object) }),
+        expect.any(Function)
       );
       expect(mockInsert).toHaveBeenCalled();
-      expect(onProgress).toHaveBeenCalled();
     });
   });
 
