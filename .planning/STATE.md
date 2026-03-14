@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: in-progress
-stopped_at: Completed 02.5-05-PLAN.md (gap closure: USDA expansion, fuzzy matching, label coverage)
-last_updated: "2026-03-14T07:35:22Z"
-last_activity: 2026-03-14 -- Completed 02.5-05 (USDA expansion, fuzzy matching, label coverage)
+status: completed
+stopped_at: Completed 02.5-06-PLAN.md (KG full rebuild, export, verification -- Phase 02.5 complete)
+last_updated: "2026-03-14T08:44:35.732Z"
+last_activity: 2026-03-14 -- Completed 02.5-06 (KG full rebuild, export, verification)
 progress:
   total_phases: 12
   completed_phases: 6
   total_plans: 27
-  completed_plans: 25
+  completed_plans: 26
   percent: 82
 ---
 
@@ -21,14 +21,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.5 gap closure (plans 04-06). Next: 02.5-06, then Phase 02.6
+**Current focus:** Phase 02.5 complete. Next: Phase 02.6 (On-Device VLM Integration)
 
 ## Current Position
 
 Phase: 02.5 of 7 (Food Knowledge Graph)
-Plan: 5 of 6 in current phase (5 complete, gap closure plans 04-06 added)
-Status: In Progress (gap closure)
-Last activity: 2026-03-14 -- Completed 02.5-05 (USDA expansion, fuzzy matching, label coverage)
+Plan: 6 of 6 in current phase (6 complete -- phase finished)
+Status: Phase Complete
+Last activity: 2026-03-14 -- Completed 02.5-06 (KG full rebuild, export, verification)
 
 Progress: [████████░░] 82%
 
@@ -84,6 +84,7 @@ Progress: [████████░░] 82%
 | Phase 02.5 P03 | 5min | 2 tasks | 8 files |
 | Phase 02.5 P04 | 4min | 2 tasks | 3 files |
 | Phase 02.5 P05 | 5min | 2 tasks | 4 files |
+| Phase 02.5 P06 | 38min | 2 tasks | 2 files |
 
 ## Accumulated Context
 
@@ -189,6 +190,8 @@ Recent decisions affecting current work:
 - [02.5-05]: Tiered USDA loading: full CSV (7,793 foods) -> auto-download -> embedded 500-food subset
 - [02.5-05]: Levenshtein fuzzy matching (Strategy 6) as supplement to direct map, invoked only after 5 faster strategies fail
 - [02.5-05]: Classifier/detector labels seeded before recipes; original labels registered as dish_alias type 'model_label'
+- [Phase 02.5]: MIN_RECIPE_COUNT=10 threshold balances 15K+ dish coverage vs 70MB mobile bundling limit
+- [Phase 02.5]: Top 30 ingredients per dish cap reduces DB size from 1.4M to 452K rows while preserving nutrition accuracy
 
 ### Roadmap Evolution
 
@@ -212,6 +215,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T07:35:22Z
-Stopped at: Completed 02.5-05-PLAN.md (gap closure: USDA expansion, fuzzy matching, label coverage)
+Last session: 2026-03-14T08:44:35.728Z
+Stopped at: Completed 02.5-06-PLAN.md (KG full rebuild, export, verification -- Phase 02.5 complete)
 Resume file: None
