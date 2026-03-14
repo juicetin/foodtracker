@@ -17,7 +17,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2.1: Pre-trained Model Acquisition** - AIY Food V1, YOLO26n COCO, TFLite pipeline wiring
 - [ ] **Phase 2.2: Deploy Custom 335-Class Classifier** - Replace AIY with trained EfficientNet-Lite0 (335 classes, 3.9MB)
 - [x] **Phase 2.3: Food-Specific YOLO Detection** - Replace COCO YOLO with GGCD YOLOv8n (241 food classes)
-- [ ] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
+- [x] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
 - [ ] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
@@ -136,8 +136,8 @@ Plans:
 
 Plans:
 - [x] 02.4-01-PLAN.md -- Dataset acquisition and merge: download 14 datasets (CNFOOD-241, Khana, THFOOD-50, etc.), deduplicate classes, create merged_v2 with 700+ classes
-- [ ] 02.4-02-PLAN.md -- Retrain and export: EfficientNet-Lite0 on merged_v2, 30 epochs on RX 7900 XT, export INT8 TFLite
-- [ ] 02.4-03-PLAN.md -- Deploy to app: swap classify.tflite and labels, update manifest and constants, verify tests pass
+- [x] 02.4-02-PLAN.md -- Retrain and export: EfficientNet-Lite0 on merged_v2, 30 epochs on RX 7900 XT, export INT8 TFLite
+- [x] 02.4-03-PLAN.md -- Deploy to app: swap classify.tflite and labels, update manifest and constants, verify tests pass
 
 ### Phase 2.5: Food Knowledge Graph (INSERTED -- replaces prior Nutrition & Metadata Enrichment)
 
@@ -255,7 +255,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.1. Pre-trained Model Acquisition | 2/3 | In progress | - |
 | 2.2. Deploy Custom 335-Class Classifier | 2/2 | Complete | 2026-03-13 |
 | 2.3. Food-Specific YOLO Detection | 3/3 | Complete | 2026-03-14 |
-| 2.4. Global Cuisine Training Expansion | 1/3 | In progress | - |
+| 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
 | 2.5. Food Knowledge Graph | 0/3 | Not started | - |
 | 2.6. On-Device VLM Integration | 0/6 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |

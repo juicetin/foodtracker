@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: in_progress
-stopped_at: Completed 02.4-01-PLAN.md
-last_updated: "2026-03-14T06:08:07Z"
-last_activity: 2026-03-14 -- Completed Plan 02.4-01 (Dataset download and merge)
+stopped_at: Completed 02.4-03-PLAN.md
+last_updated: "2026-03-14T00:09:18Z"
+last_activity: 2026-03-14 -- Completed Phase 02.4 (Global Cuisine Training Expansion)
 progress:
-  total_phases: 11
-  completed_phases: 4
-  total_plans: 24
-  completed_plans: 18
-  percent: 75
+  total_phases: 12
+  completed_phases: 5
+  total_plans: 32
+  completed_plans: 20
+  percent: 63
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.4 in progress: Global Cuisine Training Expansion
+**Current focus:** Phase 02.4 complete: Global Cuisine Training Expansion
 
 ## Current Position
 
 Phase: 02.4 of 7 (Global Cuisine Training Expansion)
-Plan: 1 of 3 in current phase (1 complete)
-Status: In Progress
-Last activity: 2026-03-14 -- Completed Plan 02.4-01 (Dataset download and merge)
+Plan: 3 of 3 in current phase (3 complete)
+Status: Phase Complete
+Last activity: 2026-03-14 -- Completed Phase 02.4 (Global Cuisine Training Expansion)
 
-Progress: [████████░░] 75%
+Progress: [██████████] 100%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 20 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 1 phase 02.4)
+- Total plans completed: 22 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4)
 - Average duration: 11min
-- Total execution time: ~2.7 hours
+- Total execution time: ~2.9 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,8 +53,8 @@ Progress: [████████░░] 75%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 4min, 3min, 35min
-- Trend: Varied (pipeline wiring fast, data acquisition slow due to download times)
+- Last 3 plans: 35min, 10min, 10min
+- Trend: Stabilizing (training export and deployment efficient)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -75,6 +75,8 @@ Progress: [████████░░] 75%
 | Phase 02.3 P03 | 3min | 2 tasks | 0 files |
 
 | Phase 02.4 P01 | 35min | 2 tasks | 5 files |
+| Phase 02.4 P02 | 10min | 1 task | 5 files |
+| Phase 02.4 P03 | 10min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -156,10 +158,19 @@ Recent decisions affecting current work:
 - [02.4-01]: Manual dedup map for cross-dataset duplicates (burger/hamburger, pakora/pakode, etc.)
 - [02.4-01]: Symlink-based merge -- all merged_v2 images are os.symlink() to source datasets, zero duplication
 - [02.4-01]: merged_v2 at 370 classes (expandable to 700+ after Kaggle auth and re-run)
+- [02.4-02]: Docker-based onnx2tf conversion (tensorflow/tensorflow:2.18.0) because Python 3.14 lacks ai-edge-torch/onnx2tf
+- [02.4-02]: Dynamic range INT8 quantization (weights-only, float32 I/O) matches existing pipeline
+- [02.4-02]: Training exceeded expectations: 76.72% top-1 on 905 classes (vs 74.17% on 335 classes)
+- [02.4-03]: CLASSIFY_CLASS_NAMES dynamically loaded from labels_classify.json -- model swap needs zero code changes
+- [02.4-03]: 241 CNFOOD-241 classes have numeric names (000-240) -- classifier is secondary to YOLO labels anyway
 
 ### Roadmap Evolution
 
 - Phase 02.1 inserted after Phase 02: Pre-trained model acquisition and TFLite integration (URGENT) — no .tflite models exist in repo; pipeline untestable without real models. Uses Google AIY Food V1 (classification) + YOLO26n COCO (detection) as zero-training baseline.
+- Phase 02.5 replaced: "Nutrition & Metadata Enrichment" (static JSON mapping) → "Food Knowledge Graph" (recipe-based nutrition decomposition via SQLite KG). Old plans archived to `_archived_02.5-nutrition-and-metadata-enrichment/`. KG subsumes the ClassNutritionMapper concept with live recipe→ingredient→USDA decomposition instead of static JSON.
+- Phase 02.6 inserted: "On-Device VLM Integration" — pulled forward from Phase 5. SmolVLM family via llama.rn (revised from ADR-005 tiers: Moondream 0.5B and Gemma 3n E2B not viable for multimodal GGUF). Progressive YOLO→VLM refinement with text+image fusion.
+- Phase 5 scope reduced: VLM + KG hidden ingredients moved to 2.5+2.6. Phase 5 retains Scale OCR, notifications, health data import.
+- Phase 3 dependency updated: now depends on Phase 2.5 (KG) + Phase 2.6 (VLM) instead of just Phase 2.
 
 ### Pending Todos
 
@@ -175,6 +186,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T06:08:07Z
-Stopped at: Completed 02.4-01-PLAN.md
-Resume file: .planning/phases/02.4-global-cuisine-training-expansion/02.4-01-SUMMARY.md
+Last session: 2026-03-14T00:09:18Z
+Stopped at: Completed 02.4-03-PLAN.md (Phase 02.4 complete)
+Resume file: .planning/phases/02.4-global-cuisine-training-expansion/02.4-03-SUMMARY.md
