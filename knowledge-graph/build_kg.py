@@ -5,11 +5,13 @@ Build the food knowledge graph database.
 Orchestrates:
 1. Apply hierarchical schema (8 tables + FTS5 + SymSpell)
 2. Seed curated dishes from generate_dishes.py
-3. Seed from RecipeNLG dataset (volume)
-4. Populate USDA SR Legacy nutrition data and link ingredients
-5. Compute SymSpell delete variants for fuzzy matching
-6. Compute per-dish average nutrition from recipe ingredients
-7. Print summary statistics
+3. Seed classifier/detector labels as KG dish entries
+4. Seed from recipe datasets (volume)
+5. Populate USDA SR Legacy nutrition data (with micronutrients) and link ingredients
+6. Seed WorldCuisines multilingual aliases
+7. Compute SymSpell delete variants for fuzzy matching
+8. Compute per-dish average nutrition from recipe ingredients
+9. Rebuild FTS5 indexes and print summary statistics
 
 Usage:
     python build_kg.py [--db food-knowledge.db] [--skip-recipenlg]
@@ -392,45 +394,190 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
     return {"dishes": dishes_inserted, "recipes": recipes_inserted}
 
 
+def seed_classifier_labels(conn: sqlite3.Connection) -> dict:
+    """
+    Seed KG dish entries for all classifier and detector labels.
+
+    Ensures every food the model can detect/classify has a corresponding
+    KG entry, so searchDish() never returns null for recognized foods.
+
+    Loads labels from:
+    - apps/mobile/assets/models/labels_classify.json (905 labels, 664 named)
+    - apps/mobile/assets/models/labels_detect.json (241 labels)
+
+    Skips numeric CNFOOD-241 labels (e.g., "000", "001", etc.).
+    """
+    import json
+
+    from seed_recipenlg import classify_cuisine
+
+    cursor = conn.cursor()
+
+    # Resolve paths relative to project root (KG_DIR is knowledge-graph/)
+    project_root = KG_DIR.parent
+    classify_path = project_root / "apps" / "mobile" / "assets" / "models" / "labels_classify.json"
+    detect_path = project_root / "apps" / "mobile" / "assets" / "models" / "labels_detect.json"
+
+    all_labels = set()
+
+    # Load classifier labels
+    if classify_path.exists():
+        with open(classify_path) as f:
+            classify_data = json.load(f)
+        for label in classify_data.get("labels", []):
+            # Skip numeric CNFOOD-241 labels (3-digit strings like "000", "001")
+            if label.isdigit() or (len(label) == 3 and all(c.isdigit() for c in label)):
+                continue
+            all_labels.add(label)
+        print(f"  Classifier labels: {len(classify_data.get('labels', []))} total, "
+              f"{len(all_labels)} named (skipped numeric)")
+    else:
+        print(f"  Warning: {classify_path} not found")
+
+    # Load detector labels
+    detect_named = set()
+    if detect_path.exists():
+        with open(detect_path) as f:
+            detect_data = json.load(f)
+        for label in detect_data.get("classNames", []):
+            detect_named.add(label)
+            all_labels.add(label)
+        print(f"  Detector labels: {len(detect_data.get('classNames', []))} total")
+    else:
+        print(f"  Warning: {detect_path} not found")
+
+    # Get existing cuisine/category caches
+    cuisine_ids = {}
+    cursor.execute("SELECT id, name FROM cuisine")
+    for row in cursor.fetchall():
+        cuisine_ids[row[1]] = row[0]
+
+    category_ids = {}
+    cursor.execute("SELECT id, cuisine_id, name FROM dish_category")
+    for row in cursor.fetchall():
+        for cname, cid in cuisine_ids.items():
+            if row[1] == cid:
+                category_ids[f"{cname}_general"] = row[0]
+
+    new_dishes = 0
+    new_aliases = 0
+
+    for label in sorted(all_labels):
+        # Normalize: replace underscores/hyphens with spaces, lowercase
+        canonical = label.lower().strip().replace("_", " ").replace("-", " ")
+        if not canonical or len(canonical) < 2:
+            continue
+
+        # Check if dish already exists
+        cursor.execute("SELECT id FROM dish WHERE canonical_name = ?", (canonical,))
+        existing = cursor.fetchone()
+
+        if existing:
+            dish_id = existing[0]
+        else:
+            # Classify cuisine for this label
+            cuisine = classify_cuisine(canonical)
+
+            if cuisine not in cuisine_ids:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO cuisine (name) VALUES (?)", (cuisine,)
+                )
+                cursor.execute("SELECT id FROM cuisine WHERE name = ?", (cuisine,))
+                cuisine_ids[cuisine] = cursor.fetchone()[0]
+
+            cuisine_id = cuisine_ids[cuisine]
+            cat_key = f"{cuisine}_general"
+            if cat_key not in category_ids:
+                cursor.execute(
+                    "INSERT OR IGNORE INTO dish_category (cuisine_id, name) VALUES (?, ?)",
+                    (cuisine_id, "General"),
+                )
+                cursor.execute(
+                    "SELECT id FROM dish_category WHERE cuisine_id = ? AND name = 'General'",
+                    (cuisine_id,),
+                )
+                category_ids[cat_key] = cursor.fetchone()[0]
+
+            category_id = category_ids[cat_key]
+
+            cursor.execute(
+                "INSERT OR IGNORE INTO dish (category_id, canonical_name, source, confidence) "
+                "VALUES (?, ?, 'classifier_label', 0.6)",
+                (category_id, canonical),
+            )
+            if cursor.rowcount > 0:
+                dish_id = cursor.lastrowid
+                new_dishes += 1
+            else:
+                # Race condition or duplicate -- fetch existing
+                cursor.execute("SELECT id FROM dish WHERE canonical_name = ?", (canonical,))
+                row = cursor.fetchone()
+                dish_id = row[0] if row else None
+
+        if not dish_id:
+            continue
+
+        # Register the original label string as a dish_alias so that
+        # formatFoodLabel() output (with underscores) can still match
+        if label != canonical:
+            cursor.execute(
+                "SELECT id FROM dish_alias WHERE dish_id = ? AND alias = ?",
+                (dish_id, label),
+            )
+            if not cursor.fetchone():
+                cursor.execute(
+                    "INSERT INTO dish_alias (dish_id, alias, language, alias_type) "
+                    "VALUES (?, ?, 'en', 'model_label')",
+                    (dish_id, label),
+                )
+                new_aliases += 1
+
+    conn.commit()
+    print(f"  Classifier labels seeded: {new_dishes} new dishes from {len(all_labels)} labels, "
+          f"{new_aliases} aliases added")
+    return {"new_dishes": new_dishes, "total_labels": len(all_labels), "aliases": new_aliases}
+
+
 def seed_usda_sr_legacy(conn: sqlite3.Connection) -> dict:
     """
     Populate usda_food table with USDA SR Legacy data and link
     recipe_ingredient rows by fuzzy-matching ingredient names.
 
-    Uses the SR Legacy CSV bundled at knowledge-graph/data/sr_legacy_food.csv
-    or downloads from USDA if not present.
+    Priority:
+    1. Full USDA SR Legacy CSV (knowledge-graph/data/sr_legacy_full.csv) -- ~7,793 foods
+    2. Auto-download via download_usda_sr.py if CSV missing
+    3. Fall back to embedded 500-food subset as last resort
     """
     cursor = conn.cursor()
 
-    # Try to load from the pre-downloaded SR Legacy dataset
-    sr_csv = KG_DIR / "data" / "sr_legacy_food.csv"
-    if not sr_csv.exists():
-        # Generate from embedded data -- a curated subset of USDA SR Legacy
-        # covering the most common recipe ingredients
-        print("  Generating USDA SR Legacy subset from embedded data...")
+    sr_full_csv = KG_DIR / "data" / "sr_legacy_full.csv"
+    sr_legacy_csv = KG_DIR / "data" / "sr_legacy_food.csv"
+
+    loaded = False
+
+    # Strategy 1: Full USDA SR Legacy with micronutrients
+    if sr_full_csv.exists():
+        loaded = _load_usda_from_csv(cursor, sr_full_csv, include_micros=True)
+
+    # Strategy 2: Auto-download if full CSV doesn't exist
+    if not loaded:
+        print("  Full USDA SR Legacy CSV not found, attempting download...")
+        try:
+            from download_usda_sr import main as download_main
+            download_main()
+            if sr_full_csv.exists():
+                loaded = _load_usda_from_csv(cursor, sr_full_csv, include_micros=True)
+        except Exception as e:
+            print(f"  Download failed: {e}")
+
+    # Strategy 3: Try older sr_legacy_food.csv (without micronutrients)
+    if not loaded and sr_legacy_csv.exists():
+        loaded = _load_usda_from_csv(cursor, sr_legacy_csv, include_micros=False)
+
+    # Strategy 4: Fall back to embedded data (last resort)
+    if not loaded:
+        print("  Falling back to embedded USDA subset (~500 foods)...")
         _seed_usda_embedded(cursor)
-    else:
-        import csv
-        print(f"  Loading USDA SR Legacy from {sr_csv}...")
-        with open(sr_csv, encoding="utf-8") as f:
-            reader = csv.DictReader(f)
-            for row in reader:
-                try:
-                    cursor.execute(
-                        "INSERT OR IGNORE INTO usda_food (fdc_id, description, food_group, calories_per_100g, protein_per_100g, fat_per_100g, carbs_per_100g, fiber_per_100g) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-                        (
-                            int(row["fdc_id"]),
-                            row["description"],
-                            row.get("food_group", ""),
-                            float(row["calories"]) if row.get("calories") else None,
-                            float(row["protein"]) if row.get("protein") else None,
-                            float(row["fat"]) if row.get("fat") else None,
-                            float(row["carbs"]) if row.get("carbs") else None,
-                            float(row.get("fiber", 0)) if row.get("fiber") else None,
-                        ),
-                    )
-                except (ValueError, KeyError):
-                    continue
 
     conn.commit()
 
@@ -444,6 +591,69 @@ def seed_usda_sr_legacy(conn: sqlite3.Connection) -> dict:
     print(f"  Ingredients linked to USDA: {linked}")
 
     return {"usda_foods": usda_count, "linked": linked}
+
+
+def _load_usda_from_csv(cursor, csv_path: Path, include_micros: bool = False) -> bool:
+    """Load USDA foods from a CSV file into the usda_food table.
+
+    Returns True if loading succeeded, False otherwise.
+    """
+    import csv as csv_mod
+
+    print(f"  Loading USDA SR Legacy from {csv_path}...")
+    count = 0
+    try:
+        with open(csv_path, encoding="utf-8") as f:
+            reader = csv_mod.DictReader(f)
+            for row in reader:
+                try:
+                    params = (
+                        int(row["fdc_id"]),
+                        row["description"],
+                        row.get("food_group", ""),
+                        float(row["calories"]) if row.get("calories") else None,
+                        float(row["protein"]) if row.get("protein") else None,
+                        float(row["fat"]) if row.get("fat") else None,
+                        float(row["carbs"]) if row.get("carbs") else None,
+                        float(row.get("fiber", 0)) if row.get("fiber") else None,
+                    )
+
+                    if include_micros:
+                        micro_params = (
+                            float(row["vitamin_a_ug"]) if row.get("vitamin_a_ug") else None,
+                            float(row["vitamin_c_mg"]) if row.get("vitamin_c_mg") else None,
+                            float(row["vitamin_d_ug"]) if row.get("vitamin_d_ug") else None,
+                            float(row["calcium_mg"]) if row.get("calcium_mg") else None,
+                            float(row["iron_mg"]) if row.get("iron_mg") else None,
+                            float(row["potassium_mg"]) if row.get("potassium_mg") else None,
+                            float(row["sodium_mg"]) if row.get("sodium_mg") else None,
+                            float(row["zinc_mg"]) if row.get("zinc_mg") else None,
+                            float(row["magnesium_mg"]) if row.get("magnesium_mg") else None,
+                        )
+                        cursor.execute(
+                            "INSERT OR IGNORE INTO usda_food (fdc_id, description, food_group, "
+                            "calories_per_100g, protein_per_100g, fat_per_100g, carbs_per_100g, fiber_per_100g, "
+                            "vitamin_a_ug, vitamin_c_mg, vitamin_d_ug, calcium_mg, iron_mg, "
+                            "potassium_mg, sodium_mg, zinc_mg, magnesium_mg) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                            params + micro_params,
+                        )
+                    else:
+                        cursor.execute(
+                            "INSERT OR IGNORE INTO usda_food (fdc_id, description, food_group, "
+                            "calories_per_100g, protein_per_100g, fat_per_100g, carbs_per_100g, fiber_per_100g) "
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+                            params,
+                        )
+                    count += 1
+                except (ValueError, KeyError):
+                    continue
+
+        print(f"  Loaded {count} USDA foods from CSV")
+        return count > 0
+    except Exception as e:
+        print(f"  Error loading CSV: {e}")
+        return False
 
 
 def _seed_usda_embedded(cursor):
@@ -1831,27 +2041,31 @@ def main():
     conn.execute("PRAGMA cache_size=-64000")
 
     # Step 1: Schema
-    print("\n[1/8] Applying schema...")
+    print("\n[1/9] Applying schema...")
     apply_schema(conn)
 
     # Step 2: Generated dishes (curated baseline)
-    print("\n[2/8] Seeding curated dishes...")
+    print("\n[2/9] Seeding curated dishes...")
     seed_generated_dishes(conn)
 
-    # Step 3: Recipe dataset (volume)
+    # Step 3: Classifier/detector label seeding (before recipes so recipe data can enrich)
+    print("\n[3/9] Seeding classifier/detector labels as dishes...")
+    seed_classifier_labels(conn)
+
+    # Step 4: Recipe dataset (volume)
     if not args.skip_recipenlg:
-        print("\n[3/8] Seeding from recipe datasets...")
+        print("\n[4/9] Seeding from recipe datasets...")
         seed_recipes(conn)
     else:
-        print("\n[3/8] Skipping recipe seeding (--skip-recipenlg)")
+        print("\n[4/9] Skipping recipe seeding (--skip-recipenlg)")
 
-    # Step 4: USDA SR Legacy
-    print("\n[4/8] Seeding USDA SR Legacy nutrition...")
+    # Step 5: USDA SR Legacy
+    print("\n[5/9] Seeding USDA SR Legacy nutrition...")
     seed_usda_sr_legacy(conn)
 
-    # Step 5: WorldCuisines aliases (before SymSpell so aliases get indexed)
+    # Step 6: WorldCuisines aliases (before SymSpell so aliases get indexed)
     if not args.skip_worldcuisines:
-        print("\n[5/8] Seeding WorldCuisines multilingual aliases...")
+        print("\n[6/9] Seeding WorldCuisines multilingual aliases...")
         try:
             from seed_worldcuisines import seed_worldcuisines
             seed_worldcuisines(conn)
@@ -1859,18 +2073,18 @@ def main():
             print(f"  Warning: WorldCuisines seeding failed: {e}")
             print("  Continuing without aliases...")
     else:
-        print("\n[5/8] Skipping WorldCuisines seeding (--skip-worldcuisines)")
+        print("\n[6/9] Skipping WorldCuisines seeding (--skip-worldcuisines)")
 
-    # Step 6: SymSpell (covers dish names + aliases)
-    print("\n[6/8] Computing SymSpell delete variants...")
+    # Step 7: SymSpell (covers dish names + aliases)
+    print("\n[7/9] Computing SymSpell delete variants...")
     compute_symspell_deletes(conn)
 
-    # Step 7: Nutrition aggregation
-    print("\n[7/8] Computing dish nutrition averages...")
+    # Step 8: Nutrition aggregation
+    print("\n[8/9] Computing dish nutrition averages...")
     compute_dish_nutrition(conn)
 
-    # Step 8: Rebuild FTS5 indexes (needed for content-sync tables)
-    print("\n[8/8] Rebuilding FTS5 indexes...")
+    # Step 9: Rebuild FTS5 indexes (needed for content-sync tables)
+    print("\n[9/9] Rebuilding FTS5 indexes...")
     conn.execute("INSERT INTO dish_fts(dish_fts) VALUES('rebuild')")
     conn.execute("INSERT INTO dish_alias_fts(dish_alias_fts) VALUES('rebuild')")
     conn.commit()

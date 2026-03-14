@@ -70,7 +70,16 @@ CREATE TABLE IF NOT EXISTS usda_food (
     protein_per_100g REAL,
     fat_per_100g REAL,
     carbs_per_100g REAL,
-    fiber_per_100g REAL
+    fiber_per_100g REAL,
+    vitamin_a_ug REAL,
+    vitamin_c_mg REAL,
+    vitamin_d_ug REAL,
+    calcium_mg REAL,
+    iron_mg REAL,
+    potassium_mg REAL,
+    sodium_mg REAL,
+    zinc_mg REAL,
+    magnesium_mg REAL
 );
 
 -- ── SymSpell Fuzzy Matching ──────────────────────────────────────────

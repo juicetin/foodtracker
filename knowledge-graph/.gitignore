@@ -9,6 +9,9 @@
 # Cache
 cache/
 
+# Downloaded USDA data (large, generated at build time)
+data/
+
 # Python bytecode
 __pycache__/
 *.pyc
