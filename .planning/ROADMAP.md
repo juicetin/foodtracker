@@ -164,7 +164,7 @@ Plans:
 ### Phase 2.6: On-Device VLM Integration (INSERTED)
 
 **Goal:** Integrate an on-device vision-language model (SmolVLM family via llama.rn) that refines YOLO food identification using multimodal image+text understanding, with optional free-form text input, producing structured food identification grounded in the knowledge graph
-**Requirements**: DET-02, DET-03
+**Requirements**: DET-02
 **Depends on:** Phase 2.5
 **Success Criteria** (what must be TRUE):
   1. llama.rn integrated with Expo dev client build; VlmService loads SmolVLM GGUF + mmproj and produces grammar-constrained JSON food identifications from image + optional text input
