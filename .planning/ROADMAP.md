@@ -18,7 +18,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2.2: Deploy Custom 335-Class Classifier** - Replace AIY with trained EfficientNet-Lite0 (335 classes, 3.9MB)
 - [x] **Phase 2.3: Food-Specific YOLO Detection** - Replace COCO YOLO with GGCD YOLOv8n (241 food classes)
 - [x] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
-- [ ] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge (gap closure in progress)
+- [x] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
@@ -259,7 +259,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.2. Deploy Custom 335-Class Classifier | 2/2 | Complete | 2026-03-13 |
 | 2.3. Food-Specific YOLO Detection | 3/3 | Complete | 2026-03-14 |
 | 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
-| 2.5. Food Knowledge Graph | 3/6 | Gap closure | - |
+| 2.5. Food Knowledge Graph | 6/6 | Complete | 2026-03-14 |
 | 2.6. On-Device VLM Integration | 0/6 | Not started | - |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
