@@ -5,6 +5,7 @@ import {
   DetectedItem,
   getConfidenceLevel,
 } from '../../services/detection/types';
+import { useDetectionStore } from '../../store/useDetectionStore';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -41,6 +42,7 @@ export function BoundingBoxOverlay({
   onSelectItem,
   onRemoveItem,
 }: BoundingBoxOverlayProps) {
+  const { displayLabel } = useDetectionStore();
   const scaleX = displayWidth / (photoWidth || 1);
   const scaleY = displayHeight / (photoHeight || 1);
 
@@ -81,7 +83,7 @@ export function BoundingBoxOverlay({
             {/* Floating label chip above the box */}
             <View style={[styles.labelChip, { backgroundColor: color }]}>
               <Text style={styles.labelText} numberOfLines={1}>
-                {item.className} {Math.round(item.confidence * 100)}%
+                {displayLabel(item)} {Math.round(item.confidence * 100)}%
               </Text>
               {/* X dismiss button */}
               <Pressable

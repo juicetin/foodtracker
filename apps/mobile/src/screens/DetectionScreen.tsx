@@ -31,6 +31,7 @@ import {
   getKnowledgeGraphService,
   type MacroResult,
 } from '../services/knowledge-graph';
+import type { ItemMacros } from '../components/detection/ItemDetailSheet';
 
 import { runVlmRefinement } from '../services/vlm/vlmPipeline';
 import { vlmService } from '../services/vlm/vlmService';
@@ -86,44 +87,8 @@ const PROXY_FAT_PER_GRAM = 0.08;
  * If the KG service is unavailable (null), goes straight to Tier 3.
  * Local SQLite queries take <5ms each, so this is fast enough for inline use.
  */
-async function getNutritionForItem(item: DetectedItem): Promise<MacroResult> {
-  const weightG = item.portionEstimate.weightG * item.portionMultiplier;
-
-  try {
-    const kgService = await getKnowledgeGraphService();
-
-    if (kgService) {
-      // Tier 1: Recipe decomposition (returns MacroResult with source='recipe')
-      // calculateDishNutrition internally tries recipe first, then dish averages
-      const kgResult = await kgService.calculateDishNutrition(
-        item.className,
-        weightG
-      );
-
-      if (kgResult) {
-        if (__DEV__) {
-          console.log(
-            `[KG] ${item.className}: ${kgResult.source} -- ` +
-              `${Math.round(kgResult.calories)} kcal, ` +
-              `${Math.round(kgResult.protein)}g protein, ` +
-              `${Math.round(kgResult.carbs)}g carbs, ` +
-              `${Math.round(kgResult.fat)}g fat`
-          );
-        }
-        return kgResult;
-      }
-    }
-  } catch (err) {
-    if (__DEV__) {
-      console.warn(
-        `[KG] Error querying nutrition for ${item.className}:`,
-        err instanceof Error ? err.message : err
-      );
-    }
-  }
-
-  // Tier 3: Flat-rate proxy (KG not available or dish not found)
-  const proxyResult: MacroResult = {
+function makeProxy(weightG: number): MacroResult {
+  return {
     calories: weightG * PROXY_KCAL_PER_GRAM,
     protein: weightG * PROXY_PROTEIN_PER_GRAM,
     carbs: weightG * PROXY_CARB_PER_GRAM,
@@ -131,18 +96,33 @@ async function getNutritionForItem(item: DetectedItem): Promise<MacroResult> {
     weightGrams: weightG,
     source: 'proxy',
   };
+}
 
-  if (__DEV__) {
-    console.log(
-      `[KG] ${item.className}: proxy -- ` +
-        `${Math.round(proxyResult.calories)} kcal, ` +
-        `${Math.round(proxyResult.protein)}g protein, ` +
-        `${Math.round(proxyResult.carbs)}g carbs, ` +
-        `${Math.round(proxyResult.fat)}g fat`
-    );
+async function getNutritionForItem(item: DetectedItem): Promise<MacroResult> {
+  const weightG = item.portionEstimate.weightG * item.portionMultiplier;
+
+  // VLM label is the only usable food name — YOLO classNames are garbage
+  if (!item.vlmLabel) return makeProxy(weightG);
+
+  try {
+    const kgService = await getKnowledgeGraphService();
+
+    if (kgService) {
+      const kgResult = await kgService.calculateDishNutrition(
+        item.vlmLabel,
+        weightG
+      );
+
+      if (kgResult) {
+        console.log(`[KG] ${item.vlmLabel}: ${kgResult.source} -- ${Math.round(kgResult.calories)} kcal`);
+        return kgResult;
+      }
+    }
+  } catch (err) {
+    console.warn(`[KG] Error for ${item.vlmLabel}:`, err instanceof Error ? err.message : err);
   }
 
-  return proxyResult;
+  return makeProxy(weightG);
 }
 
 // ---------------------------------------------------------------------------
@@ -200,6 +180,7 @@ export function DetectionScreen() {
   const [undoVisible, setUndoVisible] = useState(false);
   const [lastRemovedItem, setLastRemovedItem] = useState<DetectedItem | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [nutritionMap, setNutritionMap] = useState<Map<string, MacroResult>>(new Map());
 
   // Ref to track if component is still mounted during async ops
   const mountedRef = useRef(true);
@@ -252,9 +233,7 @@ export function DetectionScreen() {
             await vlmService.init(pack.filePath, pack.mmprojFilePath);
           }
         } catch (err) {
-          if (__DEV__) {
-            console.warn('[VLM] Failed to init VLM:', err instanceof Error ? err.message : err);
-          }
+          console.warn('[VLM] Failed to init VLM:', err instanceof Error ? err.message : err);
           return;
         }
       }
@@ -272,8 +251,10 @@ export function DetectionScreen() {
             userMealText || undefined,
           );
 
+          let refinedCount = 0;
           for (const item of refined) {
             if (item.vlmLabel) {
+              refinedCount++;
               refineItem(item.id, {
                 vlmLabel: item.vlmLabel,
                 vlmCuisine: item.vlmCuisine,
@@ -282,10 +263,9 @@ export function DetectionScreen() {
               });
             }
           }
+          console.log(`[VLM] Refined ${refinedCount}/${refined.length} items`);
         } catch (err) {
-          if (__DEV__) {
-            console.warn('[VLM] Refinement failed:', err instanceof Error ? err.message : err);
-          }
+          console.warn('[VLM] Refinement failed:', err instanceof Error ? err.message : err);
         } finally {
           setRefining(false);
         }
@@ -294,6 +274,27 @@ export function DetectionScreen() {
 
     initAndRefine();
   }, [flowState, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // -- KG nutrition computation (updates when items/labels/portions change) --
+
+  useEffect(() => {
+    if (flowState !== 'results' || items.length === 0) return;
+
+    let cancelled = false;
+
+    const compute = async () => {
+      const map = new Map<string, MacroResult>();
+      for (const item of items) {
+        if (item.removedAt) continue;
+        const macros = await getNutritionForItem(item);
+        map.set(item.id, macros);
+      }
+      if (!cancelled) setNutritionMap(map);
+    };
+
+    compute();
+    return () => { cancelled = true; };
+  }, [flowState, items]);
 
   // -- Debounced re-refinement on user text change --------------------------
 
@@ -566,7 +567,9 @@ export function DetectionScreen() {
       }
     } catch (err) {
       setFlowState('results');
-      Alert.alert('Error', 'Failed to log meal. Please try again.');
+      const detail = err instanceof Error ? err.message : String(err);
+      console.error('[LogMeal] Failed:', detail);
+      Alert.alert('Error', `Failed to log meal: ${detail}`);
     }
   }, [activeItems, mealType, addEntry, reset, navigation]);
 
@@ -751,6 +754,12 @@ export function DetectionScreen() {
           items={active}
           mealType={mealType}
           onChangeMealType={handleChangeMealType}
+          totalCalories={nutritionMap.size > 0
+            ? active.reduce((sum, i) => sum + (nutritionMap.get(i.id)?.calories ?? 0), 0)
+            : undefined}
+          totalProtein={nutritionMap.size > 0
+            ? active.reduce((sum, i) => sum + (nutritionMap.get(i.id)?.protein ?? 0), 0)
+            : undefined}
         />
 
         {/* Detection list (scrollable, fills remaining space) */}
@@ -769,7 +778,7 @@ export function DetectionScreen() {
 
         {/* Undo toast */}
         <UndoToast
-          itemName={lastRemovedItem?.className ?? ''}
+          itemName={lastRemovedItem ? displayLabel(lastRemovedItem) : ''}
           onUndo={handleUndo}
           visible={undoVisible}
           onDismiss={handleUndoDismiss}
@@ -782,6 +791,10 @@ export function DetectionScreen() {
           onDismiss={handleDismissSheet}
           onUpdatePortion={handleUpdatePortion}
           onCorrectItem={handleCorrectItem}
+          macros={selectedItem ? (() => {
+            const m = nutritionMap.get(selectedItem.id);
+            return m ? { calories: m.calories, protein: m.protein, carbs: m.carbs, fat: m.fat } : undefined;
+          })() : undefined}
         />
       </View>
     </SafeAreaView>

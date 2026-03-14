@@ -164,5 +164,5 @@ export const useDetectionStore = create<DetectionStore>((set, get) => ({
       .sort((a, b) => b.confidence - a.confidence);
   },
 
-  displayLabel: (item: DetectedItem) => item.vlmLabel ?? item.className,
+  displayLabel: (item: DetectedItem) => item.vlmLabel ?? 'Identifying…',
 }));

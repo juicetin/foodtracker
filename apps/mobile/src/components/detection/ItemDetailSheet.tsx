@@ -13,11 +13,20 @@ import {
   getConfidenceLevel,
 } from '../../services/detection/types';
 import { CorrectionStore } from '../../services/detection/correctionStore';
+import { useDetectionStore } from '../../store/useDetectionStore';
 import { PortionSlider } from './PortionSlider';
 
 // ---------------------------------------------------------------------------
 // Props
 // ---------------------------------------------------------------------------
+
+/** Pre-computed macros for the item (from KG or proxy). */
+export interface ItemMacros {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
 
 interface ItemDetailSheetProps {
   item: DetectedItem | null;
@@ -25,6 +34,8 @@ interface ItemDetailSheetProps {
   onDismiss: () => void;
   onUpdatePortion: (id: string, multiplier: number) => void;
   onCorrectItem: (id: string, newClassName: string) => void;
+  /** KG-powered macros. Falls back to flat-rate proxy when undefined. */
+  macros?: ItemMacros;
 }
 
 // ---------------------------------------------------------------------------
@@ -65,7 +76,9 @@ export function ItemDetailSheet({
   onDismiss,
   onUpdatePortion,
   onCorrectItem,
+  macros,
 }: ItemDetailSheetProps) {
+  const { displayLabel } = useDetectionStore();
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['40%', '70%'], []);
 
@@ -73,18 +86,20 @@ export function ItemDetailSheet({
   const [editText, setEditText] = useState('');
   const [suggestion, setSuggestion] = useState<string | null>(null);
 
+  const label = item ? displayLabel(item) : '';
+
   // Fetch correction suggestion when item changes
   useEffect(() => {
     if (item) {
       setSuggestion(null);
       setIsEditing(false);
-      CorrectionStore.getSuggestion(item.className)
+      CorrectionStore.getSuggestion(label)
         .then((s) => setSuggestion(s))
         .catch(() => {
           // Silently ignore -- suggestion is optional
         });
     }
-  }, [item?.id, item?.className]);
+  }, [item?.id, label]);
 
   // Open/close the sheet based on visibility
   useEffect(() => {
@@ -115,16 +130,16 @@ export function ItemDetailSheet({
 
   const handleStartEdit = useCallback(() => {
     if (item) {
-      setEditText(item.className);
+      setEditText(displayLabel(item));
       setIsEditing(true);
     }
-  }, [item]);
+  }, [item, displayLabel]);
 
   const handleSubmitCorrection = useCallback(() => {
-    if (item && editText.trim() && editText.trim() !== item.className) {
+    if (item && editText.trim() && editText.trim() !== displayLabel(item)) {
       const newName = editText.trim();
       CorrectionStore.recordCorrection(
-        item.correctedFrom ?? item.className,
+        item.correctedFrom ?? displayLabel(item),
         newName,
         item.confidence,
       ).catch(() => {
@@ -133,12 +148,12 @@ export function ItemDetailSheet({
       onCorrectItem(item.id, newName);
     }
     setIsEditing(false);
-  }, [item, editText, onCorrectItem]);
+  }, [item, editText, onCorrectItem, displayLabel]);
 
   const handleAcceptSuggestion = useCallback(() => {
     if (item && suggestion) {
       CorrectionStore.recordCorrection(
-        item.correctedFrom ?? item.className,
+        item.correctedFrom ?? displayLabel(item),
         suggestion,
         item.confidence,
       ).catch(() => {
@@ -160,11 +175,11 @@ export function ItemDetailSheet({
   const effectiveWeightG =
     item.portionEstimate.weightG * item.portionMultiplier;
 
-  // Phase 2 rough macros estimates
-  const calories = Math.round(effectiveWeightG * KCAL_PER_GRAM);
-  const protein = Math.round(effectiveWeightG * PROTEIN_PER_GRAM);
-  const carbs = Math.round(effectiveWeightG * CARB_PER_GRAM);
-  const fat = Math.round(effectiveWeightG * FAT_PER_GRAM);
+  // Use KG-powered macros if available, else flat-rate proxy
+  const calories = macros ? Math.round(macros.calories) : Math.round(effectiveWeightG * KCAL_PER_GRAM);
+  const protein = macros ? Math.round(macros.protein) : Math.round(effectiveWeightG * PROTEIN_PER_GRAM);
+  const carbs = macros ? Math.round(macros.carbs) : Math.round(effectiveWeightG * CARB_PER_GRAM);
+  const fat = macros ? Math.round(macros.fat) : Math.round(effectiveWeightG * FAT_PER_GRAM);
 
   return (
     <BottomSheet
@@ -199,7 +214,7 @@ export function ItemDetailSheet({
             </View>
           ) : (
             <Pressable onPress={handleStartEdit} style={styles.nameRow}>
-              <Text style={styles.foodName}>{item.className}</Text>
+              <Text style={styles.foodName}>{label}</Text>
               <Text style={styles.editHint}>tap to edit</Text>
             </Pressable>
           )}

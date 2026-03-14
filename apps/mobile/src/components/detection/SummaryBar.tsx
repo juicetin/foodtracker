@@ -10,6 +10,9 @@ interface SummaryBarProps {
   items: DetectedItem[]; // active (non-removed) items only
   mealType: MealType;
   onChangeMealType: (type: MealType) => void;
+  /** KG-powered totals. Falls back to flat-rate proxy when undefined. */
+  totalCalories?: number;
+  totalProtein?: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -68,8 +71,10 @@ function computeTotals(items: DetectedItem[]) {
  *
  * Right side: tappable meal-type chip that cycles through options.
  */
-export function SummaryBar({ items, mealType, onChangeMealType }: SummaryBarProps) {
-  const { calories, protein } = computeTotals(items);
+export function SummaryBar({ items, mealType, onChangeMealType, totalCalories, totalProtein }: SummaryBarProps) {
+  const proxy = computeTotals(items);
+  const calories = totalCalories ?? proxy.calories;
+  const protein = totalProtein ?? proxy.protein;
   const count = items.length;
 
   return (

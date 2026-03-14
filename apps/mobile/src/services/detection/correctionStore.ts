@@ -8,6 +8,18 @@
  */
 
 import { eq } from 'drizzle-orm';
+
+/** Safe UUID without crypto.randomUUID (unavailable in some RN runtimes). */
+function generateId(): string {
+  const hex = '0123456789abcdef';
+  let id = '';
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) id += '-';
+    else if (i === 14) id += '4';
+    else id += hex[Math.floor(Math.random() * 16)];
+  }
+  return id;
+}
 import { userDb } from '../../../db/client';
 import { correctionHistory } from '../../../db/schema';
 
@@ -32,7 +44,7 @@ export const CorrectionStore = {
     corrected: string,
     confidence: number,
   ): Promise<void> {
-    const id = crypto.randomUUID();
+    const id = generateId();
     await userDb.insert(correctionHistory).values({
       id,
       originalClassName: original,

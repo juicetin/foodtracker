@@ -4,6 +4,22 @@ import { userDb } from '../../db/client';
 import { foodEntries } from '../../db/schema';
 import { FoodEntry, Photo } from '../types';
 
+/** Generate a UUID without relying on crypto.randomUUID (unavailable in some RN runtimes). */
+function generateId(): string {
+  const hex = '0123456789abcdef';
+  let id = '';
+  for (let i = 0; i < 36; i++) {
+    if (i === 8 || i === 13 || i === 18 || i === 23) {
+      id += '-';
+    } else if (i === 14) {
+      id += '4'; // UUID v4
+    } else {
+      id += hex[Math.floor(Math.random() * 16)];
+    }
+  }
+  return id;
+}
+
 interface FoodLogState {
   entries: FoodEntry[];
   selectedPhotos: Photo[];
@@ -35,7 +51,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
   isProcessing: false,
 
   addEntry: async (entryData) => {
-    const id = crypto.randomUUID();
+    const id = generateId();
     const now = new Date().toISOString();
     const entryDate = getTodayDateStr();
 

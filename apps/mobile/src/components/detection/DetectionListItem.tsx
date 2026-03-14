@@ -13,6 +13,7 @@ import {
   DetectedItem,
   getConfidenceLevel,
 } from '../../services/detection/types';
+import { useDetectionStore } from '../../store/useDetectionStore';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -52,6 +53,7 @@ export function DetectionListItem({
   onSelect,
   onRemove,
 }: DetectionListItemProps) {
+  const { displayLabel } = useDetectionStore();
   const level = getConfidenceLevel(item.confidence);
   const color = CONFIDENCE_COLORS[level];
   const translateX = useSharedValue(0);
@@ -98,7 +100,7 @@ export function DetectionListItem({
           {/* Food name */}
           <View style={styles.nameContainer}>
             <Text style={styles.name} numberOfLines={1}>
-              {item.className}
+              {displayLabel(item)}
             </Text>
             <Text style={styles.portion}>{portionText}</Text>
           </View>
