@@ -46,8 +46,7 @@
           "forceCxx20": true,
           "enableOpenCL": true
         }
-      ],
-      "expo-device"
+      ]
     ],
     "extra": {
       "eas": {
