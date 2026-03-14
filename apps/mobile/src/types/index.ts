@@ -3,6 +3,7 @@ export type RootStackParamList = {
   Main: undefined;
   EntryDetail: { entryId: string };
   Detection: undefined;
+  VlmDownload: undefined;
 };
 
 export type MainTabParamList = {

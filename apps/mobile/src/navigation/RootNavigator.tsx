@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import MainTabNavigator from './MainTabNavigator';
-import { DetectionScreen } from '../screens';
+import { DetectionScreen, VlmDownloadScreen } from '../screens';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -22,6 +22,15 @@ export default function RootNavigator() {
           options={{
             animation: 'slide_from_bottom',
             presentation: 'fullScreenModal',
+          }}
+        />
+        <Stack.Screen
+          name="VlmDownload"
+          component={VlmDownloadScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'VLM Model',
+            animation: 'slide_from_right',
           }}
         />
         {/* TODO: Add EntryDetail screen */}

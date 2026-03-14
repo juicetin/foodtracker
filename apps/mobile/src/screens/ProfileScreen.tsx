@@ -1,5 +1,8 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import type { RootStackParamList } from '../types';
 import { ProfileScreenNavigationProp } from '../navigation/types';
 
 interface ProfileScreenProps {
@@ -7,6 +10,8 @@ interface ProfileScreenProps {
 }
 
 export default function ProfileScreen({ navigation }: ProfileScreenProps) {
+  const rootNavigation =
+    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Profile</Text>
@@ -40,6 +45,17 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
         <TouchableOpacity style={styles.row}>
           <Text style={styles.label}>Units</Text>
           <Text style={styles.value}>Metric</Text>
+        </TouchableOpacity>
+      </View>
+
+      <View style={styles.section}>
+        <Text style={styles.sectionTitle}>AI Models</Text>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => rootNavigation.navigate('VlmDownload')}
+        >
+          <Text style={styles.label}>VLM Model</Text>
+          <Text style={styles.value}>Manage</Text>
         </TouchableOpacity>
       </View>
     </View>

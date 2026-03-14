@@ -175,14 +175,16 @@ export const PackManager = {
         : onProgress
     );
 
-    // Verify model SHA-256 hash
-    const fileHash = await hashFile(fileUri);
-    if (fileHash !== pack.sha256) {
-      const modelFile = new File(fileUri);
-      modelFile.delete();
-      throw new Error(
-        `SHA-256 hash mismatch for pack ${pack.id}: expected ${pack.sha256}, got ${fileHash}`
-      );
+    // Verify model SHA-256 hash (skip when sha256 is empty -- e.g. HuggingFace direct downloads)
+    if (pack.sha256) {
+      const fileHash = await hashFile(fileUri);
+      if (fileHash !== pack.sha256) {
+        const modelFile = new File(fileUri);
+        modelFile.delete();
+        throw new Error(
+          `SHA-256 hash mismatch for pack ${pack.id}: expected ${pack.sha256}, got ${fileHash}`
+        );
+      }
     }
 
     // Handle VLM paired mmproj download
