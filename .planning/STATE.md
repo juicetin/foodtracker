@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02.5-02-PLAN.md
-last_updated: "2026-03-14T01:04:17.476Z"
+stopped_at: Completed 02.5-01-PLAN.md
+last_updated: "2026-03-14T04:30:14.327Z"
 last_activity: 2026-03-14 -- Completed 02.5-02 (KnowledgeGraphService + SymSpellIndex)
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 24
-  completed_plans: 21
+  completed_plans: 22
   percent: 73
 ---
 
@@ -79,6 +79,7 @@ Progress: [███████░░░] 73%
 | Phase 02.4 P03 | 10min | 2 tasks | 6 files |
 
 | Phase 02.5 P02 | 4min | 2 tasks | 6 files |
+| Phase 02.5 P01 | 210min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -168,6 +169,9 @@ Recent decisions affecting current work:
 - [Phase 02.5]: SymSpell implemented inline (~230 lines) instead of npm symspell-ex package (250 downloads/week, stale)
 - [Phase 02.5]: FTS5 -> alias FTS5 -> SymSpell fallback chain covers exact, alias, and fuzzy matching in priority order
 - [Phase 02.5]: Recipe decomposition: sum ingredient USDA per-100g values scaled by quantity, then scale to portion/recipe ratio
+- [Phase 02.5]: corbt/all-recipes (537K Parquet) replaces RecipeNLG (manual download deprecated)
+- [Phase 02.5]: 500 USDA SR Legacy foods embedded in build_kg.py for self-contained pipeline
+- [Phase 02.5]: SymSpell edit distance 1 (not 2) for performance with 10K+ dish names
 
 ### Roadmap Evolution
 
@@ -191,6 +195,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T01:04:17.473Z
-Stopped at: Completed 02.5-02-PLAN.md
+Last session: 2026-03-14T04:30:14.323Z
+Stopped at: Completed 02.5-01-PLAN.md
 Resume file: None
