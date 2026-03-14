@@ -1674,6 +1674,57 @@ INGREDIENT_USDA_MAP = {
 }
 
 
+def _levenshtein_distance(s1: str, s2: str, max_dist: int = 3) -> int:
+    """Compute Levenshtein edit distance between two strings.
+
+    Simple O(n*m) dynamic programming implementation with early termination.
+    Only called for ingredients that failed all faster matching strategies,
+    so performance is acceptable.
+
+    Args:
+        s1: First string
+        s2: Second string
+        max_dist: Maximum distance threshold for early termination.
+                  Returns max_dist+1 if actual distance exceeds this.
+    """
+    len1, len2 = len(s1), len(s2)
+
+    # Quick length-difference check
+    if abs(len1 - len2) > max_dist:
+        return max_dist + 1
+
+    # Optimize by making the shorter string s1
+    if len1 > len2:
+        s1, s2 = s2, s1
+        len1, len2 = len2, len1
+
+    # Use single row of DP table for space efficiency
+    prev_row = list(range(len1 + 1))
+
+    for j in range(1, len2 + 1):
+        curr_row = [j] + [0] * len1
+        row_min = j  # Track minimum in row for early termination
+
+        for i in range(1, len1 + 1):
+            cost = 0 if s1[i - 1] == s2[j - 1] else 1
+            curr_row[i] = min(
+                curr_row[i - 1] + 1,      # insertion
+                prev_row[i] + 1,           # deletion
+                prev_row[i - 1] + cost,    # substitution
+            )
+            if curr_row[i] < row_min:
+                row_min = curr_row[i]
+
+        # Early termination: if minimum in this row exceeds max_dist,
+        # the final result will also exceed it
+        if row_min > max_dist:
+            return max_dist + 1
+
+        prev_row = curr_row
+
+    return prev_row[len1]
+
+
 def _link_ingredients_to_usda(conn: sqlite3.Connection) -> int:
     """Link recipe_ingredient rows to usda_food entries by name matching.
 
@@ -1721,9 +1772,13 @@ def _link_ingredients_to_usda(conn: sqlite3.Connection) -> int:
 
     # Pre-compute the mapping (all in memory, fast O(1) lookups)
     ing_to_fdc = {}
+    direct_map_count = 0
+    fuzzy_match_count = 0
+
     for ing_name in unlinked:
         fdc_id = None
         name_lower = ing_name.lower().strip()
+        matched_via_fuzzy = False
 
         # Strategy 1: Direct map (O(1))
         if name_lower in map_to_fdc:
@@ -1760,8 +1815,53 @@ def _link_ingredients_to_usda(conn: sqlite3.Connection) -> int:
                     fdc_id = map_to_fdc[w]
                     break
 
+        # Strategy 6: Fuzzy matching (Jaccard token overlap + Levenshtein)
+        # Only invoked for ingredients that failed all 5 faster strategies
+        if not fdc_id:
+            best_score = 0
+            best_fdc = None
+            name_tokens = set(name_lower.split())
+
+            # 6a: Jaccard token overlap against USDA description first-word groups
+            for usda_desc_lower, fid in usda_by_desc.items():
+                usda_tokens = set(usda_desc_lower.split(",")[0].strip().split())
+                if not usda_tokens:
+                    continue
+                overlap = len(name_tokens & usda_tokens)
+                union = len(name_tokens | usda_tokens)
+                jaccard = overlap / union if union > 0 else 0
+
+                if jaccard >= 0.5 and jaccard > best_score:
+                    best_score = jaccard
+                    best_fdc = fid
+
+            # 6b: Levenshtein on USDA first-word groups (for close spelling matches)
+            if not best_fdc and len(name_lower) >= 4:
+                min_dist = float('inf')
+                for first_group, fid in usda_by_first.items():
+                    # Pre-filter: skip if length difference too large
+                    if abs(len(name_lower) - len(first_group)) > 3:
+                        continue
+                    # Pre-filter: skip if first characters differ significantly
+                    if name_lower and first_group:
+                        char_diff = abs(ord(name_lower[0]) - ord(first_group[0]))
+                        if char_diff > 2:
+                            continue
+                    dist = _levenshtein_distance(name_lower, first_group, max_dist=2)
+                    if dist <= 2 and dist < min_dist:
+                        min_dist = dist
+                        best_fdc = fid
+
+            if best_fdc:
+                fdc_id = best_fdc
+                matched_via_fuzzy = True
+
         if fdc_id:
             ing_to_fdc[ing_name] = fdc_id
+            if matched_via_fuzzy:
+                fuzzy_match_count += 1
+            else:
+                direct_map_count += 1
 
     # Create temporary index for fast ingredient_name lookups during linking
     print("  Creating temporary index for ingredient linking...")
@@ -1788,7 +1888,14 @@ def _link_ingredients_to_usda(conn: sqlite3.Connection) -> int:
     cursor.execute("DROP INDEX IF EXISTS idx_tmp_ri_ingname")
     conn.commit()
 
-    print(f"  Matched {len(ing_to_fdc)} of {len(unlinked)} unique ingredient names to USDA")
+    total_matched = len(ing_to_fdc)
+    total_unlinked = len(unlinked)
+    still_unlinked = total_unlinked - total_matched
+    pct = (total_matched / total_unlinked * 100) if total_unlinked else 0
+    print(f"  Linked via direct map: {direct_map_count}")
+    print(f"  Linked via fuzzy match: {fuzzy_match_count}")
+    print(f"  Total linked: {total_matched} / {total_unlinked} ({pct:.1f}%)")
+    print(f"  Still unlinked: {still_unlinked}")
     return linked
 
 
