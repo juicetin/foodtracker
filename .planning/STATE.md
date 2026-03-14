@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02.5-03-PLAN.md (Phase 02.5 complete)
-last_updated: "2026-03-14T05:57:13.476Z"
-last_activity: 2026-03-14 -- Completed 02.5-03 (Detection pipeline KG wiring + three-tier fallback)
+status: in-progress
+stopped_at: Completed 02.5-04-PLAN.md (gap closure: quantity parsing + full dataset)
+last_updated: "2026-03-14T07:25:50Z"
+last_activity: 2026-03-14 -- Completed 02.5-04 (Quantity parsing + full recipe dataset loading)
 progress:
   total_phases: 12
   completed_phases: 6
-  total_plans: 24
-  completed_plans: 23
-  percent: 79
+  total_plans: 27
+  completed_plans: 24
+  percent: 80
 ---
 
 # Project State
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.5 complete. Next: Phase 02.6 (On-Device VLM Integration)
+**Current focus:** Phase 02.5 gap closure (plans 04-06). Next: 02.5-05, then 02.5-06, then Phase 02.6
 
 ## Current Position
 
 Phase: 02.5 of 7 (Food Knowledge Graph)
-Plan: 3 of 3 in current phase (3 complete)
-Status: Phase Complete
-Last activity: 2026-03-14 -- Completed 02.5-03 (Detection pipeline KG wiring + three-tier fallback)
+Plan: 4 of 6 in current phase (4 complete, gap closure plans 04-06 added)
+Status: In Progress (gap closure)
+Last activity: 2026-03-14 -- Completed 02.5-04 (Quantity parsing + full recipe dataset loading)
 
-Progress: [████████░░] 79%
+Progress: [████████░░] 80%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 26 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 3 phase 02.5)
+- Total plans completed: 27 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 4 phase 02.5)
 - Average duration: 10min
 - Total execution time: ~3.1 hours
 
@@ -53,8 +53,8 @@ Progress: [████████░░] 79%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 14min, 4min, 5min
-- Trend: Fast (KG integration plans are wiring + verification, quick execution)
+- Last 3 plans: 4min, 5min, 4min
+- Trend: Fast (KG gap closure plans are focused, quick execution)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -82,6 +82,7 @@ Progress: [████████░░] 79%
 | Phase 02.5 P01 | 210min | 2 tasks | 6 files |
 | Phase 02.5 P01 | 14min | 2 tasks | 6 files |
 | Phase 02.5 P03 | 5min | 2 tasks | 8 files |
+| Phase 02.5 P04 | 4min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -181,6 +182,9 @@ Recent decisions affecting current work:
 - [02.5-03]: expo-asset Asset.fromModule() resolves bundled .db to filesystem path for op-sqlite open()
 - [02.5-03]: Three-tier nutrition fallback: KG recipe decomposition -> KG dish averages -> flat-rate proxy
 - [02.5-03]: Lazy KG initialization on first detection flow, not at app boot (no startup cost)
+- [02.5-04]: Ingredient-specific cup/tbsp overrides (flour=120g/cup, oil=218g/cup) instead of single water-default
+- [02.5-04]: parse_quantity_grams returns None for unparseable; caller applies 50g fallback
+- [02.5-04]: All dishes included (no cap, no minimum threshold); tiered confidence for 1-2 vs >=3 recipe counts
 
 ### Roadmap Evolution
 
@@ -204,6 +208,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T05:47:15Z
-Stopped at: Completed 02.5-03-PLAN.md (Phase 02.5 complete)
+Last session: 2026-03-14T07:25:50Z
+Stopped at: Completed 02.5-04-PLAN.md (gap closure: quantity parsing + full dataset)
 Resume file: None
