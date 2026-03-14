@@ -8,6 +8,7 @@ module.exports = {
     '^@op-engineering/op-sqlite$':
       '<rootDir>/__mocks__/@op-engineering/op-sqlite.ts',
     '\\.tflite$': '<rootDir>/__mocks__/tfliteAsset.js',
+    '^llama\\.rn$': '<rootDir>/__mocks__/llama.rn.ts',
   },
   testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
 };
