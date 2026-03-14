@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02.5-06-PLAN.md (KG full rebuild, export, verification -- Phase 02.5 complete)
-last_updated: "2026-03-14T08:51:20.212Z"
-last_activity: 2026-03-14 -- Completed 02.5-06 (KG full rebuild, export, verification)
+status: in-progress
+stopped_at: Completed 02.6-01-PLAN.md (VLM foundation -- deps, types, RAM detector)
+last_updated: "2026-03-14T12:04:33Z"
+last_activity: 2026-03-14 -- Completed 02.6-01 (VLM deps, types, RAM detector)
 progress:
   total_phases: 12
   completed_phases: 6
-  total_plans: 27
-  completed_plans: 26
-  percent: 82
+  total_plans: 33
+  completed_plans: 27
+  percent: 83
 ---
 
 # Project State
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.5 complete. Next: Phase 02.6 (On-Device VLM Integration)
+**Current focus:** Phase 02.6 (On-Device VLM Integration) -- Plan 1 of 6 complete
 
 ## Current Position
 
-Phase: 02.5 of 7 (Food Knowledge Graph)
-Plan: 6 of 6 in current phase (6 complete -- phase finished)
-Status: Phase Complete
-Last activity: 2026-03-14 -- Completed 02.5-06 (KG full rebuild, export, verification)
+Phase: 02.6 of 7 (On-Device VLM Integration)
+Plan: 1 of 6 in current phase (1 complete)
+Status: In Progress
+Last activity: 2026-03-14 -- Completed 02.6-01 (VLM deps, types, RAM detector)
 
-Progress: [████████░░] 82%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 28 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5)
+- Total plans completed: 29 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5 + 1 phase 02.6)
 - Average duration: 10min
 - Total execution time: ~3.1 hours
 
@@ -53,8 +53,8 @@ Progress: [████████░░] 82%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 5min, 4min, 5min
-- Trend: Fast (KG gap closure plans are focused, quick execution)
+- Last 3 plans: 4min, 5min, 4min
+- Trend: Fast (foundation plans are focused, quick execution)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -85,6 +85,8 @@ Progress: [████████░░] 82%
 | Phase 02.5 P04 | 4min | 2 tasks | 3 files |
 | Phase 02.5 P05 | 5min | 2 tasks | 4 files |
 | Phase 02.5 P06 | 38min | 2 tasks | 2 files |
+
+| Phase 02.6 P01 | 4min | 2 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -192,6 +194,9 @@ Recent decisions affecting current work:
 - [02.5-05]: Classifier/detector labels seeded before recipes; original labels registered as dish_alias type 'model_label'
 - [Phase 02.5]: MIN_RECIPE_COUNT=10 threshold balances 15K+ dish coverage vs 70MB mobile bundling limit
 - [Phase 02.5]: Top 30 ingredients per dish cap reduces DB size from 1.4M to 452K rows while preserving nutrition accuracy
+- [02.6-01]: llama.rn v0.11.4 with enableEntitlements, forceCxx20, enableOpenCL Expo plugin config
+- [02.6-01]: expo-device getter-based mock pattern for per-test totalMemory mutation in Jest
+- [02.6-01]: SmolVLM family tier configs: budget 256M (365MB), mid 500M (546MB), high 2.2B (1.3GB)
 
 ### Roadmap Evolution
 
@@ -215,6 +220,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T08:44:35.728Z
-Stopped at: Completed 02.5-06-PLAN.md (KG full rebuild, export, verification -- Phase 02.5 complete)
+Last session: 2026-03-14T12:04:33Z
+Stopped at: Completed 02.6-01-PLAN.md (VLM foundation -- deps, types, RAM detector)
 Resume file: None
