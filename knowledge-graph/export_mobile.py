@@ -76,24 +76,46 @@ def export_mobile(
     print("   Running VACUUM...")
     conn.execute("VACUUM")
 
-    # Verify the export
+    # Verify the export -- check all required tables exist
     print("\n3. Verifying export...")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM dishes")
+    required_tables = [
+        "cuisine", "dish_category", "dish", "dish_alias",
+        "recipe", "recipe_ingredient", "usda_food", "symspell_deletes",
+        "dish_fts", "dish_alias_fts",
+    ]
+    cursor.execute("SELECT name FROM sqlite_master WHERE type='table'")
+    actual_tables = {row[0] for row in cursor.fetchall()}
+    missing = [t for t in required_tables if t not in actual_tables]
+    if missing:
+        print(f"  ERROR: Missing tables: {missing}")
+        conn.close()
+        return False
+
+    cursor.execute("SELECT COUNT(*) FROM dish")
     dish_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM ingredients")
+    cursor.execute("SELECT COUNT(*) FROM recipe")
+    recipe_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM recipe_ingredient")
     ingredient_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM dish_ingredients")
-    relationship_count = cursor.fetchone()[0]
-
-    cursor.execute("SELECT COUNT(DISTINCT cuisine) FROM dishes")
+    cursor.execute("SELECT COUNT(*) FROM cuisine")
     cuisine_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM ingredients WHERE usda_fdc_id IS NOT NULL")
-    fdc_count = cursor.fetchone()[0]
+    cursor.execute("SELECT COUNT(*) FROM dish_alias")
+    alias_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM usda_food")
+    usda_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM symspell_deletes")
+    symspell_count = cursor.fetchone()[0]
+
+    cursor.execute("SELECT COUNT(*) FROM recipe_ingredient WHERE usda_fdc_id IS NOT NULL")
+    linked_count = cursor.fetchone()[0]
 
     conn.close()
 
@@ -108,16 +130,19 @@ def export_mobile(
     size_mb = file_size / (1024 * 1024)
 
     print(f"\n  Dishes:           {dish_count:,}")
+    print(f"  Recipes:          {recipe_count:,}")
     print(f"  Ingredients:      {ingredient_count:,}")
-    print(f"  Relationships:    {relationship_count:,}")
+    print(f"  USDA-linked:      {linked_count:,}")
     print(f"  Cuisines:         {cuisine_count}")
-    print(f"  USDA FDC links:   {fdc_count}")
+    print(f"  Aliases:          {alias_count:,}")
+    print(f"  USDA foods:       {usda_count:,}")
+    print(f"  SymSpell entries: {symspell_count:,}")
     print(f"  File size:        {size_mb:.2f} MB ({file_size:,} bytes)")
 
-    if size_mb > 50:
-        print(f"\n  WARNING: File size ({size_mb:.1f} MB) exceeds 50MB mobile threshold!")
+    if size_mb > 70:
+        print(f"\n  WARNING: File size ({size_mb:.1f} MB) exceeds 70MB limit!")
     else:
-        print(f"\n  File size OK for mobile bundling (<50MB)")
+        print(f"\n  File size OK for mobile bundling (<70MB)")
 
     # Step 4: Copy to mobile app directory if specified
     if mobile_dest:
@@ -151,7 +176,7 @@ def main():
     )
     parser.add_argument(
         "--mobile-dest",
-        default="apps/mobile/src/data/food-knowledge.db",
+        default="apps/mobile/assets/data/food-knowledge.db",
         help="Path to copy DB for mobile app bundling",
     )
     args = parser.parse_args()
