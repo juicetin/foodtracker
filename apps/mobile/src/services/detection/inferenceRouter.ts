@@ -3,7 +3,7 @@
  *
  * Orchestrates the detection pipeline sequentially:
  * 1. Detection: where are the food items? (GGCD YOLO 241 food-specific classes)
- * 2. Classification: what food is each item? (EfficientNet-Lite0 335-class labels)
+ * 2. Classification: what food is each item? (EfficientNet-Lite0 905-class labels)
  *
  * All 241 YOLO classes are food-specific (trained on GGCD dataset), so no
  * COCO food-class filtering is needed. Each detected item carries its own
@@ -147,7 +147,7 @@ export async function runDetectionPipeline(
       ? classifyOutput[0]
       : new Float32Array(classifyOutput[0] as ArrayBuffer);
 
-    // Find top class from EfficientNet-Lite0's 335 output logits.
+    // Find top class from EfficientNet-Lite0's output logits.
     let topConf = 0;
     let topIdx = 0;
     for (let i = 0; i < classifyScores.length; i++) {

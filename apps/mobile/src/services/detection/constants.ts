@@ -2,7 +2,7 @@
  * Detection pipeline constants.
  *
  * GGCD YOLOv8n detection class names (241 food-specific entries),
- * EfficientNet-Lite0 class names (335 entries), and model input sizes
+ * EfficientNet-Lite0 class names (905 entries), and model input sizes
  * for the two-stage pipeline (detect + classify).
  *
  * EfficientNet-Lite0 input: 224x224 float32 with ImageNet normalization.
@@ -33,9 +33,9 @@ export const DETECT_INPUT_SIZE = 640;
 export const CLASSIFY_INPUT_SIZE = 224;
 
 /**
- * EfficientNet-Lite0 class names (335 food-specific entries).
+ * EfficientNet-Lite0 class names (905 food-specific entries).
  * Index-aligned with model output logits.
- * Trained on Food-101 + UEC-256 merged dataset.
+ * Trained on merged_v2 dataset (14-dataset global cuisine merge).
  */
 export const CLASSIFY_CLASS_NAMES: string[] = classifyLabels.labels;
 

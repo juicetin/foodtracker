@@ -1,9 +1,10 @@
 /**
  * Tests for inference router: two-stage pipeline orchestration
- * (detect -> classify with 241-class GGCD YOLO + 335-class EfficientNet-Lite0).
+ * (detect -> classify with 241-class GGCD YOLO + 905-class EfficientNet-Lite0).
  *
  * Updated for 241 GGCD food-specific detection classes.
  * All YOLO detections are food -- no COCO food-class filtering.
+ * Classifier uses 905-class merged_v2 model (14-dataset global cuisine merge).
  */
 
 // ── Mock modelLoader ──
@@ -19,6 +20,7 @@ jest.mock('../postProcess', () => ({
 }));
 
 import { runDetectionPipeline, formatFoodLabel } from '../inferenceRouter';
+import { CLASSIFY_CLASS_NAMES } from '../constants';
 import type { RawDetection } from '../types';
 
 // Helper: build a mock model with controllable run() output
@@ -72,6 +74,22 @@ describe('inferenceRouter', () => {
     });
   });
 
+  describe('CLASSIFY_CLASS_NAMES from labels_classify.json', () => {
+    it('has 905 class entries from merged_v2 training', () => {
+      expect(CLASSIFY_CLASS_NAMES.length).toBe(905);
+    });
+
+    it('contains global cuisine food names', () => {
+      // Spot-check representative classes from different cuisine regions
+      expect(CLASSIFY_CLASS_NAMES).toContain('biryani');       // Indian
+      expect(CLASSIFY_CLASS_NAMES).toContain('pad_thai');       // Thai
+      expect(CLASSIFY_CLASS_NAMES).toContain('pho');            // Vietnamese
+      expect(CLASSIFY_CLASS_NAMES).toContain('dosa');           // South Indian
+      expect(CLASSIFY_CLASS_NAMES).toContain('doro_wat');       // Ethiopian
+      expect(CLASSIFY_CLASS_NAMES).toContain('rendang');        // Indonesian
+    });
+  });
+
   describe('runDetectionPipeline - 241-class GGCD detection', () => {
     it('pipeline function signature has 5 arguments', async () => {
       expect(runDetectionPipeline.length).toBe(5);
@@ -79,7 +97,7 @@ describe('inferenceRouter', () => {
 
     it('returns empty items when no detections found', async () => {
       const detectModel = createMockModel([new Float32Array(0)]);
-      const classifyModel = createMockModel([new Float32Array(335).fill(0.0)]);
+      const classifyModel = createMockModel([new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.0)]);
 
       mockGetModelSet.mockReturnValue({
         detect: detectModel,
@@ -100,7 +118,7 @@ describe('inferenceRouter', () => {
 
     it('all YOLO detections pass through without food-class filtering', async () => {
       const detectModel = createMockModel([new Float32Array(0)]);
-      const classifyModel = createMockModel([new Float32Array(335).fill(0.5)]);
+      const classifyModel = createMockModel([new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.5)]);
 
       mockGetModelSet.mockReturnValue({
         detect: detectModel,
@@ -125,7 +143,7 @@ describe('inferenceRouter', () => {
 
     it('each detection uses its own YOLO class name', async () => {
       const detectModel = createMockModel([new Float32Array(0)]);
-      const classifyModel = createMockModel([new Float32Array(335).fill(0.5)]);
+      const classifyModel = createMockModel([new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.5)]);
 
       mockGetModelSet.mockReturnValue({
         detect: detectModel,
@@ -155,7 +173,7 @@ describe('inferenceRouter', () => {
       const numPredictions = 2;
       const detectOutput = new Float32Array(stride * numPredictions);
       const detectModel = createMockModel([detectOutput]);
-      const classifyModel = createMockModel([new Float32Array(335).fill(0.5)]);
+      const classifyModel = createMockModel([new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.5)]);
 
       mockGetModelSet.mockReturnValue({
         detect: detectModel,
@@ -197,7 +215,7 @@ describe('inferenceRouter', () => {
       const classifyModel = {
         run: jest.fn().mockImplementation(async () => {
           callOrder.push('classify');
-          return [new Float32Array(335).fill(0.8)];
+          return [new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.8)];
         }),
         runSync: jest.fn(),
         inputs: [],
@@ -223,7 +241,7 @@ describe('inferenceRouter', () => {
 
     it('classify model receives classifyBuffer (ImageNet-normalized)', async () => {
       const detectModel = createMockModel([new Float32Array(0)]);
-      const classifyOutput = new Float32Array(335).fill(0.0);
+      const classifyOutput = new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.0);
       classifyOutput[1] = 0.8;
       const classifyModel = createMockModel([classifyOutput]);
 
@@ -249,7 +267,7 @@ describe('inferenceRouter', () => {
     it('uses YOLO label even when classify confidence is below threshold', async () => {
       const detectModel = createMockModel([new Float32Array(0)]);
       // All classify scores very low (below 0.15 threshold)
-      const classifyOutput = new Float32Array(335).fill(0.01);
+      const classifyOutput = new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.01);
       const classifyModel = createMockModel([classifyOutput]);
 
       mockGetModelSet.mockReturnValue({
@@ -272,7 +290,7 @@ describe('inferenceRouter', () => {
 
     it('records timing for detect and classify stages only', async () => {
       const detectModel = createMockModel([new Float32Array(0)]);
-      const classifyModel = createMockModel([new Float32Array(335).fill(0.0)]);
+      const classifyModel = createMockModel([new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.0)]);
 
       mockGetModelSet.mockReturnValue({
         detect: detectModel,
@@ -315,7 +333,7 @@ describe('inferenceRouter', () => {
 
     it('preserves portion estimate and metadata on each item', async () => {
       const detectModel = createMockModel([new Float32Array(0)]);
-      const classifyModel = createMockModel([new Float32Array(335).fill(0.5)]);
+      const classifyModel = createMockModel([new Float32Array(CLASSIFY_CLASS_NAMES.length).fill(0.5)]);
 
       mockGetModelSet.mockReturnValue({
         detect: detectModel,
