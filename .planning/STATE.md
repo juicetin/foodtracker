@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02.5-01-PLAN.md
-last_updated: "2026-03-14T04:32:22.483Z"
-last_activity: 2026-03-14 -- Completed 02.5-02 (KnowledgeGraphService + SymSpellIndex)
+stopped_at: Completed 02.5-03-PLAN.md (Phase 02.5 complete)
+last_updated: "2026-03-14T05:47:15Z"
+last_activity: 2026-03-14 -- Completed 02.5-03 (Detection pipeline KG wiring)
 progress:
   total_phases: 12
-  completed_phases: 5
+  completed_phases: 6
   total_plans: 24
-  completed_plans: 22
-  percent: 73
+  completed_plans: 26
+  percent: 79
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.5 in progress: Food Knowledge Graph
+**Current focus:** Phase 02.5 complete. Next: Phase 02.6 (On-Device VLM Integration)
 
 ## Current Position
 
 Phase: 02.5 of 7 (Food Knowledge Graph)
-Plan: 2 of 3 in current phase (2 complete)
-Status: In Progress
-Last activity: 2026-03-14 -- Completed 02.5-02 (KnowledgeGraphService + SymSpellIndex)
+Plan: 3 of 3 in current phase (3 complete)
+Status: Phase Complete
+Last activity: 2026-03-14 -- Completed 02.5-03 (Detection pipeline KG wiring + three-tier fallback)
 
-Progress: [███████░░░] 73%
+Progress: [████████░░] 79%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 24 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 1 phase 02.5)
+- Total plans completed: 26 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 3 phase 02.5)
 - Average duration: 10min
-- Total execution time: ~3.0 hours
+- Total execution time: ~3.1 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,8 +53,8 @@ Progress: [███████░░░] 73%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 10min, 10min, 4min
-- Trend: Accelerating (KG service plans are schema + query layer, fast execution)
+- Last 3 plans: 14min, 4min, 5min
+- Trend: Fast (KG integration plans are wiring + verification, quick execution)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -81,6 +81,7 @@ Progress: [███████░░░] 73%
 | Phase 02.5 P02 | 4min | 2 tasks | 6 files |
 | Phase 02.5 P01 | 210min | 2 tasks | 6 files |
 | Phase 02.5 P01 | 14min | 2 tasks | 6 files |
+| Phase 02.5 P03 | 5min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -176,6 +177,10 @@ Recent decisions affecting current work:
 - [Phase 02.5]: Temporary index on recipe_ingredient(ingredient_name) during USDA linking -- 300x speedup (10min to 2s)
 - [Phase 02.5]: corbt/all-recipes dataset (537K Parquet) replaces RecipeNLG (manual download, script API deprecated)
 - [Phase 02.5]: 500 USDA SR Legacy foods embedded in build_kg.py for self-contained pipeline, no external CSV download
+- [02.5-03]: food-knowledge.db bundled in APK via assets/data/ (under 70MB, avoids mandatory first-run download)
+- [02.5-03]: expo-asset Asset.fromModule() resolves bundled .db to filesystem path for op-sqlite open()
+- [02.5-03]: Three-tier nutrition fallback: KG recipe decomposition -> KG dish averages -> flat-rate proxy
+- [02.5-03]: Lazy KG initialization on first detection flow, not at app boot (no startup cost)
 
 ### Roadmap Evolution
 
@@ -199,6 +204,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T04:32:22.479Z
-Stopped at: Completed 02.5-01-PLAN.md
+Last session: 2026-03-14T05:47:15Z
+Stopped at: Completed 02.5-03-PLAN.md (Phase 02.5 complete)
 Resume file: None
