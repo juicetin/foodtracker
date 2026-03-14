@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02.6-02-PLAN.md (PackManager streaming download, VLM paired files)
-last_updated: "2026-03-14T12:07:00.614Z"
-last_activity: 2026-03-14 -- Completed 02.6-02 (PackManager streaming download, VLM paired files)
+stopped_at: Completed 02.6-04-PLAN.md (Detection types & store VLM extensions)
+last_updated: "2026-03-14T12:11:00Z"
+last_activity: 2026-03-14 -- Completed 02.6-04 (Detection types & store VLM extensions via TDD)
 progress:
   total_phases: 12
   completed_phases: 6
   total_plans: 33
-  completed_plans: 28
+  completed_plans: 30
   percent: 85
 ---
 
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.6 (On-Device VLM Integration) -- Plan 1 of 6 complete
+**Current focus:** Phase 02.6 (On-Device VLM Integration) -- Plan 4 of 6 complete
 
 ## Current Position
 
 Phase: 02.6 of 7 (On-Device VLM Integration)
-Plan: 2 of 6 in current phase (2 complete)
+Plan: 4 of 6 in current phase (4 complete)
 Status: In Progress
-Last activity: 2026-03-14 -- Completed 02.6-02 (PackManager streaming download, VLM paired files)
+Last activity: 2026-03-14 -- Completed 02.6-04 (Detection types & store VLM extensions via TDD)
 
 Progress: [████████░░] 85%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 29 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5 + 1 phase 02.6)
+- Total plans completed: 31 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5 + 3 phase 02.6)
 - Average duration: 10min
 - Total execution time: ~3.1 hours
 
@@ -88,6 +88,8 @@ Progress: [████████░░] 85%
 
 | Phase 02.6 P01 | 4min | 2 tasks | 9 files |
 | Phase 02.6 P02 | 5min | 2 tasks | 4 files |
+| Phase 02.6 P03 | 3min | 2 tasks | 5 files |
+| Phase 02.6 P04 | 3min | 2 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -201,6 +203,11 @@ Recent decisions affecting current work:
 - [Phase 02.6]: createDownloadResumable from expo-file-system/legacy replaces fetch().arrayBuffer() for streaming to disk -- avoids 300MB+ OOM
 - [Phase 02.6]: All pack types use streaming download (not just VLM) for consistent OOM prevention
 - [Phase 02.6]: VLM paired files: model deleted if mmproj download fails (atomic cleanup)
+- [02.6-03]: Singleton object literal pattern (not class) for VlmService matching PackManager convention
+- [02.6-03]: 60s inactivity timeout auto-releases VLM context to free RAM on constrained devices
+- [02.6-03]: JSON.parse fallback returns { dishes: [] } on grammar constraint failure (defense-in-depth)
+- [02.6-04]: VLM fields on DetectedItem are all optional for backward compatibility
+- [02.6-04]: setRefining propagates isRefining to all items; displayLabel uses vlmLabel ?? className fallback
 
 ### Roadmap Evolution
 
@@ -224,6 +231,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T12:06:50.886Z
-Stopped at: Completed 02.6-02-PLAN.md (PackManager streaming download, VLM paired files)
+Last session: 2026-03-14T12:11:00Z
+Stopped at: Completed 02.6-04-PLAN.md (Detection types & store VLM extensions)
 Resume file: None
