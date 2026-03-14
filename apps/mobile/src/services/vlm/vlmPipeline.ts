@@ -5,11 +5,9 @@
  * KG nutrition lookup. Matches VLM dishes to YOLO bounding boxes via
  * substring + word overlap similarity.
  *
- * Designed for graceful fallback:
- * - VLM not ready -> items unchanged
- * - VLM inference fails -> items unchanged (logged in __DEV__)
- * - KG not available -> items get vlmLabel but no KG nutrition override
- * - No match for a VLM dish -> dish ignored (no phantom items)
+ * VLM is required for usable detection — YOLO alone gives unreliable labels.
+ * Throws if VLM is not ready (caller must gate on VLM availability).
+ * KG is optional — items get vlmLabel even if KG lookup fails.
  */
 
 import { vlmService } from './vlmService';
@@ -34,24 +32,13 @@ export async function runVlmRefinement(
   items: DetectedItem[],
   userText?: string,
 ): Promise<DetectedItem[]> {
-  // Early exit: VLM not initialized or not available
+  // VLM is required — YOLO labels alone are not usable
   if (!vlmService.isReady) {
-    return items;
+    throw new Error('VLM model is not loaded. Download the VLM pack first.');
   }
 
-  // Run VLM inference (wrapped in try/catch for graceful fallback)
-  let vlmResult: VlmFoodResult;
-  try {
-    vlmResult = await vlmService.identify(photoUri, userText);
-  } catch (err) {
-    if (__DEV__) {
-      console.warn(
-        '[VLM Pipeline] Inference failed, falling back to YOLO labels:',
-        err instanceof Error ? err.message : err,
-      );
-    }
-    return items;
-  }
+  // Run VLM inference
+  const vlmResult = await vlmService.identify(photoUri, userText);
 
   // Match VLM dishes to YOLO items
   const matchMap = matchVlmToYolo(items, vlmResult);

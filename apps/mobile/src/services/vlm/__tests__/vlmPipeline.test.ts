@@ -2,7 +2,7 @@
  * Tests for VLM refinement pipeline.
  *
  * Verifies YOLO-to-VLM matching, KG nutrition bridge,
- * and graceful fallback when VLM is unavailable or fails.
+ * and that VLM is required (throws when not ready).
  */
 
 import { vlmService } from '../vlmService';
@@ -71,20 +71,22 @@ beforeEach(() => {
 });
 
 describe('runVlmRefinement', () => {
-  it('returns items unchanged when VLM not ready', async () => {
+  it('throws when VLM not ready', async () => {
     mockVlmService.isReady = false;
     const items = [makeItem()];
-    const result = await runVlmRefinement('file:///photo.jpg', items);
-    expect(result).toEqual(items);
+    await expect(runVlmRefinement('file:///photo.jpg', items)).rejects.toThrow(
+      'VLM model is not loaded',
+    );
     expect(mockVlmService.identify).not.toHaveBeenCalled();
   });
 
-  it('returns items unchanged when VLM throws', async () => {
+  it('propagates VLM inference errors', async () => {
     mockVlmService.isReady = true;
     mockVlmService.identify.mockRejectedValueOnce(new Error('Inference failed'));
     const items = [makeItem()];
-    const result = await runVlmRefinement('file:///photo.jpg', items);
-    expect(result).toEqual(items);
+    await expect(runVlmRefinement('file:///photo.jpg', items)).rejects.toThrow(
+      'Inference failed',
+    );
   });
 
   it('matches VLM dish to YOLO item by substring', async () => {

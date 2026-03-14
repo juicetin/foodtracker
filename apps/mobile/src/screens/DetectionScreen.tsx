@@ -210,22 +210,38 @@ export function DetectionScreen() {
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastVlmTextRef = useRef<string>('');
 
+  // -- VLM availability check ------------------------------------------------
+  // VLM is required for usable detection. Check on mount and gate the flow.
+
+  const [vlmAvailable, setVlmAvailable] = useState<boolean | null>(null); // null = checking
+
+  useEffect(() => {
+    const checkVlm = async () => {
+      const tier = detectVlmTier();
+      if (tier === 'none') {
+        setVlmAvailable(false);
+        return;
+      }
+      const tierConfig = getVlmTierConfig();
+      if (!tierConfig) {
+        setVlmAvailable(false);
+        return;
+      }
+      const pack = await PackManager.getInstalledPack(tierConfig.modelId);
+      setVlmAvailable(!!(pack && pack.mmprojFilePath));
+    };
+    checkVlm();
+  }, []);
+
   // -- VLM lazy init and refinement (after YOLO results) --------------------
 
   useEffect(() => {
     if (flowState !== 'results') return;
     if (items.length === 0) return;
 
-    // Lazy VLM model init (once per session)
     const initAndRefine = async () => {
       if (!vlmInitAttempted.current) {
         vlmInitAttempted.current = true;
-
-        const tier = detectVlmTier();
-        if (tier === 'none') {
-          if (__DEV__) console.log('[VLM] Device tier is "none", skipping VLM');
-          return;
-        }
 
         const tierConfig = getVlmTierConfig();
         if (!tierConfig) return;
@@ -234,11 +250,6 @@ export function DetectionScreen() {
           const pack = await PackManager.getInstalledPack(tierConfig.modelId);
           if (pack && pack.mmprojFilePath) {
             await vlmService.init(pack.filePath, pack.mmprojFilePath);
-          } else {
-            if (__DEV__) {
-              console.log('[VLM] VLM pack not installed yet:', tierConfig.modelId);
-            }
-            return;
           }
         } catch (err) {
           if (__DEV__) {
@@ -271,8 +282,10 @@ export function DetectionScreen() {
               });
             }
           }
-        } catch {
-          // Graceful fallback: YOLO labels remain
+        } catch (err) {
+          if (__DEV__) {
+            console.warn('[VLM] Refinement failed:', err instanceof Error ? err.message : err);
+          }
         } finally {
           setRefining(false);
         }
@@ -574,6 +587,50 @@ export function DetectionScreen() {
   // =========================================================================
   // Render
   // =========================================================================
+
+  // -- VLM not available: redirect to download --------------------------------
+  if (flowState === 'idle' && !photoUri && vlmAvailable === false) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.idleContainer}>
+          {navigation.canGoBack() && (
+            <Pressable onPress={handleGoBack} style={styles.backButton}>
+              <Text style={styles.backButtonText}>Back</Text>
+            </Pressable>
+          )}
+
+          <Text style={styles.idleTitle}>AI Model Required</Text>
+          <Text style={styles.idleSubtitle}>
+            Download the AI model to identify foods from photos. Detection requires the VLM model to be installed.
+          </Text>
+
+          <Pressable
+            onPress={() => (navigation as any).navigate('VlmDownload')}
+            style={styles.primaryButton}
+          >
+            <Text style={styles.primaryButtonText}>Download AI Model</Text>
+          </Pressable>
+
+          {navigation.canGoBack() && (
+            <Pressable onPress={handleGoBack} style={styles.cancelButton}>
+              <Text style={styles.cancelButtonText}>Go Back</Text>
+            </Pressable>
+          )}
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  // -- VLM check in progress: spinner ----------------------------------------
+  if (vlmAvailable === null) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.spinnerContainer}>
+          <ActivityIndicator size="large" color="#22C55E" />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   // -- Idle state: photo selection buttons -----------------------------------
   if (flowState === 'idle' && !photoUri) {
