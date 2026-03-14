@@ -150,7 +150,7 @@ class TestEdgeCases:
     def test_unit_abbreviations(self):
         result = parse_quantity_grams("2 tbsp soy sauce")
         assert result is not None
-        assert 28 <= result <= 32  # 2 * 15g
+        assert 34 <= result <= 38  # 2 * 18g (soy sauce density override)
 
     def test_tsp_abbreviation(self):
         result = parse_quantity_grams("1 tsp vanilla extract")
