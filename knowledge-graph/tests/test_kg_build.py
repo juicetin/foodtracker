@@ -6,14 +6,18 @@ Tests verify:
 - Schema creates all 8 tables + 2 FTS5 tables
 - FTS5 triggers exist for dish_fts and dish_alias_fts
 - build_kg.py runs end-to-end and produces a non-zero food-knowledge.db
-- Dish count between 5000 and 15000
-- recipe_ingredient rows have usda_fdc_id populated for at least 50%
-- usda_food table has at least 500 entries with non-null calorie values
+- Dish count >= 12000
+- recipe_ingredient rows have usda_fdc_id populated for at least 85%
+- usda_food table has at least 5000 entries with non-null calorie values
 - symspell_deletes table has at least 10000 entries
 - dish_fts MATCH query returns results for "pad thai"
 - Database file size under 70MB (75497472 bytes)
+- Quantity parsing: >60% of recipe_ingredient rows have non-default quantities
+- Classifier label coverage: >95% of named classifier labels have KG dish entries
+- Micronutrients: >50% of USDA foods have micronutrient data
 """
 
+import json
 import os
 import sqlite3
 import subprocess
@@ -129,15 +133,15 @@ def test_fts5_triggers_exist(conn):
 
 # ── Data Count Tests ──────────────────────────────────────────────────
 
-def test_dish_count_in_range(conn):
-    """Dish count is between 5000 and 15000."""
+def test_dish_count_minimum(conn):
+    """Dish count is at least 12000 (curated + classifier labels + recipes + WorldCuisines)."""
     cursor = conn.execute("SELECT COUNT(*) as cnt FROM dish")
     count = cursor.fetchone()["cnt"]
-    assert 5000 <= count <= 15000, f"Dish count {count} not in range [5000, 15000]"
+    assert count >= 12000, f"Dish count {count} is below 12000 minimum"
 
 
 def test_recipe_ingredient_usda_linkage(conn):
-    """recipe_ingredient rows have usda_fdc_id populated for at least 50%."""
+    """recipe_ingredient rows have usda_fdc_id populated for at least 85%."""
     cursor = conn.execute("SELECT COUNT(*) as total FROM recipe_ingredient")
     total = cursor.fetchone()["total"]
     cursor = conn.execute(
@@ -146,16 +150,16 @@ def test_recipe_ingredient_usda_linkage(conn):
     linked = cursor.fetchone()["linked"]
     assert total > 0, "No recipe_ingredient rows"
     pct = linked / total
-    assert pct >= 0.50, f"Only {pct:.1%} of recipe_ingredients have usda_fdc_id (need >= 50%)"
+    assert pct >= 0.85, f"Only {pct:.1%} of recipe_ingredients have usda_fdc_id (need >= 85%)"
 
 
 def test_usda_food_table_populated(conn):
-    """usda_food table has at least 500 entries with non-null calorie values."""
+    """usda_food table has at least 5000 entries with non-null calorie values."""
     cursor = conn.execute(
         "SELECT COUNT(*) as cnt FROM usda_food WHERE calories_per_100g IS NOT NULL"
     )
     count = cursor.fetchone()["cnt"]
-    assert count >= 500, f"usda_food has only {count} entries with calories (need >= 500)"
+    assert count >= 5000, f"usda_food has only {count} entries with calories (need >= 5000)"
 
 
 def test_symspell_deletes_populated(conn):
@@ -183,6 +187,71 @@ def test_database_file_size_under_70mb():
     size = DB_PATH.stat().st_size
     max_size = 75497472  # 70 MB
     assert size < max_size, f"DB size {size:,} bytes exceeds 70MB limit ({max_size:,})"
+
+
+# ── Quantity Parsing Tests ─────────────────────────────────────────────
+
+def test_quantity_parsing_improved(conn):
+    """At least 60% of recipe_ingredient rows should have non-50g quantities."""
+    cursor = conn.execute(
+        "SELECT COUNT(*) as cnt FROM recipe_ingredient WHERE quantity_grams <> 50.0"
+    )
+    non_default = cursor.fetchone()["cnt"]
+    cursor = conn.execute("SELECT COUNT(*) as cnt FROM recipe_ingredient")
+    total = cursor.fetchone()["cnt"]
+    pct = non_default / total * 100 if total > 0 else 0
+    assert pct > 60, f"Expected >60% non-default quantities, got {pct:.1f}%"
+
+
+# ── Classifier Label Coverage Tests ────────────────────────────────────
+
+def test_classifier_label_coverage(conn):
+    """All named classifier labels should have KG dish entries."""
+    labels_path = (
+        Path(__file__).parent.parent.parent
+        / "apps"
+        / "mobile"
+        / "assets"
+        / "models"
+        / "labels_classify.json"
+    )
+    if not labels_path.exists():
+        pytest.skip("labels_classify.json not found")
+    with open(labels_path) as f:
+        data = json.load(f)
+    named_labels = [
+        l
+        for l in data["labels"]
+        if not l.isdigit() and not (len(l) == 3 and l[0] == "0")
+    ]
+
+    cursor = conn.cursor()
+    missing = []
+    for label in named_labels:
+        norm = label.lower().replace("-", " ").replace("_", " ").strip()
+        cursor.execute("SELECT id FROM dish WHERE canonical_name = ?", (norm,))
+        if not cursor.fetchone():
+            missing.append(label)
+
+    coverage_pct = (len(named_labels) - len(missing)) / len(named_labels) * 100
+    assert coverage_pct > 95, (
+        f"Classifier label coverage: {coverage_pct:.1f}% "
+        f"(missing: {missing[:10]}...)"
+    )
+
+
+# ── Micronutrient Tests ────────────────────────────────────────────────
+
+def test_micronutrients_present(conn):
+    """USDA foods should have micronutrient data (vitamin A, C, calcium, iron)."""
+    cursor = conn.execute(
+        "SELECT COUNT(*) as cnt FROM usda_food WHERE vitamin_a_ug IS NOT NULL"
+    )
+    with_micros = cursor.fetchone()["cnt"]
+    cursor = conn.execute("SELECT COUNT(*) as cnt FROM usda_food")
+    total = cursor.fetchone()["cnt"]
+    pct = with_micros / total * 100 if total > 0 else 0
+    assert pct > 50, f"Expected >50% USDA foods with micronutrients, got {pct:.1f}%"
 
 
 # ── WorldCuisines Alias Tests ───────────────────────────────────────
