@@ -17,7 +17,7 @@ export interface PackManifest {
 export interface PackEntry {
   id: string; // e.g., 'usda-core', 'afcd', 'yolo-v1'
   name: string; // Human-readable
-  type: 'nutrition' | 'model';
+  type: 'nutrition' | 'model' | 'knowledge-graph';
   version: string; // Semver
   sizeBytes: number; // Download size (compressed)
   sha256: string; // Integrity hash
@@ -32,7 +32,7 @@ export interface PackEntry {
 export interface InstalledPack {
   id: string;
   name: string;
-  type: 'nutrition' | 'model';
+  type: 'nutrition' | 'model' | 'knowledge-graph';
   version: string;
   filePath: string;
   sizeBytes: number | null;
