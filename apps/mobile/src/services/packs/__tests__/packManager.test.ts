@@ -1,8 +1,8 @@
 /**
  * Tests for PackManager and PackManifest services.
  *
- * Mocks: expo-file-system (v19 File/Directory/Paths), expo-crypto,
- *        db/client, db/schema, drizzle-orm, global fetch.
+ * Mocks: expo-file-system (v19 File/Directory/Paths), expo-file-system/legacy,
+ *        expo-crypto, db/client, db/schema, drizzle-orm, global fetch.
  */
 
 import type {
@@ -32,6 +32,16 @@ jest.mock('expo-file-system', () => ({
   },
   File: jest.fn().mockImplementation(() => ({ ...mockFileInstance })),
   Directory: jest.fn().mockImplementation(() => ({ ...mockDirInstance })),
+}));
+
+// ── Mock expo-file-system/legacy (streaming download API) ──
+const mockDownloadAsync = jest.fn().mockResolvedValue({ uri: '/mock/downloaded', status: 200 });
+const mockCreateDownloadResumable = jest.fn().mockReturnValue({
+  downloadAsync: mockDownloadAsync,
+});
+
+jest.mock('expo-file-system/legacy', () => ({
+  createDownloadResumable: (...args: unknown[]) => mockCreateDownloadResumable(...args),
 }));
 
 // ── Mock expo-crypto ──
@@ -79,6 +89,7 @@ jest.mock('../../../../db/schema', () => ({
     type: 'type',
     version: 'version',
     filePath: 'file_path',
+    mmprojFilePath: 'mmproj_file_path',
     sizeBytes: 'size_bytes',
     sha256: 'sha256',
     region: 'region',
@@ -215,6 +226,155 @@ describe('PackManager', () => {
       const { File: FileMock } = require('expo-file-system');
       expect(FileMock).toHaveBeenCalled();
       expect(mockDelete).toHaveBeenCalled();
+    });
+
+    it('removes mmproj file for VLM packs', async () => {
+      selectFromResult = [
+        {
+          id: 'smolvlm-256m',
+          name: 'SmolVLM 256M',
+          type: 'vlm',
+          version: '1.0.0',
+          filePath: '/mock/documents/packs/vlm/smolvlm-256m/model.gguf',
+          mmprojFilePath: '/mock/documents/packs/vlm/smolvlm-256m/mmproj.gguf',
+          sizeBytes: 300000000,
+          sha256: 'modelhash',
+          region: null,
+          installedAt: '2026-01-01T00:00:00Z',
+          lastChecked: null,
+        },
+      ];
+
+      await PackManager.deletePack('smolvlm-256m');
+
+      const { File: FileMock } = require('expo-file-system');
+      // File should be called for both model and mmproj files
+      expect(FileMock).toHaveBeenCalledTimes(2);
+      expect(mockDelete).toHaveBeenCalled();
+    });
+  });
+
+  describe('streaming download', () => {
+    it('uses createDownloadResumable instead of fetch().arrayBuffer()', async () => {
+      const onProgress = jest.fn();
+
+      await PackManager.downloadPack(testPack, onProgress);
+
+      // Should NOT use fetch().arrayBuffer() (the OOM pattern)
+      const fetchMock = global.fetch as jest.Mock;
+      if (fetchMock.mock.calls.length > 0) {
+        // If fetch was called at all, arrayBuffer should NOT have been called
+        const response = await fetchMock.mock.results[0]?.value;
+        if (response?.arrayBuffer) {
+          expect(response.arrayBuffer).not.toHaveBeenCalled();
+        }
+      }
+
+      // Should use createDownloadResumable for streaming
+      expect(mockCreateDownloadResumable).toHaveBeenCalled();
+      expect(mockDownloadAsync).toHaveBeenCalled();
+    });
+
+    it('progress callback called during download', async () => {
+      // Set up createDownloadResumable to capture and invoke the progress callback
+      mockCreateDownloadResumable.mockImplementation(
+        (_url: string, _dest: string, _opts: unknown, progressCb: (data: { totalBytesWritten: number; totalBytesExpectedToWrite: number }) => void) => {
+          // Simulate progress callback invocation during download
+          if (progressCb) {
+            progressCb({ totalBytesWritten: 25_000_000, totalBytesExpectedToWrite: 50_000_000 });
+            progressCb({ totalBytesWritten: 50_000_000, totalBytesExpectedToWrite: 50_000_000 });
+          }
+          return {
+            downloadAsync: jest.fn().mockResolvedValue({ uri: '/mock/downloaded', status: 200 }),
+          };
+        }
+      );
+
+      const onProgress = jest.fn();
+      await PackManager.downloadPack(testPack, onProgress);
+
+      expect(onProgress).toHaveBeenCalledWith(
+        expect.objectContaining({
+          totalBytesWritten: expect.any(Number),
+          totalBytesExpected: expect.any(Number),
+          fraction: expect.any(Number),
+        })
+      );
+    });
+  });
+
+  describe('VLM paired file downloads', () => {
+    const vlmPack: PackEntry = {
+      id: 'smolvlm-256m',
+      name: 'SmolVLM 256M',
+      type: 'vlm',
+      version: '1.0.0',
+      sizeBytes: 256_000_000,
+      sha256: 'abc123hash',
+      url: 'https://r2.example.com/packs/vlm/smolvlm-256m/model.gguf',
+      mmprojUrl: 'https://r2.example.com/packs/vlm/smolvlm-256m/mmproj.gguf',
+      mmprojSha256: 'abc123hash',
+      mmprojSizeBytes: 50_000_000,
+      description: 'SmolVLM 256M VLM model',
+    };
+
+    it('downloads VLM pack with paired files', async () => {
+      const onProgress = jest.fn();
+
+      const result = await PackManager.downloadPack(vlmPack, onProgress);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe('smolvlm-256m');
+      expect(result.type).toBe('vlm');
+      expect(result.mmprojFilePath).toBeDefined();
+      expect(result.mmprojFilePath).toContain('mmproj');
+
+      // createDownloadResumable should be called twice: once for model, once for mmproj
+      expect(mockCreateDownloadResumable).toHaveBeenCalledTimes(2);
+    });
+
+    it('cleans up model file if mmproj download fails', async () => {
+      // Make the first download succeed, second fail
+      let callCount = 0;
+      mockCreateDownloadResumable.mockImplementation(() => {
+        callCount++;
+        if (callCount === 1) {
+          // Model download succeeds
+          return {
+            downloadAsync: jest.fn().mockResolvedValue({ uri: '/mock/model', status: 200 }),
+          };
+        }
+        // mmproj download fails
+        return {
+          downloadAsync: jest.fn().mockResolvedValue(undefined),
+        };
+      });
+
+      const onProgress = jest.fn();
+
+      await expect(PackManager.downloadPack(vlmPack, onProgress)).rejects.toThrow();
+
+      // Model file should be deleted (cleanup on mmproj failure)
+      const { File: FileMock } = require('expo-file-system');
+      const fileInstances = FileMock.mock.results.map((r: { value: unknown }) => r.value);
+      const deleteCallCount = fileInstances.filter(
+        (f: { delete: { mock: { calls: unknown[] } } }) => f.delete.mock.calls.length > 0
+      ).length;
+      expect(deleteCallCount).toBeGreaterThan(0);
+    });
+
+    it('non-VLM packs still download successfully', async () => {
+      const onProgress = jest.fn();
+
+      const result = await PackManager.downloadPack(testPack, onProgress);
+
+      expect(result).toBeDefined();
+      expect(result.id).toBe('usda-core');
+      expect(result.type).toBe('nutrition');
+      expect(result.mmprojFilePath).toBeUndefined();
+
+      // Only one download (no mmproj)
+      expect(mockCreateDownloadResumable).toHaveBeenCalledTimes(1);
     });
   });
 });
