@@ -357,11 +357,11 @@ def seed_from_usda(db_path: str, api_key: str = DEFAULT_API_KEY, max_pages: int 
     print("\n" + "=" * 60)
     print("USDA FoodData Central Enrichment Complete")
     print("=" * 60)
-    print(f"  API calls made:           {api_calls}")
-    print(f"  Dishes updated:           {dishes_updated}")
-    print(f"  New dishes created:       {dishes_created}")
-    print(f"  Ingredient->FDC mappings: {fdc_ids_set}")
-    print(f"  Dish-ingredient links:    {ingredients_mapped}")
+    print(f"  API calls made:           {counters['api_calls']}")
+    print(f"  Dishes updated:           {counters['dishes_updated']}")
+    print(f"  New dishes created:       {counters['dishes_created']}")
+    print(f"  Ingredient->FDC mappings: {counters['fdc_ids_set']}")
+    print(f"  Dish-ingredient links:    {counters['ingredients_mapped']}")
 
     # Show ingredients with USDA FDC IDs
     cursor.execute("SELECT COUNT(*) FROM ingredients WHERE usda_fdc_id IS NOT NULL")
