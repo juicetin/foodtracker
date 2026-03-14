@@ -1,9 +1,9 @@
 {
-  "version": "3.0.0",
-  "exportedAt": "2026-03-14T00:06:00.000000+00:00",
+  "version": "4.0.0",
+  "exportedAt": "2026-03-14T11:05:00.000000+00:00",
   "pipeline": "two-stage",
   "quantisation": "mixed",
-  "notes": "Two-stage food pipeline: GGCD YOLOv8n INT8 for 241-class food detection, EfficientNet-Lite0 INT8 for 335-class food classification. All detection classes are food-specific (no COCO filtering needed). NMS is performed in JavaScript, not baked into models.",
+  "notes": "Two-stage food pipeline: GGCD YOLOv8n INT8 for 241-class food detection, EfficientNet-Lite0 INT8 for 905-class food classification. Classifier trained on 14-dataset merge spanning 10+ cuisine regions. All detection classes are food-specific (no COCO filtering needed). NMS is performed in JavaScript, not baked into models.",
   "models": [
     {
       "id": "ggcd-detect-v1",
@@ -22,20 +22,20 @@
       "description": "YOLOv8n trained on Global Gastronomic Culinary Dataset. 241 food-specific classes spanning Central Asian, South Asian, East Asian, Middle Eastern, European, and American cuisines. INT8 quantized for mobile. NMS performed in JavaScript."
     },
     {
-      "id": "efficientnet-classify-v1",
+      "id": "efficientnet-classify-v2",
       "stage": "classify",
-      "version": "1.0.0",
+      "version": "2.0.0",
       "file": "classify.tflite",
-      "sizeBytes": 4129464,
+      "sizeBytes": 4870384,
       "format": "tflite",
       "quantisation": "int8",
       "inputSize": 224,
-      "numClasses": 335,
+      "numClasses": 905,
       "inputNormalization": "imagenet",
       "inputDtype": "float32",
-      "outputShape": [1, 335],
-      "name": "EfficientNet-Lite0 (335-Class Food Classifier)",
-      "description": "Custom-trained EfficientNet-Lite0 on Food-101 + UEC-256 merged dataset. 335 food-specific classes, 74.17% top-1, 92.14% top-5. INT8 quantized."
+      "outputShape": [1, 905],
+      "name": "EfficientNet-Lite0 (905-Class Global Food Classifier)",
+      "description": "Custom-trained EfficientNet-Lite0 on 14-dataset merge (Food-101, UEC-256, CNFOOD-241, Khana, THFOOD-50, MAFood-121, Taiwanese Food 101, VietFood67, 30VNFoods, Indonesian Food, Indian Foods, Ethiopian Foods, Central Asian Food, Padang Cuisine). 905 food-specific classes spanning 10+ cuisine regions. INT8 quantized. 76.72% top-1 validation accuracy."
     }
   ]
 }
