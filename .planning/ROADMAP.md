@@ -173,15 +173,15 @@ Plans:
   4. Progressive refinement pipeline: YOLO gives instant bounding boxes (50-80ms) -> VLM refines identification asynchronously (1-3s) -> labels update in-place with animation; UI shows "Refining..." badge during VLM processing
   5. Optional "Describe your meal" text input on DetectionScreen; user text injected into VLM prompt alongside image for text-guided disambiguation (e.g., "massaman" + curry photo -> massaman curry)
   6. VLM output (dish names, ingredients, modifiers) fed into KG for recipe-based nutrition lookup; fallback chain: VLM+KG -> YOLO+KG -> YOLO+flat-rate proxy
-**Plans:** TBD (to be created via /gsd:plan-phase)
+**Plans:** 6 plans
 
 Plans:
-- [ ] 02.6-01: TBD
-- [ ] 02.6-02: TBD
-- [ ] 02.6-03: TBD
-- [ ] 02.6-04: TBD
-- [ ] 02.6-05: TBD
-- [ ] 02.6-06: TBD
+- [ ] 02.6-01-PLAN.md -- Foundation: install llama.rn + expo-device, VLM type contracts, RAM-based tier selection, Jest mock
+- [ ] 02.6-02-PLAN.md -- PackManager streaming overhaul: large file downloads, VLM paired files (model + mmproj), DB schema extension
+- [ ] 02.6-03-PLAN.md -- VlmService singleton: llama.rn lifecycle management, prompt engineering, grammar-constrained output
+- [ ] 02.6-04-PLAN.md -- Detection types + store extension: VLM refinement fields (vlmLabel, isRefining), store actions
+- [ ] 02.6-05-PLAN.md -- Progressive refinement pipeline: YOLO->VLM->KG wiring, VLM-to-YOLO matching, DetectionScreen UI (text input, refining badge)
+- [ ] 02.6-06-PLAN.md -- VLM download screen with tier auto-selection, end-to-end on-device verification
 
 ### Phase 3: Nutrition Resolution + Diary
 **Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
