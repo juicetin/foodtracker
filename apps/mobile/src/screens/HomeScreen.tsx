@@ -15,7 +15,7 @@ export default function HomeScreen({ navigation }: HomeScreenProps) {
   return (
     <ScrollView style={styles.container}>
       <View style={styles.content}>
-        <Text style={styles.title}>Food Tracker</Text>
+        <Text style={styles.title}>Tastimate</Text>
         <Text style={styles.subtitle}>Track your meals with AI-powered photo analysis</Text>
 
         <TouchableOpacity
