@@ -71,6 +71,12 @@ export interface DetectedItem {
   isRemoved: boolean; // soft-delete for undo
   removedAt?: number; // timestamp for undo timeout
   correctedFrom?: string; // original class name if user corrected
+  // VLM refinement fields (populated asynchronously after YOLO detection)
+  vlmLabel?: string; // VLM-refined food name (more specific than className)
+  vlmCuisine?: string; // Cuisine type from VLM (e.g., "Thai", "Italian")
+  vlmIngredients?: string[]; // Inferred ingredients from VLM
+  vlmConfidence?: number; // VLM confidence (0-1)
+  isRefining?: boolean; // True while VLM is processing this item
 }
 
 // ---------------------------------------------------------------------------
@@ -79,7 +85,7 @@ export interface DetectedItem {
 
 /** Stage timing for the detection pipeline. */
 export interface PipelineStage {
-  stage: 'detect' | 'classify';
+  stage: 'detect' | 'classify' | 'vlm';
   timeMs: number;
 }
 
@@ -170,4 +176,6 @@ export interface DetectionSessionState {
   isDetecting: boolean;
   mealType: MealType;
   selectedItemId: string | null;
+  isRefining: boolean; // True while any VLM refinement is in progress
+  userMealText: string; // Free-form text input for VLM disambiguation
 }
