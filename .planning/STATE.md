@@ -4,7 +4,7 @@ milestone: v1.0
 milestone_name: milestone
 status: executing
 stopped_at: Completed 02.5-01-PLAN.md
-last_updated: "2026-03-14T04:30:14.327Z"
+last_updated: "2026-03-14T04:32:22.483Z"
 last_activity: 2026-03-14 -- Completed 02.5-02 (KnowledgeGraphService + SymSpellIndex)
 progress:
   total_phases: 12
@@ -80,6 +80,7 @@ Progress: [███████░░░] 73%
 
 | Phase 02.5 P02 | 4min | 2 tasks | 6 files |
 | Phase 02.5 P01 | 210min | 2 tasks | 6 files |
+| Phase 02.5 P01 | 14min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -172,6 +173,9 @@ Recent decisions affecting current work:
 - [Phase 02.5]: corbt/all-recipes (537K Parquet) replaces RecipeNLG (manual download deprecated)
 - [Phase 02.5]: 500 USDA SR Legacy foods embedded in build_kg.py for self-contained pipeline
 - [Phase 02.5]: SymSpell edit distance 1 (not 2) for performance with 10K+ dish names
+- [Phase 02.5]: Temporary index on recipe_ingredient(ingredient_name) during USDA linking -- 300x speedup (10min to 2s)
+- [Phase 02.5]: corbt/all-recipes dataset (537K Parquet) replaces RecipeNLG (manual download, script API deprecated)
+- [Phase 02.5]: 500 USDA SR Legacy foods embedded in build_kg.py for self-contained pipeline, no external CSV download
 
 ### Roadmap Evolution
 
@@ -195,6 +199,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T04:30:14.323Z
+Last session: 2026-03-14T04:32:22.479Z
 Stopped at: Completed 02.5-01-PLAN.md
 Resume file: None
