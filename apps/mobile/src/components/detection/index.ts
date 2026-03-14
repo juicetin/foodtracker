@@ -7,3 +7,5 @@ export { ItemDetailSheet } from './ItemDetailSheet';
 export { PortionSlider } from './PortionSlider';
 export { LogMealFAB } from './LogMealFAB';
 export { UndoToast } from './UndoToast';
+export { MealTextInput } from './MealTextInput';
+export { RefiningBadge } from './RefiningBadge';
