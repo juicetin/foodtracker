@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02.6-04-PLAN.md (Detection types & store VLM extensions)
-last_updated: "2026-03-14T12:11:00Z"
-last_activity: 2026-03-14 -- Completed 02.6-04 (Detection types & store VLM extensions via TDD)
+stopped_at: Completed 02.6-05-PLAN.md (Progressive refinement pipeline)
+last_updated: "2026-03-14T13:00:00Z"
+last_activity: 2026-03-14 -- Completed 02.6-05 (Progressive refinement pipeline, VLM->YOLO matching, DetectionScreen integration)
 progress:
   total_phases: 12
   completed_phases: 6
-  total_plans: 33
-  completed_plans: 30
-  percent: 85
+  total_plans: 42
+  completed_plans: 35
+  percent: 83
 ---
 
 # Project State
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.6 (On-Device VLM Integration) -- Plan 4 of 6 complete
+**Current focus:** Phase 02.6 (On-Device VLM Integration) -- Plan 5 of 6 complete
 
 ## Current Position
 
 Phase: 02.6 of 7 (On-Device VLM Integration)
-Plan: 4 of 6 in current phase (4 complete)
+Plan: 5 of 6 in current phase (5 complete)
 Status: In Progress
-Last activity: 2026-03-14 -- Completed 02.6-04 (Detection types & store VLM extensions via TDD)
+Last activity: 2026-03-14 -- Completed 02.6-05 (Progressive refinement pipeline, VLM->YOLO matching, DetectionScreen integration)
 
-Progress: [████████░░] 85%
+Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 31 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5 + 3 phase 02.6)
+- Total plans completed: 32 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5 + 4 phase 02.6)
 - Average duration: 10min
 - Total execution time: ~3.1 hours
 
@@ -90,6 +90,7 @@ Progress: [████████░░] 85%
 | Phase 02.6 P02 | 5min | 2 tasks | 4 files |
 | Phase 02.6 P03 | 3min | 2 tasks | 5 files |
 | Phase 02.6 P04 | 3min | 2 tasks | 3 files |
+| Phase 02.6 P05 | 25min | 3 tasks | 11 files |
 
 ## Accumulated Context
 
@@ -208,6 +209,10 @@ Recent decisions affecting current work:
 - [02.6-03]: JSON.parse fallback returns { dishes: [] } on grammar constraint failure (defense-in-depth)
 - [02.6-04]: VLM fields on DetectedItem are all optional for backward compatibility
 - [02.6-04]: setRefining propagates isRefining to all items; displayLabel uses vlmLabel ?? className fallback
+- [02.6-05]: Word overlap matching (substring + word ratio) for VLM-to-YOLO dish pairing, with positional fallback
+- [02.6-05]: Debounced 500ms re-refinement on user text input changes
+- [02.6-05]: patch-package fix for llama.rn v0.11.4 ESM/CJS config plugin incompatibility
+- [02.6-05]: VLM init is lazy (on first detection results), not at app boot
 
 ### Roadmap Evolution
 
@@ -231,6 +236,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T12:11:00Z
-Stopped at: Completed 02.6-04-PLAN.md (Detection types & store VLM extensions)
+Last session: 2026-03-14T13:00:00Z
+Stopped at: Completed 02.6-05-PLAN.md (Progressive refinement pipeline)
 Resume file: None
