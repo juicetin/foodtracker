@@ -2,16 +2,16 @@
 gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
-status: completed
-stopped_at: Completed 02.4-03-PLAN.md (Phase 02.4 complete)
-last_updated: "2026-03-14T00:19:35.894Z"
-last_activity: 2026-03-14 -- Completed Phase 02.4 (Global Cuisine Training Expansion)
+status: executing
+stopped_at: Completed 02.5-02-PLAN.md
+last_updated: "2026-03-14T01:04:17.476Z"
+last_activity: 2026-03-14 -- Completed 02.5-02 (KnowledgeGraphService + SymSpellIndex)
 progress:
   total_phases: 12
   completed_phases: 5
   total_plans: 24
-  completed_plans: 20
-  percent: 100
+  completed_plans: 21
+  percent: 73
 ---
 
 # Project State
@@ -21,23 +21,23 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.4 complete: Global Cuisine Training Expansion
+**Current focus:** Phase 02.5 in progress: Food Knowledge Graph
 
 ## Current Position
 
-Phase: 02.4 of 7 (Global Cuisine Training Expansion)
-Plan: 3 of 3 in current phase (3 complete)
-Status: Phase Complete
-Last activity: 2026-03-14 -- Completed Phase 02.4 (Global Cuisine Training Expansion)
+Phase: 02.5 of 7 (Food Knowledge Graph)
+Plan: 2 of 3 in current phase (2 complete)
+Status: In Progress
+Last activity: 2026-03-14 -- Completed 02.5-02 (KnowledgeGraphService + SymSpellIndex)
 
-Progress: [██████████] 100%
+Progress: [███████░░░] 73%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 22 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4)
-- Average duration: 11min
-- Total execution time: ~2.9 hours
+- Total plans completed: 24 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 1 phase 02.5)
+- Average duration: 10min
+- Total execution time: ~3.0 hours
 
 **Previous Phase 1 (carried forward):**
 
@@ -53,8 +53,8 @@ Progress: [██████████] 100%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 35min, 10min, 10min
-- Trend: Stabilizing (training export and deployment efficient)
+- Last 3 plans: 10min, 10min, 4min
+- Trend: Accelerating (KG service plans are schema + query layer, fast execution)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -77,6 +77,8 @@ Progress: [██████████] 100%
 | Phase 02.4 P01 | 35min | 2 tasks | 5 files |
 | Phase 02.4 P02 | 10min | 1 task | 5 files |
 | Phase 02.4 P03 | 10min | 2 tasks | 6 files |
+
+| Phase 02.5 P02 | 4min | 2 tasks | 6 files |
 
 ## Accumulated Context
 
@@ -163,6 +165,9 @@ Recent decisions affecting current work:
 - [02.4-02]: Training exceeded expectations: 76.72% top-1 on 905 classes (vs 74.17% on 335 classes)
 - [02.4-03]: CLASSIFY_CLASS_NAMES dynamically loaded from labels_classify.json -- model swap needs zero code changes
 - [02.4-03]: 241 CNFOOD-241 classes have numeric names (000-240) -- classifier is secondary to YOLO labels anyway
+- [Phase 02.5]: SymSpell implemented inline (~230 lines) instead of npm symspell-ex package (250 downloads/week, stale)
+- [Phase 02.5]: FTS5 -> alias FTS5 -> SymSpell fallback chain covers exact, alias, and fuzzy matching in priority order
+- [Phase 02.5]: Recipe decomposition: sum ingredient USDA per-100g values scaled by quantity, then scale to portion/recipe ratio
 
 ### Roadmap Evolution
 
@@ -186,6 +191,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T00:09:18Z
-Stopped at: Completed 02.4-03-PLAN.md (Phase 02.4 complete)
-Resume file: .planning/phases/02.4-global-cuisine-training-expansion/02.4-03-SUMMARY.md
+Last session: 2026-03-14T01:04:17.473Z
+Stopped at: Completed 02.5-02-PLAN.md
+Resume file: None
