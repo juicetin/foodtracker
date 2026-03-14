@@ -29,7 +29,7 @@ jest.mock('../../knowledge-graph', () => ({
   getKnowledgeGraphService: jest.fn().mockResolvedValue(null),
 }));
 
-const mockVlmService = vlmService as {
+const mockVlmService = vlmService as unknown as {
   isReady: boolean;
   identify: jest.Mock;
 };

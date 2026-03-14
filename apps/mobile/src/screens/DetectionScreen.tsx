@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -32,6 +32,11 @@ import {
   type MacroResult,
 } from '../services/knowledge-graph';
 
+import { runVlmRefinement } from '../services/vlm/vlmPipeline';
+import { vlmService } from '../services/vlm/vlmService';
+import { detectVlmTier, getVlmTierConfig } from '../services/vlm/ramDetector';
+import { PackManager } from '../services/packs/packManager';
+
 import {
   AnnotatedPhoto,
   BoundingBoxOverlay,
@@ -40,6 +45,8 @@ import {
   ItemDetailSheet,
   LogMealFAB,
   UndoToast,
+  MealTextInput,
+  RefiningBadge,
 } from '../components/detection';
 
 // ---------------------------------------------------------------------------
@@ -165,11 +172,17 @@ export function DetectionScreen() {
     photoHeight,
     items,
     isDetecting,
+    isRefining,
+    userMealText,
     mealType,
     selectedItemId,
     setPhoto,
     setItems,
     setDetecting,
+    setRefining,
+    refineItem,
+    setUserText,
+    displayLabel,
     removeItem,
     restoreItem,
     updatePortion,
@@ -190,6 +203,126 @@ export function DetectionScreen() {
 
   // Ref to track if component is still mounted during async ops
   const mountedRef = useRef(true);
+
+  // VLM state: track init attempt and debounce text input
+  const vlmInitAttempted = useRef(false);
+  const vlmRefinementDone = useRef(false);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastVlmTextRef = useRef<string>('');
+
+  // -- VLM lazy init and refinement (after YOLO results) --------------------
+
+  useEffect(() => {
+    if (flowState !== 'results') return;
+    if (items.length === 0) return;
+
+    // Lazy VLM model init (once per session)
+    const initAndRefine = async () => {
+      if (!vlmInitAttempted.current) {
+        vlmInitAttempted.current = true;
+
+        const tier = detectVlmTier();
+        if (tier === 'none') {
+          if (__DEV__) console.log('[VLM] Device tier is "none", skipping VLM');
+          return;
+        }
+
+        const tierConfig = getVlmTierConfig();
+        if (!tierConfig) return;
+
+        try {
+          const pack = await PackManager.getInstalledPack(tierConfig.modelId);
+          if (pack && pack.mmprojFilePath) {
+            await vlmService.init(pack.filePath, pack.mmprojFilePath);
+          } else {
+            if (__DEV__) {
+              console.log('[VLM] VLM pack not installed yet:', tierConfig.modelId);
+            }
+            return;
+          }
+        } catch (err) {
+          if (__DEV__) {
+            console.warn('[VLM] Failed to init VLM:', err instanceof Error ? err.message : err);
+          }
+          return;
+        }
+      }
+
+      // Run VLM refinement if ready and not already done
+      if (vlmService.isReady && !vlmRefinementDone.current) {
+        vlmRefinementDone.current = true;
+        lastVlmTextRef.current = userMealText;
+
+        try {
+          setRefining(true);
+          const refined = await runVlmRefinement(
+            photoUri!,
+            items,
+            userMealText || undefined,
+          );
+
+          for (const item of refined) {
+            if (item.vlmLabel) {
+              refineItem(item.id, {
+                vlmLabel: item.vlmLabel,
+                vlmCuisine: item.vlmCuisine,
+                vlmIngredients: item.vlmIngredients,
+                vlmConfidence: item.vlmConfidence,
+              });
+            }
+          }
+        } catch {
+          // Graceful fallback: YOLO labels remain
+        } finally {
+          setRefining(false);
+        }
+      }
+    };
+
+    initAndRefine();
+  }, [flowState, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // -- Debounced re-refinement on user text change --------------------------
+
+  const handleUserTextChange = useCallback((text: string) => {
+    setUserText(text);
+
+    // Debounce: re-trigger VLM refinement 500ms after last keystroke
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current);
+    }
+
+    debounceTimerRef.current = setTimeout(async () => {
+      if (!vlmService.isReady) return;
+      if (text === lastVlmTextRef.current) return;
+
+      lastVlmTextRef.current = text;
+
+      try {
+        setRefining(true);
+        const refined = await runVlmRefinement(
+          photoUri!,
+          items,
+          text || undefined,
+        );
+
+        for (const item of refined) {
+          if (item.vlmLabel) {
+            refineItem(item.id, {
+              vlmLabel: item.vlmLabel,
+              vlmCuisine: item.vlmCuisine,
+              vlmIngredients: item.vlmIngredients,
+              vlmConfidence: item.vlmConfidence,
+            });
+          }
+        }
+      } catch {
+        // Graceful fallback
+      } finally {
+        setRefining(false);
+      }
+    }, 500);
+  }, [photoUri, items, setUserText, setRefining, refineItem]);
 
   // -- Photo dimensions for display -----------------------------------------
   const aspectRatio = photoWidth > 0 ? photoHeight / photoWidth : 1;
@@ -408,7 +541,7 @@ export function DetectionScreen() {
         totalProtein: Math.round(totalProtein),
         totalCarbs: Math.round(totalCarbs),
         totalFat: Math.round(totalFat),
-        notes: `AI detected: ${currentActive.map((i) => i.className).join(', ')}`,
+        notes: `AI detected: ${currentActive.map((i) => displayLabel(i)).join(', ')}`,
       });
 
       // Reset detection store and navigate back
@@ -515,14 +648,24 @@ export function DetectionScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.resultsContainer}>
-        {/* Header with dismiss button */}
+        {/* Header with dismiss button and refining badge */}
         <View style={styles.resultsHeader}>
           <Pressable onPress={handleGoBack} style={styles.dismissButton}>
             <Text style={styles.dismissButtonText}>Cancel</Text>
           </Pressable>
-          <Text style={styles.resultsTitle}>Detection Results</Text>
+          <View style={styles.titleRow}>
+            <Text style={styles.resultsTitle}>Detection Results</Text>
+            <RefiningBadge visible={isRefining} />
+          </View>
           <View style={styles.dismissButtonPlaceholder} />
         </View>
+
+        {/* Meal text input for VLM disambiguation */}
+        <MealTextInput
+          value={userMealText}
+          onChangeText={handleUserTextChange}
+          disabled={flowState !== 'results'}
+        />
 
         {/* Annotated photo with bounding boxes */}
         {photoUri && (
@@ -709,6 +852,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: '#007AFF',
     fontWeight: '500',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
   },
   resultsTitle: {
     fontSize: 16,
