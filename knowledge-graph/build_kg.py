@@ -181,6 +181,7 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
         normalize_dish_name,
         classify_cuisine,
     )
+    from parse_quantities import parse_quantity_grams
 
     try:
         from tqdm import tqdm as tqdm_fn
@@ -191,15 +192,17 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
     print("  Loading recipe dataset...")
     recipes_iter = None
 
-    # Strategy 1: corbt/all-recipes (Parquet, no auth needed)
+    # Strategy 1: corbt/all-recipes (Parquet, no auth needed) -- all 4 files
     try:
         from huggingface_hub import hf_hub_download
         import pandas as pd
 
-        parquet_file = "data/train-00000-of-00004-237b1b1141fdcfa1.parquet"
-        path = hf_hub_download("corbt/all-recipes", parquet_file, repo_type="dataset")
-        df = pd.read_parquet(path)
-        print(f"  Loaded {len(df):,} recipes from all-recipes dataset")
+        parquet_files = [
+            "data/train-00000-of-00004-237b1b1141fdcfa1.parquet",
+            "data/train-00001-of-00004-d46654ac93566129.parquet",
+            "data/train-00002-of-00004-3b4f78b99eedadc2.parquet",
+            "data/train-00003-of-00004-2369b90eb0860a76.parquet",
+        ]
 
         def _parse_all_recipes_text(text):
             """Parse the all-recipes format: Title\n\nIngredients:\n- ...\n\nDirections:..."""
@@ -221,11 +224,18 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
             return title, ingredients
 
         recipes_iter = []
-        for text in tqdm_fn(df["input"].values, desc="  Parsing recipes"):
-            title, ings = _parse_all_recipes_text(text)
-            if title and ings:
-                recipes_iter.append({"title": title, "ingredients": ings})
-        del df  # Free memory
+        total_loaded = 0
+        for pf_idx, pf in enumerate(parquet_files):
+            path = hf_hub_download("corbt/all-recipes", pf, repo_type="dataset")
+            df = pd.read_parquet(path)
+            total_loaded += len(df)
+            print(f"  Loaded parquet {pf_idx + 1}/4: {len(df):,} recipes")
+            for text in tqdm_fn(df["input"].values, desc=f"  Parsing file {pf_idx + 1}"):
+                title, ings = _parse_all_recipes_text(text)
+                if title and ings:
+                    recipes_iter.append({"title": title, "ingredients": ings})
+            del df  # Free memory after each file
+        print(f"  Total: {total_loaded:,} recipes loaded from all 4 parquet files")
     except Exception as e:
         print(f"  Warning: Could not load all-recipes: {e}")
 
@@ -247,7 +257,10 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
     print("  Phase 1: Aggregating recipes by dish name...")
     dish_data = defaultdict(lambda: {"ingredients": defaultdict(list), "count": 0})
 
-    for recipe in tqdm_fn(recipes_iter, desc="  Scanning recipes"):
+    parsed_count = 0
+    fallback_count = 0
+
+    for r_idx, recipe in enumerate(tqdm_fn(recipes_iter, desc="  Scanning recipes")):
         title = recipe.get("title", "")
         if not title:
             continue
@@ -260,19 +273,33 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
         for ing_str in raw_ingredients:
             ing_clean = _clean_ingredient(ing_str)
             if ing_clean and len(ing_clean) >= 2 and len(ing_clean) <= 60:
-                dish_data[dish_name]["ingredients"][ing_clean].append(50.0)
+                # Parse real quantity from raw string (before cleaning strips amounts)
+                parsed_g = parse_quantity_grams(ing_str)
+                if parsed_g is not None:
+                    qty_g = parsed_g
+                    parsed_count += 1
+                else:
+                    qty_g = 50.0  # Fallback only when parser fails
+                    fallback_count += 1
+                dish_data[dish_name]["ingredients"][ing_clean].append(qty_g)
 
         dish_data[dish_name]["count"] += 1
 
-    print(f"  Found {len(dish_data):,} unique dish names")
+        # Progress logging every 100K recipes
+        if (r_idx + 1) % 100000 == 0:
+            print(f"  Progress: {r_idx + 1:,} recipes processed...")
 
-    # Phase 2: Filter to dishes with >= 3 recipes (cap 8K)
-    popular_dishes = {
-        k: v for k, v in dish_data.items() if v["count"] >= 3
-    }
-    # Sort by popularity, cap at 8000 (combined with ~1K curated = ~9K total)
-    sorted_dishes = sorted(popular_dishes.items(), key=lambda x: -x[1]["count"])[:8000]
-    print(f"  Filtered to {len(sorted_dishes):,} dishes with >= 3 recipe occurrences")
+    total_ings = parsed_count + fallback_count
+    parse_pct = (parsed_count / total_ings * 100) if total_ings > 0 else 0
+    print(f"  Found {len(dish_data):,} unique dish names")
+    print(f"  Quantity parsing: {parsed_count:,} parsed ({parse_pct:.1f}%), {fallback_count:,} fallback to 50g")
+
+    # Phase 2: Include ALL dishes (no cap, no minimum threshold)
+    # Sort by popularity for deterministic insertion order
+    sorted_dishes = sorted(dish_data.items(), key=lambda x: -x[1]["count"])
+    high_conf = sum(1 for _, v in sorted_dishes if v["count"] >= 3)
+    low_conf = len(sorted_dishes) - high_conf
+    print(f"  Including all {len(sorted_dishes):,} dishes ({high_conf:,} with >= 3 recipes, {low_conf:,} long-tail)")
 
     # Get existing cuisine/category caches
     cuisine_ids = {}
@@ -318,9 +345,18 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
         # Normalize: lowercase, spaces only
         canonical = dish_name.lower().strip().replace("-", " ").replace("_", " ")
 
+        # Confidence based on recipe count:
+        # >= 3 recipes: 0.3-0.9 scaling (high confidence)
+        # 1-2 recipes: 0.2-0.4 (lower confidence, long-tail)
+        count = data["count"]
+        if count >= 3:
+            confidence = min(0.9, 0.3 + (count / 100.0) * 0.6)
+        else:
+            confidence = 0.2 + (count * 0.1)
+
         cursor.execute(
             "INSERT OR IGNORE INTO dish (category_id, canonical_name, source, confidence) VALUES (?, ?, 'recipenlg', ?)",
-            (category_id, canonical, min(0.9, 0.3 + (data["count"] / 100.0) * 0.6)),
+            (category_id, canonical, confidence),
         )
         if cursor.rowcount == 0:
             continue
