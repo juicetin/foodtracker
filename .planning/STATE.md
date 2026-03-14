@@ -3,15 +3,15 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: executing
-stopped_at: Completed 02.6-05-PLAN.md (Progressive refinement pipeline)
-last_updated: "2026-03-14T13:00:00Z"
-last_activity: 2026-03-14 -- Completed 02.6-05 (Progressive refinement pipeline, VLM->YOLO matching, DetectionScreen integration)
+stopped_at: Completed 02.6-06-PLAN.md (VLM download screen & E2E verification) -- Phase 02.6 COMPLETE
+last_updated: "2026-03-14T13:33:41Z"
+last_activity: 2026-03-14 -- Completed 02.6-06 (VLM download screen, E2E verification, detection gated behind VLM availability)
 progress:
   total_phases: 12
-  completed_phases: 6
-  total_plans: 42
-  completed_plans: 35
-  percent: 83
+  completed_phases: 7
+  total_plans: 33
+  completed_plans: 33
+  percent: 85
 ---
 
 # Project State
@@ -21,21 +21,21 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 02.6 (On-Device VLM Integration) -- Plan 5 of 6 complete
+**Current focus:** Phase 02.6 (On-Device VLM Integration) -- COMPLETE (6 of 6 plans)
 
 ## Current Position
 
 Phase: 02.6 of 7 (On-Device VLM Integration)
-Plan: 5 of 6 in current phase (5 complete)
-Status: In Progress
-Last activity: 2026-03-14 -- Completed 02.6-05 (Progressive refinement pipeline, VLM->YOLO matching, DetectionScreen integration)
+Plan: 6 of 6 in current phase (6 complete -- PHASE COMPLETE)
+Status: Phase Complete
+Last activity: 2026-03-14 -- Completed 02.6-06 (VLM download screen & E2E verification)
 
 Progress: [████████░░] 83%
 
 ## Performance Metrics
 
 **Velocity:**
-- Total plans completed: 32 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5 + 4 phase 02.6)
+- Total plans completed: 33 (3 carried from pre-pivot + 4 new phase 1 + 6 phase 2 + 2 phase 02.1 + 2 phase 02.2 + 3 phase 02.3 + 3 phase 02.4 + 5 phase 02.5 + 6 phase 02.6 - 1 phase 02.5 duplicate)
 - Average duration: 10min
 - Total execution time: ~3.1 hours
 
@@ -53,8 +53,8 @@ Progress: [████████░░] 83%
 | New Phase 01 P04 | 4min | 1 task | 2 files |
 
 **Recent Trend:**
-- Last 3 plans: 4min, 5min, 4min
-- Trend: Fast (foundation plans are focused, quick execution)
+- Last 3 plans: 3min, 25min, 25min
+- Trend: Moderate (VLM integration plans include verification checkpoints and orchestrator fixes)
 
 *Updated after each plan completion*
 | Phase 02 P01 | 3min | 2 tasks | 7 files |
@@ -91,6 +91,7 @@ Progress: [████████░░] 83%
 | Phase 02.6 P03 | 3min | 2 tasks | 5 files |
 | Phase 02.6 P04 | 3min | 2 tasks | 3 files |
 | Phase 02.6 P05 | 25min | 3 tasks | 11 files |
+| Phase 02.6 P06 | 25min | 2 tasks | 13 files |
 
 ## Accumulated Context
 
@@ -213,6 +214,10 @@ Recent decisions affecting current work:
 - [02.6-05]: Debounced 500ms re-refinement on user text input changes
 - [02.6-05]: patch-package fix for llama.rn v0.11.4 ESM/CJS config plugin incompatibility
 - [02.6-05]: VLM init is lazy (on first detection results), not at app boot
+- [02.6-06]: VLM download screen uses detectVlmTier() for automatic tier selection -- no manual tier picker
+- [02.6-06]: Detection gated behind VLM availability -- YOLO-only fallback removed (YOLO labels unreliable, e.g. ramen->"egg")
+- [02.6-06]: VlmPipeline throws if VLM not ready instead of silently returning bad labels -- fail-fast for correctness
+- [02.6-06]: E2E verification on physical device deferred -- emulator insufficient RAM for VLM download
 
 ### Roadmap Evolution
 
@@ -236,6 +241,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-14T13:00:00Z
-Stopped at: Completed 02.6-05-PLAN.md (Progressive refinement pipeline)
+Last session: 2026-03-14T13:33:41Z
+Stopped at: Completed 02.6-06-PLAN.md (VLM download screen & E2E verification) -- Phase 02.6 COMPLETE
 Resume file: None
