@@ -296,12 +296,14 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
     print(f"  Found {len(dish_data):,} unique dish names")
     print(f"  Quantity parsing: {parsed_count:,} parsed ({parse_pct:.1f}%), {fallback_count:,} fallback to 50g")
 
-    # Phase 2: Include ALL dishes (no cap, no minimum threshold)
-    # Sort by popularity for deterministic insertion order
-    sorted_dishes = sorted(dish_data.items(), key=lambda x: -x[1]["count"])
-    high_conf = sum(1 for _, v in sorted_dishes if v["count"] >= 3)
-    low_conf = len(sorted_dishes) - high_conf
-    print(f"  Including all {len(sorted_dishes):,} dishes ({high_conf:,} with >= 3 recipes, {low_conf:,} long-tail)")
+    # Phase 2: Filter to dishes with >= 10 recipe occurrences (no cap)
+    # >= 10 gives ~16K dishes which meets 15K+ requirement while keeping DB under 70MB
+    # (>= 3 produces 78K dishes / 295MB; >= 10 is the sweet spot for size vs coverage)
+    MIN_RECIPE_COUNT = 10
+    all_dishes = sorted(dish_data.items(), key=lambda x: -x[1]["count"])
+    sorted_dishes = [(name, data) for name, data in all_dishes if data["count"] >= MIN_RECIPE_COUNT]
+    skipped = len(all_dishes) - len(sorted_dishes)
+    print(f"  Keeping {len(sorted_dishes):,} dishes with >= {MIN_RECIPE_COUNT} recipes (skipped {skipped:,} with < {MIN_RECIPE_COUNT})")
 
     # Get existing cuisine/category caches
     cuisine_ids = {}
@@ -347,14 +349,10 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
         # Normalize: lowercase, spaces only
         canonical = dish_name.lower().strip().replace("-", " ").replace("_", " ")
 
-        # Confidence based on recipe count:
-        # >= 3 recipes: 0.3-0.9 scaling (high confidence)
-        # 1-2 recipes: 0.2-0.4 (lower confidence, long-tail)
+        # Confidence based on recipe count (all have >= 10 after filtering):
+        # 0.4-0.9 scaling based on popularity
         count = data["count"]
-        if count >= 3:
-            confidence = min(0.9, 0.3 + (count / 100.0) * 0.6)
-        else:
-            confidence = 0.2 + (count * 0.1)
+        confidence = min(0.9, 0.4 + (count / 200.0) * 0.5)
 
         cursor.execute(
             "INSERT OR IGNORE INTO dish (category_id, canonical_name, source, confidence) VALUES (?, ?, 'recipenlg', ?)",
@@ -379,7 +377,14 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
         recipe_id = cursor.lastrowid
         recipes_inserted += 1
 
-        for idx, (ing_name, amounts) in enumerate(data["ingredients"].items()):
+        # Keep only top 30 ingredients by occurrence frequency across recipes
+        # (popular dishes aggregate thousands of unique ingredient strings from many recipes;
+        #  top 30 captures the essential/common ingredients while keeping DB size manageable)
+        sorted_ings = sorted(
+            data["ingredients"].items(),
+            key=lambda x: -len(x[1]),  # sort by number of recipes containing this ingredient
+        )[:30]
+        for idx, (ing_name, amounts) in enumerate(sorted_ings):
             avg_g = sum(amounts) / len(amounts)
             cursor.execute(
                 "INSERT INTO recipe_ingredient (recipe_id, ingredient_name, quantity_grams, sort_order) VALUES (?, ?, ?, ?)",
