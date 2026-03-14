@@ -35,6 +35,13 @@ opsqlite.execute(`CREATE TABLE IF NOT EXISTS installed_packs (
   installed_at TEXT DEFAULT (datetime('now')),
   last_checked TEXT
 )`);
+// Add mmproj_file_path column if missing (added in phase 02.6 for VLM paired files)
+try {
+  opsqlite.execute('ALTER TABLE installed_packs ADD COLUMN mmproj_file_path TEXT');
+} catch {
+  // Column already exists — expected on fresh installs
+}
+
 opsqlite.execute(`CREATE TABLE IF NOT EXISTS correction_history (
   id TEXT PRIMARY KEY NOT NULL,
   original_class_name TEXT NOT NULL,

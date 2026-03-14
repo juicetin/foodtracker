@@ -151,11 +151,10 @@ export const PackManager = {
       headers[API_KEY_HEADER] = apiKey;
     }
 
-    // For VLM packs with paired files, compute combined progress weights
+    // For VLM packs with paired files, track combined progress across both downloads.
+    // Use HTTP-reported sizes (not config estimates) so progress never exceeds 100%.
     const isVlmPairedPack = pack.type === 'vlm' && pack.mmprojUrl;
-    const modelSize = pack.sizeBytes;
-    const mmprojSize = pack.mmprojSizeBytes ?? 0;
-    const totalCombinedSize = isVlmPairedPack ? modelSize + mmprojSize : modelSize;
+    let actualModelSize = 0; // Set from HTTP Content-Length during download
 
     // Stream download model file
     await streamDownloadFile(
@@ -164,12 +163,13 @@ export const PackManager = {
       headers,
       isVlmPairedPack
         ? (progress) => {
-            // Weight model progress by its fraction of total combined size
-            const modelWeight = modelSize / totalCombinedSize;
+            // During model download, report partial progress (model portion only).
+            // Use HTTP-reported expected size as the model's true size.
+            actualModelSize = progress.totalBytesExpected;
             onProgress({
               totalBytesWritten: progress.totalBytesWritten,
-              totalBytesExpected: totalCombinedSize,
-              fraction: progress.fraction * modelWeight,
+              totalBytesExpected: progress.totalBytesExpected, // model-only for now
+              fraction: progress.fraction * 0.5, // estimate 50% until we know mmproj size
             });
           }
         : onProgress
@@ -199,13 +199,12 @@ export const PackManager = {
           mmprojFileUri,
           headers,
           (progress) => {
-            // Weight mmproj progress: model portion complete + mmproj fraction
-            const modelWeight = modelSize / totalCombinedSize;
-            const mmprojWeight = mmprojSize / totalCombinedSize;
+            // Use HTTP-reported sizes for accurate combined progress
+            const totalCombined = actualModelSize + progress.totalBytesExpected;
             onProgress({
-              totalBytesWritten: modelSize + progress.totalBytesWritten,
-              totalBytesExpected: totalCombinedSize,
-              fraction: modelWeight + progress.fraction * mmprojWeight,
+              totalBytesWritten: actualModelSize + progress.totalBytesWritten,
+              totalBytesExpected: totalCombined,
+              fraction: (actualModelSize + progress.totalBytesWritten) / totalCombined,
             });
           }
         );
