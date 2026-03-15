@@ -85,7 +85,7 @@ export interface DetectedItem {
 
 /** Stage timing for the detection pipeline. */
 export interface PipelineStage {
-  stage: 'detect' | 'classify' | 'vlm';
+  stage: 'detect' | 'vlm';
   timeMs: number;
 }
 
@@ -127,10 +127,9 @@ export interface TFLiteModel {
   runSync: (input: ArrayBufferLike[]) => ArrayBufferLike[];
 }
 
-/** Model set for the two-stage detection pipeline (detect + classify). */
+/** Model set for the single-stage detection pipeline (detect only). */
 export interface ModelSet {
   detect: TFLiteModel;
-  classify: TFLiteModel;
 }
 
 // ---------------------------------------------------------------------------

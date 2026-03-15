@@ -1,12 +1,12 @@
 /**
- * Model loader: loads two-stage pipeline models from PackManager file paths.
+ * Model loader: loads detect-only model from PackManager file paths.
  *
  * Queries the installed_packs table for model-type packs matching the
- * yolo-detect-* and efficientnet-classify-* (or yolo-classify-*) naming convention.
- * Models are loaded via react-native-fast-tflite and cached for reuse.
+ * yolo-detect-* naming convention.
+ * Model is loaded via react-native-fast-tflite and cached for reuse.
  *
- * When no packs are installed, falls back to bundled models loaded via
- * require() -- these are the pre-trained models bundled with the APK.
+ * When no packs are installed, falls back to the bundled model loaded via
+ * require() -- the pre-trained model bundled with the APK.
  *
  * File paths from PackManager use the file:// prefix required by
  * loadTensorflowModel. If the stored path doesn't have the prefix,
@@ -19,12 +19,9 @@ import { userDb } from '../../../db/client';
 import { installedPacks } from '../../../db/schema';
 import type { ModelSet } from './types';
 
-// Bundled models -- resolved at build time by Metro bundler.
-// These are the pre-trained baseline models (YOLO11n COCO + EfficientNet-Lite0).
+// Bundled detect model -- resolved at build time by Metro bundler.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
 const BUNDLED_DETECT = require('../../../assets/models/detect.tflite');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
-const BUNDLED_CLASSIFY = require('../../../assets/models/classify.tflite');
 
 /** Module-level cache for loaded models. */
 let cachedModelSet: ModelSet | null = null;
@@ -52,64 +49,44 @@ async function findModelPackPath(idPrefix: string): Promise<string | null> {
     const match = rows.find((row) => row.id.startsWith(idPrefix));
     return match?.filePath ?? null;
   } catch {
-    // Table may not exist yet if migrations haven't run — fall through to bundled models
+    // Table may not exist yet if migrations haven't run -- fall through to bundled models
     return null;
   }
 }
 
 /**
- * Load both pipeline models from installed pack file paths.
+ * Load the detect model from an installed pack file path.
  *
  * Queries installedPacks for model-type packs with IDs matching:
  * - yolo-detect-*  (detection: where is the food?)
- * - efficientnet-classify-* or yolo-classify-*  (classification: what food is it?)
  *
- * Models are loaded with the default delegate. On iOS the Expo config
+ * Model is loaded with the default delegate. On iOS the Expo config
  * plugin enables the CoreML delegate automatically.
  *
- * @throws If any required model pack is not installed
- * @returns Cached ModelSet with detect and classify models
+ * @returns Cached ModelSet with detect model
  */
 export async function loadModelSet(): Promise<ModelSet> {
   // Return cached models if already loaded
   if (cachedModelSet !== null) return cachedModelSet;
 
   const detectPath = await findModelPackPath('yolo-detect-');
-  const classifyPath =
-    (await findModelPackPath('efficientnet-classify-')) ??
-    (await findModelPackPath('yolo-classify-'));
 
-  // If no packs are installed at all, fall back to bundled models
-  if (!detectPath && !classifyPath) {
-    const [detect, classify] = await Promise.all([
-      loadTensorflowModel(BUNDLED_DETECT, 'default'),
-      loadTensorflowModel(BUNDLED_CLASSIFY, 'default'),
-    ]);
+  // If no packs are installed, fall back to bundled model
+  if (!detectPath) {
+    const detect = await loadTensorflowModel(BUNDLED_DETECT, 'default');
     cachedModelSet = {
       detect: detect as unknown as ModelSet['detect'],
-      classify: classify as unknown as ModelSet['classify'],
     };
     return cachedModelSet;
   }
 
-  // Partial install: some but not all packs found -- error
-  if (!detectPath || !classifyPath) {
-    const missing: string[] = [];
-    if (!detectPath) missing.push('yolo-detect-*');
-    if (!classifyPath) missing.push('efficientnet-classify-* / yolo-classify-*');
-    throw new Error(
-      `Required model pack(s) not installed: ${missing.join(', ')}. Download required.`,
-    );
-  }
-
-  const [detect, classify] = await Promise.all([
-    loadTensorflowModel({ url: ensureFilePrefix(detectPath) }, 'default'),
-    loadTensorflowModel({ url: ensureFilePrefix(classifyPath) }, 'default'),
-  ]);
+  const detect = await loadTensorflowModel(
+    { url: ensureFilePrefix(detectPath) },
+    'default',
+  );
 
   cachedModelSet = {
     detect: detect as unknown as ModelSet['detect'],
-    classify: classify as unknown as ModelSet['classify'],
   };
 
   return cachedModelSet;

@@ -1,37 +1,22 @@
 /**
- * Two-stage inference pipeline router: detect -> classify.
+ * Single-stage inference pipeline router: bbox-only detection.
  *
- * Orchestrates the detection pipeline sequentially:
- * 1. Detection: where are the food items? (GGCD YOLO 241 food-specific classes)
- * 2. Classification: what food is each item? (EfficientNet-Lite0 905-class labels)
+ * Detects food bounding boxes using GGCD YOLO (241 food-specific classes).
+ * Each detection is labelled "Food Region" and flagged as isRefining=true,
+ * pending VLM identification (handled by a separate pipeline).
  *
- * All 241 YOLO classes are food-specific (trained on GGCD dataset), so no
- * COCO food-class filtering is needed. Each detected item carries its own
- * YOLO-assigned food class name as the primary label.
- *
- * Accepts two buffers: detectBuffer (640x640) for the detection stage,
- * classifyBuffer (224x224, ImageNet-normalized) for the classify stage.
+ * Accepts a single detectBuffer (640x640) for the detection stage.
+ * Classification stage has been removed (Phase 7).
  */
 
 import { getModelSet } from './modelLoader';
 import { decodeYoloOutput } from './postProcess';
-import {
-  CLASSIFY_CLASS_NAMES,
-} from './constants';
 import type {
   InferenceResult,
   DetectedItem,
   PipelineStage,
   PortionEstimate,
 } from './types';
-
-/**
- * Classify confidence threshold. Below this, the classifier result is treated
- * as "not confident enough". Since YOLO now provides meaningful per-box food
- * labels, this threshold only affects whether the classifier's secondary
- * label is logged for debugging.
- */
-const CLASSIFY_CONFIDENCE_THRESHOLD = 0.15;
 
 /** Counter for generating unique detection IDs within a session. */
 let detectionCounter = 0;
@@ -78,19 +63,17 @@ export function formatFoodLabel(rawLabel: string): string {
 }
 
 /**
- * Run the detection pipeline on preprocessed image buffers.
+ * Run the bbox-only detection pipeline on a preprocessed image buffer.
  *
  * @param detectBuffer   - Float32Array preprocessed at 640x640 for detection stage
- * @param classifyBuffer - Float32Array preprocessed at 224x224 with ImageNet normalization
  * @param imageWidth     - Width of the detection image (e.g. 640)
  * @param imageHeight    - Height of the detection image (e.g. 640)
  * @param classNames     - Array of 241 GGCD food class labels for detection output decoding
  * @returns InferenceResult with detected items and timing metrics
  * @throws If models are not loaded (call loadModelSet() first)
  */
-export async function runDetectionPipeline(
+export async function runBboxDetection(
   detectBuffer: Float32Array,
-  classifyBuffer: Float32Array,
   imageWidth: number,
   imageHeight: number,
   classNames: string[],
@@ -105,7 +88,7 @@ export async function runDetectionPipeline(
   const pipelineStart = performance.now();
   const pipelineStages: PipelineStage[] = [];
 
-  // ── Stage 1: Detection ──
+  // -- Stage 1: Detection --
   // Uses detectBuffer (640x640) since YOLO expects that input size.
   const detectStart = performance.now();
   const detectOutput = await models.detect.run([detectBuffer]);
@@ -133,47 +116,21 @@ export async function runDetectionPipeline(
   );
 
   // All 241 GGCD classes are food -- no COCO filtering needed.
-  // Every detection is a food item.
   const foodDetections = rawDetections;
 
-  // ── Stage 2: Classification ──
-  // Uses EfficientNet-Lite0 (224x224 with ImageNet normalization) for a
-  // secondary food label. With GGCD YOLO providing meaningful per-box
-  // food names, the classifier serves as confirmation/refinement.
-  const classifyStart = performance.now();
-  if (foodDetections.length > 0) {
-    const classifyOutput = await models.classify.run([classifyBuffer]);
-    const classifyScores = classifyOutput[0] instanceof Float32Array
-      ? classifyOutput[0]
-      : new Float32Array(classifyOutput[0] as ArrayBuffer);
-
-    // Find top class from EfficientNet-Lite0's output logits.
-    let topConf = 0;
-    let topIdx = 0;
-    for (let i = 0; i < classifyScores.length; i++) {
-      if (classifyScores[i] > topConf) {
-        topConf = classifyScores[i];
-        topIdx = i;
-      }
-    }
-
-    // Log classifier result for debugging -- YOLO label is primary.
-    if (__DEV__) {
-      if (topConf >= CLASSIFY_CONFIDENCE_THRESHOLD && topIdx < CLASSIFY_CLASS_NAMES.length) {
-        const classifyLabel = formatFoodLabel(CLASSIFY_CLASS_NAMES[topIdx]);
-        console.log(`[Detection] Classifier secondary label: ${classifyLabel} (${(topConf * 100).toFixed(1)}%)`);
-      }
+  // Log YOLO labels in dev mode for debugging
+  if (__DEV__ && foodDetections.length > 0) {
+    for (const det of foodDetections) {
+      console.log(`[Detection] YOLO bbox: ${formatFoodLabel(det.className)} (${(det.confidence * 100).toFixed(1)}%)`);
     }
   }
-  const classifyTimeMs = performance.now() - classifyStart;
-  pipelineStages.push({ stage: 'classify', timeMs: classifyTimeMs });
 
-  // ── Build DetectedItem array ──
-  // Each detection uses its own YOLO-assigned food class name (from GGCD).
-  // The per-box YOLO label is the primary className for each item.
+  // -- Build DetectedItem array --
+  // All items labelled "Food Region" with isRefining=true.
+  // VLM will identify the actual food name asynchronously.
   const items: DetectedItem[] = foodDetections.map((det) => ({
     id: generateDetectionId(),
-    className: formatFoodLabel(det.className),
+    className: 'Food Region',
     confidence: det.confidence,
     bbox: {
       x: det.x,
@@ -184,6 +141,7 @@ export async function runDetectionPipeline(
     portionEstimate: defaultPortionEstimate(),
     portionMultiplier: 1,
     isRemoved: false,
+    isRefining: true,
   }));
 
   return {

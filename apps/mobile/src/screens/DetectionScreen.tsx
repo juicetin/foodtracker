@@ -14,12 +14,11 @@ import { useNavigation } from '@react-navigation/native';
 
 import { useDetectionStore } from '../store/useDetectionStore';
 import { useFoodLogStore } from '../store/useFoodLogStore';
-import { runDetectionPipeline } from '../services/detection/inferenceRouter';
+import { runBboxDetection } from '../services/detection/inferenceRouter';
 import { loadModelSet } from '../services/detection/modelLoader';
 import { preprocessImageForModel } from '../services/detection/imagePreprocess';
 import {
   DETECT_CLASS_NAMES,
-  CLASSIFY_INPUT_SIZE,
   DETECT_INPUT_SIZE,
 } from '../services/detection/constants';
 import {
@@ -69,10 +68,10 @@ const PROXY_CARB_PER_GRAM = 0.2;
 /** Flat-rate fat-per-gram proxy. */
 const PROXY_FAT_PER_GRAM = 0.08;
 
-// Input sizes imported from constants.ts:
-// DETECT_INPUT_SIZE (640), CLASSIFY_INPUT_SIZE (224).
+// Input size imported from constants.ts:
+// DETECT_INPUT_SIZE (640) for YOLO bbox detection.
 // DETECT_CLASS_NAMES (241 GGCD food classes) for YOLO decoding.
-// Per-item YOLO labelling and EfficientNet-Lite0 classification handled in inferenceRouter.
+// VLM identifies food items post-detection (separate pipeline).
 
 // ---------------------------------------------------------------------------
 // KG-powered nutrition helper
@@ -418,18 +417,14 @@ export function DetectionScreen() {
       // Load models if not already loaded
       await loadModelSet();
 
-      // Preprocess at two sizes: 640x640 for detection, 224x224 for classification
-      const [detectPixels, classifyPixels] = await Promise.all([
-        preprocessImageForModel(uri, DETECT_INPUT_SIZE),
-        preprocessImageForModel(uri, CLASSIFY_INPUT_SIZE, 'imagenet'),
-      ]);
+      // Preprocess at 640x640 for YOLO bbox detection
+      const detectPixels = await preprocessImageForModel(uri, DETECT_INPUT_SIZE);
 
       // Pass Float32Array directly (not .buffer) -- react-native-fast-tflite expects TypedArray
       // DETECT_CLASS_NAMES (241 GGCD food names) is passed for YOLO decoding.
       // All classes are food-specific -- no filtering needed.
-      const result = await runDetectionPipeline(
+      const result = await runBboxDetection(
         detectPixels,
-        classifyPixels,
         DETECT_INPUT_SIZE,
         DETECT_INPUT_SIZE,
         DETECT_CLASS_NAMES,
