@@ -135,9 +135,14 @@ describe('useDetectionStore VLM extensions', () => {
     );
   });
 
-  it('displayLabel returns className when no vlmLabel', () => {
-    const item = makeItem({ className: 'Curry' });
-    expect(useDetectionStore.getState().displayLabel(item)).toBe('Curry');
+  it('displayLabel returns empty string when isRefining (shimmer state)', () => {
+    const item = makeItem({ isRefining: true });
+    expect(useDetectionStore.getState().displayLabel(item)).toBe('');
+  });
+
+  it('displayLabel returns "Unknown food" when no vlmLabel and not refining', () => {
+    const item = makeItem({ className: 'Food Region' });
+    expect(useDetectionStore.getState().displayLabel(item)).toBe('Unknown food');
   });
 
   it('reset clears VLM state', () => {

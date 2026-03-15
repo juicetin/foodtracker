@@ -164,5 +164,9 @@ export const useDetectionStore = create<DetectionStore>((set, get) => ({
       .sort((a, b) => b.confidence - a.confidence);
   },
 
-  displayLabel: (item: DetectedItem) => item.vlmLabel ?? 'Identifying…',
+  displayLabel: (item: DetectedItem) => {
+    if (item.vlmLabel) return item.vlmLabel;
+    if (item.isRefining) return ''; // Empty string signals shimmer state to UI
+    return 'Unknown food'; // Fallback if VLM failed and no text input
+  },
 }));
