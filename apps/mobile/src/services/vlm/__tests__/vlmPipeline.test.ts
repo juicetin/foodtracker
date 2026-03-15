@@ -1,8 +1,9 @@
 /**
- * Tests for VLM refinement pipeline.
+ * Tests for VLM identification pipeline.
  *
- * Verifies YOLO-to-VLM matching, KG nutrition bridge,
- * and that VLM is required (throws when not ready).
+ * Verifies primary VLM identification with retry, positional
+ * assignment to bounding boxes, and text fallback support.
+ * VLM is required (throws when not ready).
  */
 
 import { vlmService } from '../vlmService';
@@ -12,7 +13,7 @@ import {
 } from '../../knowledge-graph';
 import type { DetectedItem } from '../../detection/types';
 import type { VlmFoodResult } from '../vlmTypes';
-import { runVlmRefinement } from '../vlmPipeline';
+import { runVlmIdentification, identifyWithRetry, assignDishesToBoxes } from '../vlmPipeline';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -43,7 +44,7 @@ const mockGetKG = getKnowledgeGraphService as jest.Mock;
 function makeItem(overrides: Partial<DetectedItem> = {}): DetectedItem {
   return {
     id: 'item-1',
-    className: 'Curry',
+    className: 'Food Region',
     confidence: 0.85,
     bbox: { x: 0.1, y: 0.1, w: 0.3, h: 0.3 },
     portionEstimate: {
@@ -70,99 +71,177 @@ beforeEach(() => {
   mockGetKG.mockResolvedValue(null);
 });
 
-describe('runVlmRefinement', () => {
+describe('identifyWithRetry', () => {
+  it('succeeds on first attempt (identify called once)', async () => {
+    mockVlmService.isReady = true;
+    const vlmResult: VlmFoodResult = {
+      dishes: [{ name: 'Pad Thai', cuisine: 'Thai', ingredients: ['noodles'] }],
+    };
+    mockVlmService.identify.mockResolvedValueOnce(vlmResult);
+
+    const result = await identifyWithRetry('file:///photo.jpg', 'pad thai');
+
+    expect(result).toEqual(vlmResult);
+    expect(mockVlmService.identify).toHaveBeenCalledTimes(1);
+    expect(mockVlmService.identify).toHaveBeenCalledWith('file:///photo.jpg', 'pad thai');
+  });
+
+  it('succeeds on second attempt after first failure (identify called twice)', async () => {
+    mockVlmService.isReady = true;
+    const vlmResult: VlmFoodResult = {
+      dishes: [{ name: 'Green Curry', cuisine: 'Thai', ingredients: ['coconut'] }],
+    };
+    mockVlmService.identify.mockRejectedValueOnce(new Error('Timeout'));
+    mockVlmService.identify.mockResolvedValueOnce(vlmResult);
+
+    const result = await identifyWithRetry('file:///photo.jpg');
+
+    expect(result).toEqual(vlmResult);
+    expect(mockVlmService.identify).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns empty dishes after both attempts fail (no throw)', async () => {
+    mockVlmService.isReady = true;
+    mockVlmService.identify.mockRejectedValueOnce(new Error('Timeout'));
+    mockVlmService.identify.mockRejectedValueOnce(new Error('Timeout again'));
+
+    const result = await identifyWithRetry('file:///photo.jpg');
+
+    expect(result).toEqual({ dishes: [] });
+    expect(mockVlmService.identify).toHaveBeenCalledTimes(2);
+  });
+
+  it('passes userText to both attempts', async () => {
+    mockVlmService.isReady = true;
+    mockVlmService.identify.mockRejectedValueOnce(new Error('Timeout'));
+    mockVlmService.identify.mockResolvedValueOnce({ dishes: [] });
+
+    await identifyWithRetry('file:///photo.jpg', 'ramen with egg');
+
+    expect(mockVlmService.identify).toHaveBeenCalledTimes(2);
+    expect(mockVlmService.identify).toHaveBeenNthCalledWith(1, 'file:///photo.jpg', 'ramen with egg');
+    expect(mockVlmService.identify).toHaveBeenNthCalledWith(2, 'file:///photo.jpg', 'ramen with egg');
+  });
+});
+
+describe('assignDishesToBoxes', () => {
+  it('assigns by area descending (largest box gets first dish)', () => {
+    const items = [
+      makeItem({ id: 'small', bbox: { x: 0, y: 0, w: 0.1, h: 0.1 } }),  // area 0.01
+      makeItem({ id: 'large', bbox: { x: 0, y: 0, w: 0.5, h: 0.5 } }),  // area 0.25
+      makeItem({ id: 'medium', bbox: { x: 0, y: 0, w: 0.3, h: 0.2 } }), // area 0.06
+    ];
+
+    const result = assignDishesToBoxes(items, ['Pad Thai', 'Green Curry', 'Rice']);
+
+    expect(result.get('large')).toBe('Pad Thai');
+    expect(result.get('medium')).toBe('Green Curry');
+    expect(result.get('small')).toBe('Rice');
+  });
+
+  it('handles more dishes than boxes (extra dishes go unmatched)', () => {
+    const items = [
+      makeItem({ id: 'item-1', bbox: { x: 0, y: 0, w: 0.5, h: 0.5 } }),
+    ];
+
+    const result = assignDishesToBoxes(items, ['Pad Thai', 'Green Curry', 'Rice']);
+
+    expect(result.size).toBe(1);
+    expect(result.get('item-1')).toBe('Pad Thai');
+  });
+
+  it('handles more boxes than dishes (extra boxes get no assignment)', () => {
+    const items = [
+      makeItem({ id: 'large', bbox: { x: 0, y: 0, w: 0.5, h: 0.5 } }),
+      makeItem({ id: 'medium', bbox: { x: 0, y: 0, w: 0.3, h: 0.2 } }),
+      makeItem({ id: 'small', bbox: { x: 0, y: 0, w: 0.1, h: 0.1 } }),
+    ];
+
+    const result = assignDishesToBoxes(items, ['Pad Thai']);
+
+    expect(result.size).toBe(1);
+    expect(result.get('large')).toBe('Pad Thai');
+    expect(result.has('medium')).toBe(false);
+    expect(result.has('small')).toBe(false);
+  });
+
+  it('skips removed items', () => {
+    const items = [
+      makeItem({ id: 'removed', bbox: { x: 0, y: 0, w: 0.8, h: 0.8 }, isRemoved: true }),
+      makeItem({ id: 'active', bbox: { x: 0, y: 0, w: 0.3, h: 0.3 } }),
+    ];
+
+    const result = assignDishesToBoxes(items, ['Pad Thai']);
+
+    expect(result.size).toBe(1);
+    expect(result.get('active')).toBe('Pad Thai');
+    expect(result.has('removed')).toBe(false);
+  });
+});
+
+describe('runVlmIdentification', () => {
   it('throws when VLM not ready', async () => {
     mockVlmService.isReady = false;
     const items = [makeItem()];
-    await expect(runVlmRefinement('file:///photo.jpg', items)).rejects.toThrow(
+    await expect(runVlmIdentification('file:///photo.jpg', items)).rejects.toThrow(
       'VLM model is not loaded',
     );
     expect(mockVlmService.identify).not.toHaveBeenCalled();
   });
 
-  it('propagates VLM inference errors', async () => {
-    mockVlmService.isReady = true;
-    mockVlmService.identify.mockRejectedValueOnce(new Error('Inference failed'));
-    const items = [makeItem()];
-    await expect(runVlmRefinement('file:///photo.jpg', items)).rejects.toThrow(
-      'Inference failed',
-    );
-  });
-
-  it('matches VLM dish to YOLO item by substring', async () => {
+  it('matches VLM dishes to items by positional assignment (area descending)', async () => {
     mockVlmService.isReady = true;
     const vlmResult: VlmFoodResult = {
       dishes: [
-        { name: 'Massaman Curry', cuisine: 'Thai', ingredients: ['potato', 'peanut'] },
-      ],
-    };
-    mockVlmService.identify.mockResolvedValueOnce(vlmResult);
-
-    const items = [makeItem({ id: 'item-1', className: 'Curry' })];
-    const result = await runVlmRefinement('file:///photo.jpg', items);
-
-    expect(result[0].vlmLabel).toBe('Massaman Curry');
-    expect(result[0].vlmCuisine).toBe('Thai');
-    expect(result[0].vlmIngredients).toEqual(['potato', 'peanut']);
-  });
-
-  it('matches VLM dish to YOLO item by word overlap', async () => {
-    mockVlmService.isReady = true;
-    const vlmResult: VlmFoodResult = {
-      dishes: [
-        { name: 'Pad Thai Noodles', cuisine: 'Thai', ingredients: ['noodles', 'shrimp'] },
-      ],
-    };
-    mockVlmService.identify.mockResolvedValueOnce(vlmResult);
-
-    const items = [makeItem({ id: 'item-1', className: 'Pad Thai' })];
-    const result = await runVlmRefinement('file:///photo.jpg', items);
-
-    expect(result[0].vlmLabel).toBe('Pad Thai Noodles');
-  });
-
-  it('unmatched VLM dishes do not create phantom items', async () => {
-    mockVlmService.isReady = true;
-    const vlmResult: VlmFoodResult = {
-      dishes: [
-        { name: 'Pad Thai', cuisine: 'Thai', ingredients: ['noodles'] },
+        { name: 'Pad Thai', cuisine: 'Thai', ingredients: ['noodles', 'shrimp'] },
         { name: 'Green Curry', cuisine: 'Thai', ingredients: ['coconut'] },
-        { name: 'Mango Sticky Rice', cuisine: 'Thai', ingredients: ['mango'] },
       ],
     };
     mockVlmService.identify.mockResolvedValueOnce(vlmResult);
 
     const items = [
-      makeItem({ id: 'item-1', className: 'Pad Thai' }),
-      makeItem({ id: 'item-2', className: 'Curry' }),
+      makeItem({ id: 'small', bbox: { x: 0, y: 0, w: 0.2, h: 0.2 } }),
+      makeItem({ id: 'large', bbox: { x: 0, y: 0, w: 0.5, h: 0.5 } }),
     ];
-    const result = await runVlmRefinement('file:///photo.jpg', items);
+    const result = await runVlmIdentification('file:///photo.jpg', items);
 
-    // Only 2 items returned (same as input), no phantom items
-    expect(result).toHaveLength(2);
+    // Largest bbox gets first VLM dish
+    const largeItem = result.find((i) => i.id === 'large')!;
+    const smallItem = result.find((i) => i.id === 'small')!;
+
+    expect(largeItem.vlmLabel).toBe('Pad Thai');
+    expect(largeItem.vlmCuisine).toBe('Thai');
+    expect(largeItem.vlmIngredients).toEqual(['noodles', 'shrimp']);
+
+    expect(smallItem.vlmLabel).toBe('Green Curry');
+    expect(smallItem.vlmCuisine).toBe('Thai');
+    expect(smallItem.vlmIngredients).toEqual(['coconut']);
   });
 
-  it('unmatched YOLO items keep original labels', async () => {
+  it('on empty VLM dishes, returns items unchanged', async () => {
     mockVlmService.isReady = true;
-    const vlmResult: VlmFoodResult = {
-      dishes: [
-        { name: 'Massaman Curry', cuisine: 'Thai', ingredients: ['potato'] },
-      ],
-    };
-    mockVlmService.identify.mockResolvedValueOnce(vlmResult);
+    mockVlmService.identify.mockResolvedValueOnce({ dishes: [] });
 
-    const items = [
-      makeItem({ id: 'item-1', className: 'Curry' }),
-      makeItem({ id: 'item-2', className: 'Rice' }),
-      makeItem({ id: 'item-3', className: 'Salad' }),
-    ];
-    const result = await runVlmRefinement('file:///photo.jpg', items);
+    const items = [makeItem({ id: 'item-1' })];
+    const result = await runVlmIdentification('file:///photo.jpg', items);
 
-    // Only item-1 should have vlmLabel (matched "Curry" to "Massaman Curry")
-    expect(result[0].vlmLabel).toBe('Massaman Curry');
-    // Other items should keep original labels (no vlmLabel)
-    expect(result[1].vlmLabel).toBeUndefined();
-    expect(result[2].vlmLabel).toBeUndefined();
+    expect(result).toHaveLength(1);
+    expect(result[0].vlmLabel).toBeUndefined();
+    // isRefining should stay as-is for caller to handle fallback
+    expect(result[0].id).toBe('item-1');
+  });
+
+  it('passes userText to identify', async () => {
+    mockVlmService.isReady = true;
+    mockVlmService.identify.mockResolvedValueOnce({ dishes: [] });
+
+    const items = [makeItem()];
+    await runVlmIdentification('file:///photo.jpg', items, 'pad thai with shrimp');
+
+    expect(mockVlmService.identify).toHaveBeenCalledWith(
+      'file:///photo.jpg',
+      'pad thai with shrimp',
+    );
   });
 
   it('KG nutrition lookup called for matched VLM dishes', async () => {
@@ -195,22 +274,36 @@ describe('runVlmRefinement', () => {
     } as unknown as KnowledgeGraphService;
     mockGetKG.mockResolvedValue(mockKGService);
 
-    const items = [makeItem({ id: 'item-1', className: 'Curry' })];
-    await runVlmRefinement('file:///photo.jpg', items);
+    const items = [makeItem({ id: 'item-1' })];
+    await runVlmIdentification('file:///photo.jpg', items);
 
     expect(mockKGService.searchDish).toHaveBeenCalledWith('Massaman Curry');
   });
 
-  it('passes userText to vlmService.identify', async () => {
+  it('uses retry logic (succeeds on second VLM attempt)', async () => {
     mockVlmService.isReady = true;
-    mockVlmService.identify.mockResolvedValueOnce({ dishes: [] });
+    const vlmResult: VlmFoodResult = {
+      dishes: [{ name: 'Ramen', cuisine: 'Japanese', ingredients: ['noodles'] }],
+    };
+    mockVlmService.identify.mockRejectedValueOnce(new Error('Timeout'));
+    mockVlmService.identify.mockResolvedValueOnce(vlmResult);
 
-    const items = [makeItem()];
-    await runVlmRefinement('file:///photo.jpg', items, 'pad thai with shrimp');
+    const items = [makeItem({ id: 'item-1' })];
+    const result = await runVlmIdentification('file:///photo.jpg', items);
 
-    expect(mockVlmService.identify).toHaveBeenCalledWith(
-      'file:///photo.jpg',
-      'pad thai with shrimp',
-    );
+    expect(result[0].vlmLabel).toBe('Ramen');
+    expect(mockVlmService.identify).toHaveBeenCalledTimes(2);
+  });
+
+  it('returns items unchanged when VLM fails after retry', async () => {
+    mockVlmService.isReady = true;
+    mockVlmService.identify.mockRejectedValueOnce(new Error('Fail 1'));
+    mockVlmService.identify.mockRejectedValueOnce(new Error('Fail 2'));
+
+    const items = [makeItem({ id: 'item-1' })];
+    const result = await runVlmIdentification('file:///photo.jpg', items);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].vlmLabel).toBeUndefined();
   });
 });
