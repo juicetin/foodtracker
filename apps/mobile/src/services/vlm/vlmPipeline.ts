@@ -1,12 +1,11 @@
 /**
- * VLM refinement pipeline.
+ * VLM identification pipeline.
  *
- * Orchestrates progressive refinement: YOLO results -> VLM identification ->
- * KG nutrition lookup. Matches VLM dishes to YOLO bounding boxes via
- * substring + word overlap similarity.
+ * Primary food identification engine: VLM is the sole source of food names
+ * (YOLO only provides bounding boxes labeled 'Food Region'). Includes retry
+ * logic for resilience and positional assignment of dishes to bounding boxes.
  *
- * VLM is required for usable detection — YOLO alone gives unreliable labels.
- * Throws if VLM is not ready (caller must gate on VLM availability).
+ * VLM is required for usable detection — throws if VLM is not ready.
  * KG is optional — items get vlmLabel even if KG lookup fails.
  */
 
@@ -20,14 +19,67 @@ import { getKnowledgeGraphService } from '../knowledge-graph';
 // ---------------------------------------------------------------------------
 
 /**
- * Run VLM refinement on detected items.
+ * Identify food items with one silent retry on failure.
  *
  * @param photoUri - File URI of the photo.
- * @param items - YOLO-detected items to refine.
  * @param userText - Optional user-provided meal description for VLM disambiguation.
- * @returns Refined items with vlmLabel/vlmCuisine/vlmIngredients populated for matches.
+ * @returns VLM identification result, or { dishes: [] } if both attempts fail.
  */
-export async function runVlmRefinement(
+export async function identifyWithRetry(
+  photoUri: string,
+  userText?: string,
+): Promise<VlmFoodResult> {
+  try {
+    return await vlmService.identify(photoUri, userText);
+  } catch {
+    // Silent retry — one more attempt
+    try {
+      return await vlmService.identify(photoUri, userText);
+    } catch {
+      // Both attempts failed — return empty result (no throw)
+      return { dishes: [] };
+    }
+  }
+}
+
+/**
+ * Assign dish names to items sorted by bounding box area descending.
+ *
+ * Largest bbox gets the first dish name, second largest gets the second, etc.
+ * Skips removed items. Only assigns min(items, dishNames) pairs.
+ *
+ * @param items - Detected items with bounding boxes.
+ * @param dishNames - Dish names to assign.
+ * @returns Map from item ID to dish name.
+ */
+export function assignDishesToBoxes(
+  items: DetectedItem[],
+  dishNames: string[],
+): Map<string, string> {
+  const result = new Map<string, string>();
+
+  // Filter out removed items and sort by bbox area descending
+  const activeItems = items
+    .filter((i) => !i.isRemoved)
+    .sort((a, b) => (b.bbox.w * b.bbox.h) - (a.bbox.w * a.bbox.h));
+
+  const count = Math.min(activeItems.length, dishNames.length);
+  for (let i = 0; i < count; i++) {
+    result.set(activeItems[i].id, dishNames[i]);
+  }
+
+  return result;
+}
+
+/**
+ * Run VLM identification on detected items (primary identification, not refinement).
+ *
+ * @param photoUri - File URI of the photo.
+ * @param items - YOLO-detected items (all labeled 'Food Region').
+ * @param userText - Optional user-provided meal description for VLM disambiguation.
+ * @returns Items with vlmLabel/vlmCuisine/vlmIngredients populated for matches.
+ */
+export async function runVlmIdentification(
   photoUri: string,
   items: DetectedItem[],
   userText?: string,
@@ -37,17 +89,22 @@ export async function runVlmRefinement(
     throw new Error('VLM model is not loaded. Download the VLM pack first.');
   }
 
-  // Run VLM inference
-  const vlmResult = await vlmService.identify(photoUri, userText);
+  // Run VLM inference with retry
+  const vlmResult = await identifyWithRetry(photoUri, userText);
 
-  // Match VLM dishes to YOLO items
-  const matchMap = matchVlmToYolo(items, vlmResult);
+  // If VLM returned no dishes, return items unchanged
+  if (vlmResult.dishes.length === 0) {
+    return items;
+  }
+
+  // Positional matching: assign dishes to items by bbox area descending
+  const matchMap = matchVlmToItems(items, vlmResult);
 
   // Look up KG nutrition for matched VLM dishes
   const kgService = await getKnowledgeGraphService();
 
-  // Build refined items
-  const refined = await Promise.all(
+  // Build identified items
+  const identified = await Promise.all(
     items.map(async (item) => {
       const vlmDish = matchMap.get(item.id);
       if (!vlmDish) return item;
@@ -71,111 +128,46 @@ export async function runVlmRefinement(
     }),
   );
 
-  return refined;
+  return identified;
 }
 
 // ---------------------------------------------------------------------------
-// Internal: VLM-to-YOLO matching
+// Internal: Positional VLM-to-item matching
 // ---------------------------------------------------------------------------
 
 /**
- * Match VLM dishes to YOLO-detected items.
+ * Match VLM dishes to detected items by positional assignment.
  *
- * Strategy:
- * 1. Substring match (case-insensitive): VLM dish name contains YOLO class or vice versa
- * 2. Word overlap ratio (>= 0.3 threshold)
- * 3. Positional fallback: first VLM dish -> largest YOLO bbox
+ * Since all items have className 'Food Region' (no meaningful YOLO labels),
+ * matching is purely positional: sort non-removed items by bbox area descending,
+ * assign first VLM dish to largest bbox, second to next largest, etc.
  *
  * @returns Map from item ID to matched VLM dish.
  */
-function matchVlmToYolo(
+function matchVlmToItems(
   items: DetectedItem[],
   vlmResult: VlmFoodResult,
 ): Map<string, VlmDish> {
   const result = new Map<string, VlmDish>();
-  const usedItemIds = new Set<string>();
-  const unmatchedDishes: VlmDish[] = [];
 
-  for (const dish of vlmResult.dishes) {
-    const dishNameLower = dish.name.toLowerCase();
-    let matched = false;
+  // Sort non-removed items by bbox area descending (largest first)
+  const activeItems = items
+    .filter((i) => !i.isRemoved)
+    .sort((a, b) => (b.bbox.w * b.bbox.h) - (a.bbox.w * a.bbox.h));
 
-    // Strategy 1: Substring match
-    for (const item of items) {
-      if (usedItemIds.has(item.id)) continue;
-      const classLower = item.className.toLowerCase();
-
-      if (dishNameLower.includes(classLower) || classLower.includes(dishNameLower)) {
-        result.set(item.id, dish);
-        usedItemIds.add(item.id);
-        matched = true;
-        break;
-      }
-    }
-
-    if (matched) continue;
-
-    // Strategy 2: Word overlap
-    let bestOverlap = 0;
-    let bestItem: DetectedItem | null = null;
-
-    for (const item of items) {
-      if (usedItemIds.has(item.id)) continue;
-      const overlap = computeWordOverlap(dishNameLower, item.className.toLowerCase());
-      if (overlap > bestOverlap) {
-        bestOverlap = overlap;
-        bestItem = item;
-      }
-    }
-
-    if (bestItem && bestOverlap >= 0.3) {
-      result.set(bestItem.id, dish);
-      usedItemIds.add(bestItem.id);
-      matched = true;
-    }
-
-    if (matched) continue;
-
-    // Strategy 3: Positional fallback -- match to largest unmatched bbox
-    const unmatched = items
-      .filter((i) => !usedItemIds.has(i.id))
-      .sort((a, b) => (b.bbox.w * b.bbox.h) - (a.bbox.w * a.bbox.h));
-
-    if (unmatched.length > 0) {
-      result.set(unmatched[0].id, dish);
-      usedItemIds.add(unmatched[0].id);
-    } else {
-      unmatchedDishes.push(dish);
-    }
+  const count = Math.min(activeItems.length, vlmResult.dishes.length);
+  for (let i = 0; i < count; i++) {
+    result.set(activeItems[i].id, vlmResult.dishes[i]);
   }
 
-  if (__DEV__ && unmatchedDishes.length > 0) {
+  // Log unmatched dishes in dev mode
+  if (__DEV__ && vlmResult.dishes.length > activeItems.length) {
+    const unmatchedDishes = vlmResult.dishes.slice(activeItems.length);
     console.log(
-      '[VLM Pipeline] Unmatched VLM dishes (no YOLO boxes available):',
+      '[VLM Pipeline] Unmatched VLM dishes (no bounding boxes available):',
       unmatchedDishes.map((d) => d.name),
     );
   }
 
   return result;
-}
-
-/**
- * Compute word overlap ratio between two strings.
- *
- * Splits both strings into words, counts common words,
- * and returns overlap / max(wordsA.length, wordsB.length).
- */
-function computeWordOverlap(a: string, b: string): number {
-  const wordsA = a.split(/\s+/).filter(Boolean);
-  const wordsB = b.split(/\s+/).filter(Boolean);
-
-  if (wordsA.length === 0 || wordsB.length === 0) return 0;
-
-  const setB = new Set(wordsB);
-  let common = 0;
-  for (const word of wordsA) {
-    if (setB.has(word)) common++;
-  }
-
-  return common / Math.max(wordsA.length, wordsB.length);
 }
