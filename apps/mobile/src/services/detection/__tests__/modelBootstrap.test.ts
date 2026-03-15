@@ -2,20 +2,13 @@
  * Tests for bundled model loading fallback.
  *
  * When installed_packs has no model entries, modelLoader should fall back
- * to loading models via require() bundled assets.
+ * to loading the detect model via require() bundled asset.
  *
- * Updated for two-model loading (detect + classify only, no binary or food101).
+ * Updated for single-model loading (detect only, no classify).
  */
 
-// ── Mock react-native-fast-tflite ──
+// -- Mock react-native-fast-tflite --
 const mockDetectModel = {
-  run: jest.fn().mockResolvedValue([new Float32Array(0)]),
-  runSync: jest.fn().mockReturnValue([new Float32Array(0)]),
-  inputs: [],
-  outputs: [],
-  delegate: 'default' as const,
-};
-const mockClassifyModel = {
   run: jest.fn().mockResolvedValue([new Float32Array(0)]),
   runSync: jest.fn().mockReturnValue([new Float32Array(0)]),
   inputs: [],
@@ -29,7 +22,7 @@ jest.mock('react-native-fast-tflite', () => ({
   loadTensorflowModel: (...args: unknown[]) => mockLoadTensorflowModel(...args),
 }));
 
-// ── Mock db/client with drizzle-like chaining ──
+// -- Mock db/client with drizzle-like chaining --
 let selectFromResult: unknown[] = [];
 const mockSelectWhere = jest.fn().mockImplementation(() => Promise.resolve(selectFromResult));
 const mockSelectFrom = jest.fn().mockImplementation(() => {
@@ -45,7 +38,7 @@ jest.mock('../../../../db/client', () => ({
   },
 }));
 
-// ── Mock drizzle-orm ──
+// -- Mock drizzle-orm --
 jest.mock('drizzle-orm', () => ({
   eq: jest.fn((col: unknown, val: unknown) => ({ col, val, type: 'eq' })),
   and: jest.fn((...args: unknown[]) => ({ args, type: 'and' })),
@@ -53,7 +46,7 @@ jest.mock('drizzle-orm', () => ({
   sql: jest.fn(),
 }));
 
-// ── Mock db/schema ──
+// -- Mock db/schema --
 jest.mock('../../../../db/schema', () => ({
   installedPacks: {
     id: 'id',
@@ -71,66 +64,53 @@ jest.mock('../../../../db/schema', () => ({
 
 import { loadModelSet, getModelSet, releaseModels } from '../modelLoader';
 
-describe('modelLoader - bundled model fallback (2-model)', () => {
+describe('modelLoader - bundled model fallback (detect-only)', () => {
   beforeEach(() => {
     jest.clearAllMocks();
     releaseModels();
     selectFromResult = [];
   });
 
-  it('falls back to bundled require() models when installed_packs is empty', async () => {
-    // installed_packs returns no model-type rows
+  it('falls back to bundled require() model when installed_packs is empty', async () => {
     selectFromResult = [];
 
-    mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+    mockLoadTensorflowModel.mockResolvedValueOnce(mockDetectModel);
 
     const modelSet = await loadModelSet();
 
     expect(modelSet).toBeDefined();
     expect(modelSet.detect).toBeDefined();
-    expect(modelSet.classify).toBeDefined();
 
-    // Should have called loadTensorflowModel exactly 2 times (detect + classify)
-    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(2);
+    // Should have called loadTensorflowModel exactly 1 time (detect only)
+    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(1);
 
-    // All calls should use require() number values, not { url: string }
-    for (const call of mockLoadTensorflowModel.mock.calls) {
-      expect(typeof call[0]).toBe('number');
-    }
+    // Should use require() number value, not { url: string }
+    expect(typeof mockLoadTensorflowModel.mock.calls[0][0]).toBe('number');
   });
 
-  it('returns valid ModelSet with exactly 2 models (detect + classify)', async () => {
+  it('returns valid ModelSet with detect only (no classify)', async () => {
     selectFromResult = [];
 
-    mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+    mockLoadTensorflowModel.mockResolvedValueOnce(mockDetectModel);
 
     const modelSet = await loadModelSet();
 
-    // Each model should have run/runSync methods
+    // Detect model should have run/runSync methods
     expect(typeof modelSet.detect.run).toBe('function');
     expect(typeof modelSet.detect.runSync).toBe('function');
-    expect(typeof modelSet.classify.run).toBe('function');
-    expect(typeof modelSet.classify.runSync).toBe('function');
 
-    // ModelSet should NOT have binary or food101 properties
+    // ModelSet should NOT have classify, binary, or food101 properties
+    expect((modelSet as unknown as Record<string, unknown>).classify).toBeUndefined();
     expect((modelSet as unknown as Record<string, unknown>).binary).toBeUndefined();
     expect((modelSet as unknown as Record<string, unknown>).food101).toBeUndefined();
   });
 
-  it('still uses installed_packs path when packs exist', async () => {
-    // installed_packs has detect and classify models
+  it('still uses installed_packs path when detect pack exists', async () => {
     selectFromResult = [
       { id: 'yolo-detect-v1', name: 'Detect', type: 'model', version: '1.0.0', filePath: '/data/detect.tflite', sizeBytes: 10000000, sha256: 'h2', region: null, installedAt: '2026-01-01', lastChecked: null },
-      { id: 'efficientnet-classify-v1', name: 'Classify', type: 'model', version: '1.0.0', filePath: '/data/classify.tflite', sizeBytes: 4000000, sha256: 'h3', region: null, installedAt: '2026-01-01', lastChecked: null },
     ];
 
-    mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+    mockLoadTensorflowModel.mockResolvedValueOnce(mockDetectModel);
 
     const modelSet = await loadModelSet();
 
@@ -145,14 +125,12 @@ describe('modelLoader - bundled model fallback (2-model)', () => {
   it('caches bundled models (second call returns same instances)', async () => {
     selectFromResult = [];
 
-    mockLoadTensorflowModel
-      .mockResolvedValueOnce(mockDetectModel)
-      .mockResolvedValueOnce(mockClassifyModel);
+    mockLoadTensorflowModel.mockResolvedValueOnce(mockDetectModel);
 
     const first = await loadModelSet();
     const second = await loadModelSet();
 
     expect(first).toBe(second);
-    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(2);
+    expect(mockLoadTensorflowModel).toHaveBeenCalledTimes(1);
   });
 });

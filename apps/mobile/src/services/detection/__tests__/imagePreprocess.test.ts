@@ -3,18 +3,19 @@
  *
  * Verifies the contract of preprocessImageForModel:
  * - Returns Float32Array of correct length (size * size * 3)
- * - Pixel values normalized to 0-1 range
+ * - Pixel values normalized to 0-1 range (zero_one only, no ImageNet mode)
  * - Throws on invalid/missing URI
+ * - Function takes only 2 params (no normalization arg)
  */
 
-// ── Mock expo-image-manipulator ──
+// -- Mock expo-image-manipulator --
 const mockManipulateAsync = jest.fn();
 jest.mock('expo-image-manipulator', () => ({
   manipulateAsync: (...args: unknown[]) => mockManipulateAsync(...args),
   SaveFormat: { JPEG: 'jpeg', PNG: 'png', WEBP: 'webp' },
 }));
 
-// ── Mock expo-file-system ──
+// -- Mock expo-file-system --
 const mockReadAsStringAsync = jest.fn();
 jest.mock('expo-file-system', () => ({
   readAsStringAsync: (...args: unknown[]) => mockReadAsStringAsync(...args),
@@ -24,9 +25,7 @@ jest.mock('expo-file-system', () => ({
 import { preprocessImageForModel } from '../imagePreprocess';
 
 // Helper: create a fake base64 string that represents raw RGBA pixel data
-// For testing, we simulate the scenario where the decoder extracts known pixel values.
 function createFakeBase64(pixelCount: number, value: number): string {
-  // Create RGBA bytes: each pixel has R, G, B, A channels
   const bytes = new Uint8Array(pixelCount * 4);
   for (let i = 0; i < pixelCount; i++) {
     bytes[i * 4] = value;       // R
@@ -34,7 +33,6 @@ function createFakeBase64(pixelCount: number, value: number): string {
     bytes[i * 4 + 2] = value;   // B
     bytes[i * 4 + 3] = 255;     // A (fully opaque)
   }
-  // Convert to base64 using Buffer (available in Jest/Node environment)
   return Buffer.from(bytes).toString('base64');
 }
 
@@ -44,8 +42,12 @@ describe('imagePreprocess', () => {
   });
 
   describe('preprocessImageForModel', () => {
+    it('takes only 2 params (no normalization arg)', () => {
+      expect(preprocessImageForModel.length).toBe(2);
+    });
+
     it('returns Float32Array of correct length (size * size * 3)', async () => {
-      const size = 4; // Small size for testing
+      const size = 4;
       const fakeBase64 = createFakeBase64(size * size, 128);
 
       mockManipulateAsync.mockResolvedValue({
@@ -62,7 +64,7 @@ describe('imagePreprocess', () => {
     });
 
     it('normalizes pixel values to 0-1 range', async () => {
-      const size = 2; // 2x2 image = 4 pixels
+      const size = 2;
       const pixelValue = 128;
       const fakeBase64 = createFakeBase64(size * size, pixelValue);
 
@@ -75,13 +77,11 @@ describe('imagePreprocess', () => {
 
       const result = await preprocessImageForModel('file:///test/photo.jpg', size);
 
-      // All values should be in 0-1 range
       for (let i = 0; i < result.length; i++) {
         expect(result[i]).toBeGreaterThanOrEqual(0);
         expect(result[i]).toBeLessThanOrEqual(1);
       }
 
-      // Verify normalization: 128/255 ~= 0.502
       const expected = pixelValue / 255;
       expect(result[0]).toBeCloseTo(expected, 2);
     });
