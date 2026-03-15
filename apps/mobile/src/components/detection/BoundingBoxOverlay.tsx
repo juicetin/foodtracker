@@ -1,11 +1,13 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import Animated, { FadeIn } from 'react-native-reanimated';
 import {
   CONFIDENCE_COLORS,
   DetectedItem,
   getConfidenceLevel,
 } from '../../services/detection/types';
 import { useDetectionStore } from '../../store/useDetectionStore';
+import { ShimmerPlaceholder } from './ShimmerPlaceholder';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -82,8 +84,19 @@ export function BoundingBoxOverlay({
           >
             {/* Floating label chip above the box */}
             <View style={[styles.labelChip, { backgroundColor: color }]}>
-              <Text style={styles.labelText} numberOfLines={1}>
-                {displayLabel(item)} {Math.round(item.confidence * 100)}%
+              {item.isRefining ? (
+                <ShimmerPlaceholder width={80} height={14} />
+              ) : (
+                <Animated.Text
+                  entering={FadeIn.duration(200)}
+                  style={styles.labelText}
+                  numberOfLines={1}
+                >
+                  {displayLabel(item)}
+                </Animated.Text>
+              )}
+              <Text style={styles.confidenceText}>
+                {' '}{Math.round(item.confidence * 100)}%
               </Text>
               {/* X dismiss button */}
               <Pressable
@@ -129,6 +142,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '600',
     flexShrink: 1,
+  },
+  confidenceText: {
+    color: '#fff',
+    fontSize: 11,
+    fontWeight: '600',
   },
   dismissButton: {
     marginLeft: 4,

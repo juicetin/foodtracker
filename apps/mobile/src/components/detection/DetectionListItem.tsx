@@ -14,6 +14,7 @@ import {
   getConfidenceLevel,
 } from '../../services/detection/types';
 import { useDetectionStore } from '../../store/useDetectionStore';
+import { ShimmerPlaceholder } from './ShimmerPlaceholder';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -99,10 +100,19 @@ export function DetectionListItem({
 
           {/* Food name */}
           <View style={styles.nameContainer}>
-            <Text style={styles.name} numberOfLines={1}>
-              {displayLabel(item)}
-            </Text>
-            <Text style={styles.portion}>{portionText}</Text>
+            {item.isRefining ? (
+              <>
+                <ShimmerPlaceholder width={120} height={14} />
+                <ShimmerPlaceholder width={60} height={10} style={{ marginTop: 4 }} />
+              </>
+            ) : (
+              <>
+                <Text style={styles.name} numberOfLines={1}>
+                  {displayLabel(item)}
+                </Text>
+                <Text style={styles.portion}>{portionText}</Text>
+              </>
+            )}
           </View>
 
           {/* Confidence percentage */}
