@@ -24,7 +24,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
 - [ ] **Phase 5: Scale OCR + Notifications + Health Data** - Kitchen scale reading, container weights, daily macro notifications, Apple Health/Google Fit
 - [ ] **Phase 6: Sync + Distribution** - Google Drive and iCloud sync, Play for On-Device AI, iOS On-Demand Resources, Gemini Nano adapter
-- [ ] **Phase 7: Remove YOLO+EfficientNet pipeline -- VLM-only detection** - Strip EfficientNet classifier, YOLO bbox-only, shimmer UX, VLM failure fallback
+- [x] **Phase 7: Remove YOLO+EfficientNet pipeline -- VLM-only detection** - Strip EfficientNet classifier, YOLO bbox-only, shimmer UX, VLM failure fallback (completed 2026-03-15)
 
 ## Phase Details
 
@@ -196,12 +196,12 @@ Plans:
   4. VLM is the primary food identifier (not a refinement step), with one silent retry on failure
   5. Shimmer/skeleton animation appears in bounding box labels and detection list items while VLM processes
   6. When VLM fails, user sees "Describe your meal" text input; typed dish names are assigned to boxes by size order with KG nutrition lookup
-**Plans:** 3 plans
+**Plans:** 3/3 plans complete
 
 Plans:
-- [ ] 07-01-PLAN.md -- EfficientNet removal + pipeline simplification: delete assets/scripts, simplify types/constants/modelLoader/inferenceRouter to bbox-only
-- [ ] 07-02-PLAN.md -- VLM pipeline rewrite: primary identification with retry, text fallback with box-size assignment, store displayLabel update
-- [ ] 07-03-PLAN.md -- Shimmer UX + DetectionScreen rewrite: ShimmerPlaceholder component, bbox/list shimmer, VLM-primary flow, text fallback UI
+- [x] 07-01-PLAN.md -- EfficientNet removal + pipeline simplification: delete assets/scripts, simplify types/constants/modelLoader/inferenceRouter to bbox-only
+- [x] 07-02-PLAN.md -- VLM pipeline rewrite: primary identification with retry, text fallback with box-size assignment, store displayLabel update
+- [x] 07-03-PLAN.md -- Shimmer UX + DetectionScreen rewrite: ShimmerPlaceholder component, bbox/list shimmer, VLM-primary flow, text fallback UI
 
 ### Phase 3: Nutrition Resolution + Diary
 **Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
@@ -281,7 +281,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
 | 2.5. Food Knowledge Graph | 6/6 | Complete | 2026-03-14 |
 | 2.6. On-Device VLM Integration | 6/6 | Complete | 2026-03-14 |
-| 7. Remove YOLO+EfficientNet -- VLM-only | 0/3 | Not started | - |
+| 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete   | 2026-03-15 |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
