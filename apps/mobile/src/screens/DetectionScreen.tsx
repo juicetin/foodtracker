@@ -32,7 +32,7 @@ import {
 } from '../services/knowledge-graph';
 import type { ItemMacros } from '../components/detection/ItemDetailSheet';
 
-import { runVlmRefinement } from '../services/vlm/vlmPipeline';
+import { runVlmIdentification, assignDishesToBoxes } from '../services/vlm/vlmPipeline';
 import { vlmService } from '../services/vlm/vlmService';
 import { detectVlmTier, getVlmTierConfig } from '../services/vlm/ramDetector';
 import { PackManager } from '../services/packs/packManager';
@@ -46,7 +46,6 @@ import {
   LogMealFAB,
   UndoToast,
   MealTextInput,
-  RefiningBadge,
 } from '../components/detection';
 
 // ---------------------------------------------------------------------------
@@ -184,11 +183,12 @@ export function DetectionScreen() {
   // Ref to track if component is still mounted during async ops
   const mountedRef = useRef(true);
 
-  // VLM state: track init attempt and debounce text input
+  // VLM state: track init attempt, fallback mode, and debounce text input
   const vlmInitAttempted = useRef(false);
-  const vlmRefinementDone = useRef(false);
+  const vlmIdentificationDone = useRef(false);
   const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastVlmTextRef = useRef<string>('');
+  const [vlmFailed, setVlmFailed] = useState(false);
 
   // -- VLM availability check ------------------------------------------------
   // VLM is required for usable detection. Check on mount and gate the flow.
@@ -213,13 +213,13 @@ export function DetectionScreen() {
     checkVlm();
   }, []);
 
-  // -- VLM lazy init and refinement (after YOLO results) --------------------
+  // -- VLM lazy init and identification (after YOLO results) ----------------
 
   useEffect(() => {
     if (flowState !== 'results') return;
     if (items.length === 0) return;
 
-    const initAndRefine = async () => {
+    const initAndIdentify = async () => {
       if (!vlmInitAttempted.current) {
         vlmInitAttempted.current = true;
 
@@ -237,23 +237,24 @@ export function DetectionScreen() {
         }
       }
 
-      // Run VLM refinement if ready and not already done
-      if (vlmService.isReady && !vlmRefinementDone.current) {
-        vlmRefinementDone.current = true;
+      // Run VLM identification if ready and not already done
+      if (vlmService.isReady && !vlmIdentificationDone.current) {
+        vlmIdentificationDone.current = true;
         lastVlmTextRef.current = userMealText;
 
         try {
           setRefining(true);
-          const refined = await runVlmRefinement(
+          const identified = await runVlmIdentification(
             photoUri!,
             items,
             userMealText || undefined,
           );
 
-          let refinedCount = 0;
-          for (const item of refined) {
+          // Check if VLM returned any labels
+          let identifiedCount = 0;
+          for (const item of identified) {
             if (item.vlmLabel) {
-              refinedCount++;
+              identifiedCount++;
               refineItem(item.id, {
                 vlmLabel: item.vlmLabel,
                 vlmCuisine: item.vlmCuisine,
@@ -262,16 +263,24 @@ export function DetectionScreen() {
               });
             }
           }
-          console.log(`[VLM] Refined ${refinedCount}/${refined.length} items`);
+
+          if (identifiedCount === 0) {
+            // VLM failed to identify any items -- activate text fallback
+            console.log('[VLM] No items identified -- activating text fallback');
+            setVlmFailed(true);
+          } else {
+            console.log(`[VLM] Identified ${identifiedCount}/${identified.length} items`);
+          }
         } catch (err) {
-          console.warn('[VLM] Refinement failed:', err instanceof Error ? err.message : err);
+          console.warn('[VLM] Identification failed:', err instanceof Error ? err.message : err);
+          setVlmFailed(true);
         } finally {
           setRefining(false);
         }
       }
     };
 
-    initAndRefine();
+    initAndIdentify();
   }, [flowState, items.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // -- KG nutrition computation (updates when items/labels/portions change) --
@@ -295,47 +304,83 @@ export function DetectionScreen() {
     return () => { cancelled = true; };
   }, [flowState, items]);
 
-  // -- Debounced re-refinement on user text change --------------------------
+  // -- Debounced re-identification on user text change ----------------------
 
   const handleUserTextChange = useCallback((text: string) => {
     setUserText(text);
 
-    // Debounce: re-trigger VLM refinement 500ms after last keystroke
+    // Debounce: re-trigger identification 500ms after last keystroke
     if (debounceTimerRef.current) {
       clearTimeout(debounceTimerRef.current);
     }
 
     debounceTimerRef.current = setTimeout(async () => {
-      if (!vlmService.isReady) return;
       if (text === lastVlmTextRef.current) return;
-
       lastVlmTextRef.current = text;
 
-      try {
-        setRefining(true);
-        const refined = await runVlmRefinement(
-          photoUri!,
-          items,
-          text || undefined,
-        );
+      if (vlmFailed) {
+        // VLM failed -- use text fallback with assignDishesToBoxes
+        if (!text.trim()) return;
 
-        for (const item of refined) {
-          if (item.vlmLabel) {
-            refineItem(item.id, {
-              vlmLabel: item.vlmLabel,
-              vlmCuisine: item.vlmCuisine,
-              vlmIngredients: item.vlmIngredients,
-              vlmConfidence: item.vlmConfidence,
-            });
+        const dishNames = text
+          .split(/[,\n]+/)
+          .map((s) => s.trim())
+          .filter(Boolean);
+        if (dishNames.length === 0) return;
+
+        const assignments = assignDishesToBoxes(items, dishNames);
+        for (const [id, dishName] of assignments) {
+          refineItem(id, { vlmLabel: dishName });
+        }
+
+        // KG lookup for each dish in __DEV__ mode
+        if (__DEV__) {
+          try {
+            const kgService = await getKnowledgeGraphService();
+            if (kgService) {
+              for (const dishName of dishNames) {
+                const result = await kgService.searchDish(dishName);
+                if (result) {
+                  console.log(`[KG] Fallback dish "${dishName}" found:`, result.dish_name);
+                }
+              }
+            }
+          } catch {
+            // KG lookup is best-effort in fallback mode
           }
         }
-      } catch {
-        // Graceful fallback
-      } finally {
-        setRefining(false);
+
+        setVlmFailed(false);
+      } else {
+        // VLM is working -- re-run identification with updated text
+        if (!vlmService.isReady) return;
+
+        try {
+          setRefining(true);
+          const identified = await runVlmIdentification(
+            photoUri!,
+            items,
+            text || undefined,
+          );
+
+          for (const item of identified) {
+            if (item.vlmLabel) {
+              refineItem(item.id, {
+                vlmLabel: item.vlmLabel,
+                vlmCuisine: item.vlmCuisine,
+                vlmIngredients: item.vlmIngredients,
+                vlmConfidence: item.vlmConfidence,
+              });
+            }
+          }
+        } catch {
+          // Graceful fallback
+        } finally {
+          setRefining(false);
+        }
       }
     }, 500);
-  }, [photoUri, items, setUserText, setRefining, refineItem]);
+  }, [photoUri, items, setUserText, setRefining, refineItem, vlmFailed]);
 
   // -- Photo dimensions for display -----------------------------------------
   const aspectRatio = photoWidth > 0 ? photoHeight / photoWidth : 1;
@@ -703,17 +748,25 @@ export function DetectionScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.resultsContainer}>
-        {/* Header with dismiss button and refining badge */}
+        {/* Header with dismiss button */}
         <View style={styles.resultsHeader}>
           <Pressable onPress={handleGoBack} style={styles.dismissButton}>
             <Text style={styles.dismissButtonText}>Cancel</Text>
           </Pressable>
           <View style={styles.titleRow}>
             <Text style={styles.resultsTitle}>Detection Results</Text>
-            <RefiningBadge visible={isRefining} />
           </View>
           <View style={styles.dismissButtonPlaceholder} />
         </View>
+
+        {/* VLM failure helper message */}
+        {vlmFailed && (
+          <View style={styles.vlmFailedBanner}>
+            <Text style={styles.vlmFailedText}>
+              AI identification unavailable. Describe your meal to get nutrition info.
+            </Text>
+          </View>
+        )}
 
         {/* Meal text input for VLM disambiguation */}
         <MealTextInput
@@ -929,5 +982,19 @@ const styles = StyleSheet.create({
   },
   dismissButtonPlaceholder: {
     width: 60,
+  },
+  // -- VLM failed banner --
+  vlmFailedBanner: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: '#E0E0E0',
+  },
+  vlmFailedText: {
+    color: '#E65100',
+    fontSize: 13,
+    textAlign: 'center',
+    fontWeight: '500',
   },
 });

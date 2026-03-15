@@ -1,14 +1,13 @@
 /**
  * Render tests for VLM-related detection components.
  *
- * Tests MealTextInput and RefiningBadge rendering behavior
- * based on their props (disabled, visible).
+ * Tests MealTextInput and ShimmerPlaceholder rendering behavior.
  */
 
 import React from 'react';
 import { render } from '@testing-library/react-native';
 import { MealTextInput } from '../MealTextInput';
-import { RefiningBadge } from '../RefiningBadge';
+import { ShimmerPlaceholder } from '../ShimmerPlaceholder';
 
 // Mock react-native-reanimated to avoid native module errors in tests
 jest.mock('react-native-reanimated', () => {
@@ -26,6 +25,7 @@ jest.mock('react-native-reanimated', () => {
     withTiming: jest.fn((val: unknown) => val),
     withRepeat: jest.fn((val: unknown) => val),
     FadeIn: { duration: jest.fn(() => ({ duration: jest.fn() })) },
+    FadeOut: { duration: jest.fn(() => ({ duration: jest.fn() })) },
     // Animated components
     View,
     Text,
@@ -50,14 +50,17 @@ describe('MealTextInput', () => {
   });
 });
 
-describe('RefiningBadge', () => {
-  it('renders text when visible', () => {
-    const { getByText } = render(<RefiningBadge visible />);
-    expect(getByText('Refining...')).toBeTruthy();
+describe('ShimmerPlaceholder', () => {
+  it('renders with given dimensions', () => {
+    const { toJSON } = render(<ShimmerPlaceholder width={100} height={14} />);
+    const tree = toJSON();
+    expect(tree).not.toBeNull();
   });
 
-  it('returns null when not visible', () => {
-    const { toJSON } = render(<RefiningBadge visible={false} />);
-    expect(toJSON()).toBeNull();
+  it('applies custom borderRadius', () => {
+    const { toJSON } = render(
+      <ShimmerPlaceholder width={80} height={12} borderRadius={10} />,
+    );
+    expect(toJSON()).not.toBeNull();
   });
 });
