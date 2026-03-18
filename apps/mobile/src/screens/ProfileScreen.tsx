@@ -126,6 +126,15 @@ export default function ProfileScreen() {
         </View>
       </View>
 
+      {/* Recipes */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Recipes</Text>
+        <Pressable style={styles.row} onPress={() => rootNavigation.navigate('Recipes')}>
+          <Text style={styles.rowLabel}>My Recipes</Text>
+          <Text style={styles.rowChevron}>→</Text>
+        </Pressable>
+      </View>
+
       {/* AI Models */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>AI Models</Text>

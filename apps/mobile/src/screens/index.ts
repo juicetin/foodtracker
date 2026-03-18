@@ -7,3 +7,4 @@ export { default as GeminiNanoTestScreen } from './GeminiNanoTestScreen';
 export { default as EntryDetailScreen } from './EntryDetailScreen';
 export { default as FoodSearchScreen } from './FoodSearchScreen';
 export { default as BarcodeScanScreen } from './BarcodeScanScreen';
+export { default as RecipeScreen } from './RecipeScreen';

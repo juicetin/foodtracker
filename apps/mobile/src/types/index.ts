@@ -5,6 +5,7 @@ export type RootStackParamList = {
   Detection: undefined;
   FoodSearch: undefined;
   BarcodeScan: undefined;
+  Recipes: undefined;
   VlmDownload: undefined;
   GeminiNanoTest: undefined;
 };
