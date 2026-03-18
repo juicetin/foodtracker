@@ -3,6 +3,7 @@ export type RootStackParamList = {
   Main: undefined;
   EntryDetail: { entryId: string };
   Detection: undefined;
+  FoodSearch: undefined;
   VlmDownload: undefined;
   GeminiNanoTest: undefined;
 };
@@ -111,6 +112,49 @@ export interface ScaleReading {
   unit: 'g' | 'kg' | 'oz' | 'lb';
   confidence: number;
   photoId: string;
+}
+
+// ---------------------------------------------------------------------------
+// Scan result types (Gemini Nano pipeline output)
+// ---------------------------------------------------------------------------
+
+/** A single ingredient as identified by Gemini Nano, enriched with KG nutrition. */
+export interface ScannedIngredient {
+  id: string;
+  name: string;
+  /** Current weight in grams (may be scaled or manually edited). */
+  amount_g: number;
+  /** Locked original Gemini Nano estimate — used as scaling baseline. */
+  originalAmount_g: number;
+  /** Nutrition values are for originalAmount_g. Scale by amount_g/originalAmount_g to display. */
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  fiber: number;
+  sodium: number;
+  nutritionSource: 'kg' | 'proxy';
+  userModified: boolean;
+}
+
+/** A dish identified in a single photo scan. */
+export interface ScannedDish {
+  id: string;
+  name: string;
+  cuisine: string | null;
+  /** URI of the source photo this dish was identified from. */
+  photoUri: string;
+  ingredients: ScannedIngredient[];
+  /** Multiplicative scale applied to all non-userModified ingredients (1.0 = Gemini estimate). */
+  portionScale: number;
+}
+
+/** Full result of a single food scan (photo + all dishes). */
+export interface ScanResult {
+  photoUri: string;
+  dishes: ScannedDish[];
+  /** True when Gemini Nano is unavailable and mock data is used. */
+  isMock: boolean;
 }
 
 // User preferences

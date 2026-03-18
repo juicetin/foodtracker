@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { eq, and } from 'drizzle-orm';
-import { userDb } from '../../db/client';
+import { userDb, opsqlite } from '../../db/client';
 import { foodEntries } from '../../db/schema';
-import { FoodEntry, Photo } from '../types';
+import type { FoodEntry, Photo, ScanResult } from '../types';
+import type { MealType } from '../services/detection/types';
 
 /** Generate a UUID without relying on crypto.randomUUID (unavailable in some RN runtimes). */
 function generateId(): string {
@@ -27,6 +28,7 @@ interface FoodLogState {
 
   // Actions
   addEntry: (entry: Omit<FoodEntry, 'id' | 'createdAt' | 'updatedAt' | 'isSynced' | 'isDeleted' | 'entryDate' | 'photos' | 'ingredients'> & { photos?: Photo[]; ingredients?: FoodEntry['ingredients'] }) => Promise<void>;
+  logScanResult: (result: ScanResult, mealType: MealType) => Promise<void>;
   updateEntry: (id: string, updates: Partial<FoodEntry>) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
   loadTodayEntries: () => Promise<void>;
@@ -134,6 +136,76 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     }));
 
     set({ entries });
+  },
+
+  logScanResult: async (result, mealType) => {
+    const entryId = generateId();
+    const now = new Date().toISOString();
+    const entryDate = getTodayDateStr();
+
+    // Calculate totals (nutrition stored at originalAmount_g, scale by current amount_g)
+    const totals = result.dishes.reduce(
+      (acc, dish) => {
+        dish.ingredients.forEach((ing) => {
+          const s = ing.originalAmount_g > 0 ? ing.amount_g / ing.originalAmount_g : 1;
+          acc.calories += ing.calories * s;
+          acc.protein  += ing.protein  * s;
+          acc.carbs    += ing.carbs    * s;
+          acc.fat      += ing.fat      * s;
+        });
+        return acc;
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    );
+
+    await userDb.insert(foodEntries).values({
+      id: entryId,
+      mealType,
+      entryDate,
+      totalCalories: Math.round(totals.calories),
+      totalProtein:  Math.round(totals.protein),
+      totalCarbs:    Math.round(totals.carbs),
+      totalFat:      Math.round(totals.fat),
+      createdAt: now,
+      updatedAt: now,
+      isSynced: false,
+      isDeleted: false,
+    });
+
+    // Photo
+    const photoId = generateId();
+    opsqlite.execute(
+      'INSERT INTO photos (id, entry_id, uri, uploaded_at) VALUES (?, ?, ?, ?)',
+      [photoId, entryId, result.photoUri, now],
+    );
+
+    // Dishes + ingredients
+    for (const dish of result.dishes) {
+      const dishId = generateId();
+      opsqlite.execute(
+        'INSERT INTO scanned_dishes (id, entry_id, name, cuisine, portion_scale, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+        [dishId, entryId, dish.name, dish.cuisine ?? null, dish.portionScale, now],
+      );
+      for (const ing of dish.ingredients) {
+        const s = ing.originalAmount_g > 0 ? ing.amount_g / ing.originalAmount_g : 1;
+        opsqlite.execute(
+          `INSERT INTO ingredients
+            (id, entry_id, dish_id, name, quantity, unit, amount_g, original_amount_g,
+             calories, protein, carbs, fat, fiber, database_source, user_modified, created_at, updated_at)
+           VALUES (?, ?, ?, ?, ?, 'g', ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [
+            generateId(), entryId, dishId, ing.name,
+            ing.amount_g, ing.amount_g, ing.originalAmount_g,
+            ing.calories * s, ing.protein * s, ing.carbs * s, ing.fat * s, ing.fiber * s,
+            ing.nutritionSource === 'kg' ? 'USDA' : null,
+            ing.userModified ? 1 : 0,
+            now, now,
+          ],
+        );
+      }
+    }
+
+    await get().loadTodayEntries();
   },
 
   setSelectedPhotos: (photos) => set({ selectedPhotos: photos }),

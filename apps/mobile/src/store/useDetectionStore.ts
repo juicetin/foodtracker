@@ -1,172 +1,168 @@
 import { create } from 'zustand';
-import {
-  DetectedItem,
-  DetectionSessionState,
-  MealType,
-  autoDetectMealType,
-} from '../services/detection/types';
+import { autoDetectMealType, type MealType } from '../services/detection/types';
+import type { ScannedDish, ScannedIngredient, ScanResult } from '../types';
 
 // ---------------------------------------------------------------------------
-// Store interface
+// Types
 // ---------------------------------------------------------------------------
 
-interface DetectionStore extends DetectionSessionState {
-  // Actions
-  setPhoto: (uri: string, width: number, height: number) => void;
-  setItems: (items: DetectedItem[]) => void;
-  setDetecting: (detecting: boolean) => void;
-  removeItem: (id: string) => void;
-  restoreItem: (id: string) => void;
-  updatePortion: (id: string, multiplier: number) => void;
-  correctItem: (id: string, newClassName: string) => void;
+interface DetectionState {
+  photoUri: string | null;
+  dishes: ScannedDish[];
+  isAnalyzing: boolean;
+  mealType: MealType;
+  isMock: boolean;
+  /** Number of photos still being processed in the background. */
+  pendingPhotos: number;
+  totalPhotos: number;
+}
+
+interface DetectionStore extends DetectionState {
+  setScanResult: (result: ScanResult) => void;
+  /** Append dishes from an additional photo scan (multi-photo). */
+  addScanResult: (result: ScanResult) => void;
+  setPendingPhotos: (pending: number, total: number) => void;
+  setAnalyzing: (val: boolean) => void;
   setMealType: (type: MealType) => void;
-  selectItem: (id: string | null) => void;
+  /** Edit an ingredient's name or weight. Marks it userModified. */
+  updateIngredient: (
+    dishId: string,
+    ingId: string,
+    update: Partial<Pick<ScannedIngredient, 'name' | 'amount_g'>>,
+  ) => void;
+  /** Scale all non-userModified ingredients proportionally. */
+  updateDishScale: (dishId: string, scale: number) => void;
+  updateDishName: (dishId: string, name: string) => void;
+  removeIngredient: (dishId: string, ingId: string) => void;
+  removeDish: (dishId: string) => void;
   reset: () => void;
-  // VLM refinement actions
-  setRefining: (refining: boolean) => void;
-  refineItem: (id: string, vlmData: {
-    vlmLabel: string;
-    vlmCuisine?: string;
-    vlmIngredients?: string[];
-    vlmConfidence?: number;
-  }) => void;
-  setUserText: (text: string) => void;
-  // Computed
-  activeItems: () => DetectedItem[];
-  displayLabel: (item: DetectedItem) => string;
+  getDishTotals: (dishId: string) => { calories: number; protein: number; carbs: number; fat: number };
+  getTotalNutrition: () => { calories: number; protein: number; carbs: number; fat: number };
 }
 
 // ---------------------------------------------------------------------------
-// Initial state
+// Helpers
 // ---------------------------------------------------------------------------
 
-const initialState: DetectionSessionState = {
-  photoUri: null,
-  photoWidth: 0,
-  photoHeight: 0,
-  items: [],
-  isDetecting: false,
-  mealType: autoDetectMealType(),
-  selectedItemId: null,
-  isRefining: false,
-  userMealText: '',
-};
+function ingScale(ing: ScannedIngredient): number {
+  return ing.originalAmount_g > 0 ? ing.amount_g / ing.originalAmount_g : 1;
+}
 
 // ---------------------------------------------------------------------------
 // Store
 // ---------------------------------------------------------------------------
 
-/**
- * Zustand store for detection session state.
- *
- * Unlike useFoodLogStore, this store is ephemeral -- it does NOT persist to
- * SQLite.  The session lives only while the user reviews detected items.
- * Persistence happens when the user taps "Log Meal" (handled elsewhere).
- *
- * Follows write-first pattern conceptually: mutations update Zustand state
- * directly (no DB round-trip needed for ephemeral data).
- */
+const initialState: DetectionState = {
+  photoUri: null,
+  dishes: [],
+  isAnalyzing: false,
+  mealType: autoDetectMealType(),
+  isMock: false,
+  pendingPhotos: 0,
+  totalPhotos: 0,
+};
+
 export const useDetectionStore = create<DetectionStore>((set, get) => ({
   ...initialState,
 
-  // -- Actions ---------------------------------------------------------------
+  setScanResult: (result) =>
+    set({ photoUri: result.photoUri, dishes: result.dishes, isMock: result.isMock }),
 
-  setPhoto: (uri, width, height) =>
-    set({ photoUri: uri, photoWidth: width, photoHeight: height }),
-
-  setItems: (items) => set({ items }),
-
-  setDetecting: (detecting) => set({ isDetecting: detecting }),
-
-  removeItem: (id) =>
+  addScanResult: (result) =>
     set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id
-          ? { ...item, isRemoved: true, removedAt: Date.now() }
-          : item,
-      ),
-      // Deselect if the removed item was selected
-      selectedItemId: state.selectedItemId === id ? null : state.selectedItemId,
+      dishes: [...state.dishes, ...result.dishes],
+      pendingPhotos: Math.max(0, state.pendingPhotos - 1),
     })),
 
-  restoreItem: (id) =>
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id
-          ? { ...item, isRemoved: false, removedAt: undefined }
-          : item,
-      ),
-    })),
+  setPendingPhotos: (pending, total) => set({ pendingPhotos: pending, totalPhotos: total }),
 
-  updatePortion: (id, multiplier) =>
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id
-          ? { ...item, portionMultiplier: Math.min(3.0, Math.max(0.5, multiplier)) }
-          : item,
-      ),
-    })),
-
-  correctItem: (id, newClassName) =>
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              correctedFrom: item.correctedFrom ?? item.className,
-              className: newClassName,
-            }
-          : item,
-      ),
-    })),
+  setAnalyzing: (val) => set({ isAnalyzing: val }),
 
   setMealType: (type) => set({ mealType: type }),
 
-  selectItem: (id) => set({ selectedItemId: id }),
-
-  reset: () => set({ ...initialState, mealType: autoDetectMealType() }),
-
-  // -- VLM refinement actions ------------------------------------------------
-
-  setRefining: (refining) =>
+  updateIngredient: (dishId, ingId, update) =>
     set((state) => ({
-      isRefining: refining,
-      items: state.items.map((item) => ({
-        ...item,
-        isRefining: refining,
-      })),
-    })),
-
-  refineItem: (id, vlmData) =>
-    set((state) => ({
-      items: state.items.map((item) =>
-        item.id === id
-          ? {
-              ...item,
-              vlmLabel: vlmData.vlmLabel,
-              vlmCuisine: vlmData.vlmCuisine,
-              vlmIngredients: vlmData.vlmIngredients,
-              vlmConfidence: vlmData.vlmConfidence,
-              isRefining: false,
-            }
-          : item,
+      dishes: state.dishes.map((dish) =>
+        dish.id !== dishId
+          ? dish
+          : {
+              ...dish,
+              ingredients: dish.ingredients.map((ing) =>
+                ing.id !== ingId
+                  ? ing
+                  : { ...ing, ...update, userModified: true },
+              ),
+            },
       ),
     })),
 
-  setUserText: (text) => set({ userMealText: text }),
+  updateDishScale: (dishId, scale) =>
+    set((state) => ({
+      dishes: state.dishes.map((dish) =>
+        dish.id !== dishId
+          ? dish
+          : {
+              ...dish,
+              portionScale: scale,
+              ingredients: dish.ingredients.map((ing) =>
+                ing.userModified
+                  ? ing
+                  : { ...ing, amount_g: ing.originalAmount_g * scale },
+              ),
+            },
+      ),
+    })),
 
-  // -- Computed --------------------------------------------------------------
+  updateDishName: (dishId, name) =>
+    set((state) => ({
+      dishes: state.dishes.map((d) => (d.id !== dishId ? d : { ...d, name })),
+    })),
 
-  activeItems: () => {
-    const { items } = get();
-    return items
-      .filter((i) => !i.isRemoved)
-      .sort((a, b) => b.confidence - a.confidence);
+  removeIngredient: (dishId, ingId) =>
+    set((state) => ({
+      dishes: state.dishes.map((dish) =>
+        dish.id !== dishId
+          ? dish
+          : { ...dish, ingredients: dish.ingredients.filter((i) => i.id !== ingId) },
+      ),
+    })),
+
+  removeDish: (dishId) =>
+    set((state) => ({ dishes: state.dishes.filter((d) => d.id !== dishId) })),
+
+  reset: () => set({ ...initialState, mealType: autoDetectMealType() }),
+
+  getDishTotals: (dishId) => {
+    const dish = get().dishes.find((d) => d.id === dishId);
+    if (!dish) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    return dish.ingredients.reduce(
+      (acc, ing) => {
+        const s = ingScale(ing);
+        return {
+          calories: acc.calories + ing.calories * s,
+          protein:  acc.protein  + ing.protein  * s,
+          carbs:    acc.carbs    + ing.carbs    * s,
+          fat:      acc.fat      + ing.fat      * s,
+        };
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    );
   },
 
-  displayLabel: (item: DetectedItem) => {
-    if (item.vlmLabel) return item.vlmLabel;
-    if (item.isRefining) return ''; // Empty string signals shimmer state to UI
-    return 'Unknown food'; // Fallback if VLM failed and no text input
+  getTotalNutrition: () => {
+    const { dishes } = get();
+    const store = get();
+    return dishes.reduce(
+      (acc, dish) => {
+        const t = store.getDishTotals(dish.id);
+        return {
+          calories: acc.calories + t.calories,
+          protein:  acc.protein  + t.protein,
+          carbs:    acc.carbs    + t.carbs,
+          fat:      acc.fat      + t.fat,
+        };
+      },
+      { calories: 0, protein: 0, carbs: 0, fat: 0 },
+    );
   },
 }));

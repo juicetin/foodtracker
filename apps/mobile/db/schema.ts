@@ -53,6 +53,9 @@ export const ingredients = sqliteTable('ingredients', {
   fat: real('fat').default(0),
   fiber: real('fiber').default(0),
   sugar: real('sugar').default(0),
+  dishId: text('dish_id'),
+  amountG: real('amount_g'),
+  originalAmountG: real('original_amount_g'),
   aiConfidence: real('ai_confidence'),
   boundingBoxX: real('bounding_box_x'),
   boundingBoxY: real('bounding_box_y'),
@@ -80,6 +83,19 @@ export const photos = sqliteTable('photos', {
   latitude: real('latitude'),
   longitude: real('longitude'),
   uploadedAt: text('uploaded_at').default(sql`(datetime('now'))`),
+});
+
+// ── Scanned Dishes (Gemini Nano pipeline output, grouped per food_entry) ──
+
+export const scannedDishes = sqliteTable('scanned_dishes', {
+  id: text('id').primaryKey(),
+  entryId: text('entry_id')
+    .notNull()
+    .references(() => foodEntries.id, { onDelete: 'cascade' }),
+  name: text('name').notNull(),
+  cuisine: text('cuisine'),
+  portionScale: real('portion_scale').notNull().default(1.0),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
 // ── Modification History (no modified_by FK) ──
