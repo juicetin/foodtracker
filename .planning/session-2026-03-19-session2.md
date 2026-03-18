@@ -39,3 +39,21 @@
 Left/right chevron arrows with date label that shows "Today"/"Yesterday"/formatted date.
 Tap date label jumps to today. Forward arrow disabled on today.
 Copy Yesterday only visible on today's view.
+
+11. `3e086bb1` feat: add micronutrient panel and P/C/F breakdown to EntryDetail
+12. `a78f6fb4` feat: editable recipe name in builder header
+
+#### Decision 9: Micronutrient Panel
+Show fiber and sugar totals in a separate "Additional Nutrients" card below
+the main macros totals. Only appears when values > 0. Per-ingredient P/C/F
+shown in subtitle text on read mode.
+
+#### Decision 10: Recipe Name Editing
+Replaced static title Text with TextInput in recipe builder header.
+onEndEditing persists name change. Added updateRecipeName to recipe service.
+
+### Final Session Totals
+- 14 commits total this session
+- 39 new tests across 4 test suites, all passing
+- Phases 3.1, 3.2, 3.3: COMPLETE
+- Phase 3.4 (Polish): date nav + micronutrients + recipe name editing DONE
