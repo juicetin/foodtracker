@@ -21,3 +21,5 @@ __pycache__/
 
 # Claude Code
 .claude/settings.local.json
+apps/mobile/credentials.json
+apps/mobile/modules/gemini-nano/android/build/

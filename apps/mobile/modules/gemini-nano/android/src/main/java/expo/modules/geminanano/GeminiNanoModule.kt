@@ -8,25 +8,41 @@ import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.GenerateContentRequest
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.ImagePart
+import com.google.mlkit.genai.prompt.PromptPrefix
 import com.google.mlkit.genai.prompt.TextPart
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 
 class GeminiNanoModule : Module() {
 
-    // Reuse across calls in the same app session to avoid AICore rebinding overhead.
-    private val model by lazy { Generation.getClient() }
+    // Initialized eagerly on the main thread (module construction happens on main thread in Expo).
+    // lazy { } would defer init to the first background coroutine caller — AICore binding
+    // appears to require a main-looper context.
+    private val model = Generation.getClient()
 
     override fun definition() = ModuleDefinition {
         Name("GeminiNano")
 
-        // Returns: "available" | "downloading" | "downloadable" | "unavailable"
-        // "downloadable" = device supports Gemini Nano, model not yet downloaded — call requestDownload()
-        // "unavailable"  = device does not support Gemini Nano (no AICore / wrong device)
+        // Returns: "available" | "downloading" | "downloadable" | "unavailable" | "needs_update"
+        // "needs_update"  = AICore version too old; RC01 (versionCode < 382178) has an inference NPE bug
+        // "downloadable"  = device supports Gemini Nano, model not yet downloaded — call requestDownload()
+        // "unavailable"   = device does not support Gemini Nano (no AICore / wrong device)
         AsyncFunction("checkAvailability") Coroutine { ->
             try {
+                val aiCoreVersion = try {
+                    appContext.reactContext!!.packageManager
+                        .getPackageInfo("com.google.android.aicore", 0).longVersionCode
+                } catch (e: Exception) { -1L }
+
+                // RC01 (382100) has a NullPointerException in AiCoreIsolatedService that causes
+                // all generateContent() calls to fail with INFERENCE_ERROR for third-party apps.
+                // RC02 (382178) fixes this. Minimum known-working versionCode: 382178.
+                if (aiCoreVersion in 1 until 382178) return@Coroutine "needs_update"
+
                 when (model.checkStatus()) {
                     FeatureStatus.AVAILABLE    -> "available"
                     FeatureStatus.DOWNLOADING  -> "downloading"
@@ -63,6 +79,35 @@ class GeminiNanoModule : Module() {
             }
         }
 
+        // Diagnostic probe — reports warmup result, model name, token limit, then tries inference.
+        AsyncFunction("testTextOnly") Coroutine { prompt: String ->
+            val sb = StringBuilder()
+            try {
+                try {
+                    val name = model.getBaseModelName()
+                    sb.append("model:$name ")
+                } catch (e: Exception) {
+                    sb.append("model:ERR:${e.message} ")
+                }
+                try {
+                    val limit = model.getTokenLimit()
+                    sb.append("tokenLimit:$limit ")
+                } catch (e: Exception) {
+                    sb.append("tokenLimit:ERR ")
+                }
+                // Use the simple String overload — bypass GenerateContentRequest entirely.
+                // The Builder path triggers a NullPointerException inside AICore's isolated service.
+                val response = withContext(Dispatchers.Main) { model.generateContent(prompt) }
+                val text = response.candidates.firstOrNull()?.text
+                sb.append("result:${text ?: "empty"}")
+            } catch (e: com.google.mlkit.genai.common.GenAiException) {
+                sb.append("infer:FAIL:code=${e.errorCode}:${e.message}")
+            } catch (e: Exception) {
+                sb.append("infer:FAIL:${e.javaClass.simpleName}:${e.message}")
+            }
+            sb.toString()
+        }
+
         AsyncFunction("identifyFood") Coroutine { imageUri: String, prompt: String ->
             try {
                 val androidUri = Uri.parse(imageUri)
@@ -72,10 +117,12 @@ class GeminiNanoModule : Module() {
                     java.io.FileInputStream(androidUri.path!!)
                 }
 
-                // Decode bitmap and scale to max 1024px on longest edge to reduce latency.
-                // Defensive against full 12MP camera photos causing excessive processing time.
-                val rawBitmap = BitmapFactory.decodeStream(stream)
-                val bitmap = scaleBitmapIfNeeded(rawBitmap, 1024)
+                // Decode bitmap as ARGB_8888 — BitmapFactory returns HARDWARE config by default
+                // on Android 8+ which is GPU-only and unreadable by ML Kit CPU inference.
+                val opts = BitmapFactory.Options().apply { inPreferredConfig = Bitmap.Config.ARGB_8888 }
+                val rawBitmap = BitmapFactory.decodeStream(stream, null, opts)
+                    ?: return@Coroutine "ERROR:decode_failed:null bitmap from stream"
+                val bitmap = scaleBitmapIfNeeded(rawBitmap, 512)
 
                 val requestBuilder = GenerateContentRequest.Builder(ImagePart(bitmap), TextPart(prompt))
                 requestBuilder.temperature = 0.2f
@@ -83,25 +130,38 @@ class GeminiNanoModule : Module() {
                 requestBuilder.topK = 10
                 val request = requestBuilder.build()
 
-                val response = model.generateContent(request)
-                response.candidates.firstOrNull()?.text ?: ""
+                val response = withContext(Dispatchers.Main) { model.generateContent(request) }
+                val text = response.candidates.firstOrNull()?.text
+                if (text.isNullOrEmpty()) {
+                    "ERROR:empty_response candidates=${response.candidates.size} finishReason=${response.candidates.firstOrNull()?.finishReason}"
+                } else {
+                    text
+                }
+            } catch (e: com.google.mlkit.genai.common.GenAiException) {
+                "ERROR:GenAiException:code=${e.errorCode}:${e.message}"
             } catch (e: Exception) {
-                // Handles: BUSY quota error, stream errors, inference errors
-                ""
+                "ERROR:${e.javaClass.simpleName}:${e.message}"
             }
         }
     }
 
     /**
      * Scale bitmap down so the longest edge is at most maxPx.
-     * Returns the original bitmap unchanged if already within bounds.
+     * Always returns a software ARGB_8888 bitmap — createScaledBitmap can produce
+     * hardware-config bitmaps on newer Android, which AICore CPU inference can't read.
      */
     private fun scaleBitmapIfNeeded(bitmap: Bitmap, maxPx: Int): Bitmap {
         val maxEdge = maxOf(bitmap.width, bitmap.height)
-        if (maxEdge <= maxPx) return bitmap
-        val scale = maxPx.toFloat() / maxEdge
-        val newWidth = (bitmap.width * scale).toInt()
-        val newHeight = (bitmap.height * scale).toInt()
-        return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+        val (targetW, targetH) = if (maxEdge <= maxPx) {
+            bitmap.width to bitmap.height
+        } else {
+            val scale = maxPx.toFloat() / maxEdge
+            (bitmap.width * scale).toInt() to (bitmap.height * scale).toInt()
+        }
+        // Copy via Canvas to guarantee software ARGB_8888 regardless of source config.
+        val out = Bitmap.createBitmap(targetW, targetH, Bitmap.Config.ARGB_8888)
+        val canvas = android.graphics.Canvas(out)
+        canvas.drawBitmap(bitmap, null, android.graphics.RectF(0f, 0f, targetW.toFloat(), targetH.toFloat()), null)
+        return out
     }
 }

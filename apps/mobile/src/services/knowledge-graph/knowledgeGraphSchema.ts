@@ -85,3 +85,24 @@ export const SQL_LOAD_DISH_NAMES = `
   SELECT id, canonical_name
   FROM ${KG_TABLES.DISH}
 `;
+
+/** Multi-result FTS dish search (for ingredient picker). */
+export const SQL_SEARCH_DISHES_FTS = `
+  SELECT d.id, d.canonical_name, d.avg_calories_per_serving,
+         d.avg_protein_per_serving, d.avg_carbs_per_serving,
+         d.avg_fat_per_serving, d.default_serving_grams
+  FROM ${KG_TABLES.DISH_FTS} fts
+  JOIN ${KG_TABLES.DISH} d ON d.id = fts.rowid
+  WHERE ${KG_TABLES.DISH_FTS} MATCH ?
+  ORDER BY rank
+  LIMIT ?
+`;
+
+/** Search recipe ingredient names (for ingredient picker). */
+export const SQL_SEARCH_INGREDIENT_NAMES = `
+  SELECT DISTINCT ri.ingredient_name
+  FROM ${KG_TABLES.RECIPE_INGREDIENT} ri
+  WHERE ri.ingredient_name LIKE ?
+  ORDER BY ri.ingredient_name
+  LIMIT ?
+`;

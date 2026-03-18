@@ -24,10 +24,22 @@ export const SPIKE_PROMPT =
   'Only include dishes you can see. Be specific (e.g. "pad thai" not "noodles").';
 
 /**
- * Production prompt used in Wave 2 vlmPipeline integration.
- * Same shape as SPIKE_PROMPT for now -- update after spike quality review.
+ * Weighted ingredients prompt: dish + ingredient names + estimated gram weights only.
+ * Nutrition (macros/micros) is looked up deterministically from a nutrition DB — not
+ * estimated by the LLM. Used in the test screen to evaluate weight estimation quality.
  */
-export const FOOD_PROMPT = SPIKE_PROMPT;
+export const SPIKE_NUTRITION_PROMPT =
+  'Identify all food in this image. Return only valid JSON — no extra text:\n' +
+  '{"dishes":[{"name":string,"cuisine":string,"ingredients":[{"name":string,"amount_g":number}]}]}\n' +
+  'Estimate amount_g using surrounding objects (plates, cutlery, cups, hands) as size references; ' +
+  'fall back to a typical restaurant serving size if no reference objects are visible. ' +
+  'Be specific with ingredient names (e.g. "basmati rice" not "rice").';
+
+/**
+ * Production prompt: ingredients with gram weights, for KG nutrition lookup.
+ * Gemini Nano identifies what's in the photo; KG provides the nutrition.
+ */
+export const FOOD_PROMPT = SPIKE_NUTRITION_PROMPT;
 
 // ---------------------------------------------------------------------------
 // Session-scoped availability cache

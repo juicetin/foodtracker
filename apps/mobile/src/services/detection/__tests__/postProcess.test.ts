@@ -44,7 +44,7 @@ describe('decodeYoloOutput', () => {
       2,
     );
 
-    const results = decodeYoloOutput(output, 2, 1, classNames, 0.25);
+    const results = decodeYoloOutput(output, 2, 1, classNames, 1, 1, 0.25);
 
     expect(results).toHaveLength(1);
     // cx=0.5, w=0.3 -> x = 0.5 - 0.3/2 = 0.35
@@ -66,7 +66,7 @@ describe('decodeYoloOutput', () => {
       2,
     );
 
-    const results = decodeYoloOutput(output, 2, 1, classNames, 0.25);
+    const results = decodeYoloOutput(output, 2, 1, classNames, 1, 1, 0.25);
     expect(results).toHaveLength(0);
   });
 
@@ -81,7 +81,7 @@ describe('decodeYoloOutput', () => {
       2,
     );
 
-    const results = decodeYoloOutput(output, 2, 3, classNames, 0.25);
+    const results = decodeYoloOutput(output, 2, 3, classNames, 1, 1, 0.25);
 
     expect(results).toHaveLength(2);
     // First kept: apple with conf 0.9
@@ -94,7 +94,7 @@ describe('decodeYoloOutput', () => {
 
   it('returns empty array for empty tensor', () => {
     const output = new Float32Array(0);
-    const results = decodeYoloOutput(output, 2, 0, classNames);
+    const results = decodeYoloOutput(output, 2, 0, classNames, 1, 1);
     expect(results).toEqual([]);
   });
 
@@ -104,7 +104,7 @@ describe('decodeYoloOutput', () => {
       2,
     );
 
-    const results = decodeYoloOutput(output, 2, 1, classNames);
+    const results = decodeYoloOutput(output, 2, 1, classNames, 1, 1);
     expect(results).toHaveLength(1);
     expect(results[0].className).toBe('banana');
     expect(results[0].classId).toBe(1);
@@ -123,7 +123,7 @@ describe('decodeYoloOutput', () => {
       2,
     );
 
-    const results = decodeYoloOutput(output, 2, 2, classNames, 0.25);
+    const results = decodeYoloOutput(output, 2, 2, classNames, 1, 1, 0.25);
     expect(results).toHaveLength(2);
   });
 
@@ -136,7 +136,7 @@ describe('decodeYoloOutput', () => {
       2,
     );
 
-    const results = decodeYoloOutput(output, 2, 2, classNames);
+    const results = decodeYoloOutput(output, 2, 2, classNames, 1, 1);
     expect(results).toHaveLength(1);
     expect(results[0].confidence).toBeCloseTo(0.26);
   });
@@ -147,7 +147,7 @@ describe('decodeYoloOutput', () => {
       3,
     );
 
-    const results = decodeYoloOutput(output, 3, 1, classNames, 0.25);
+    const results = decodeYoloOutput(output, 3, 1, classNames, 1, 1, 0.25);
     expect(results).toHaveLength(1);
     expect(results[0].className).toBe('class_2');
     expect(results[0].classId).toBe(2);

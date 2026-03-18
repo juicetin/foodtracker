@@ -1,173 +1,136 @@
 /**
- * VLM identification pipeline.
+ * Gemini Nano scan pipeline.
  *
- * Primary food identification engine: VLM is the sole source of food names
- * (YOLO only provides bounding boxes labeled 'Food Region'). Includes retry
- * logic for resilience and positional assignment of dishes to bounding boxes.
+ * Sole inference path: Gemini Nano identifies dishes + ingredient weights.
+ * KG provides per-ingredient nutrition. Mock data on unsupported devices.
  *
- * VLM is required for usable detection — throws if VLM is not ready.
- * KG is optional — items get vlmLabel even if KG lookup fails.
+ * SmolVLM, YOLO, and EfficientNet are removed — Gemini Nano only.
  */
 
-import { vlmService } from './vlmService';
-import type { VlmDish, VlmFoodResult } from './vlmTypes';
-import type { DetectedItem } from '../detection/types';
+import { geminiNanoModule } from 'gemini-nano';
+import { geminiNanoService } from './geminiNanoService';
+import { getMockScanResult } from './geminiNanoMock';
 import { getKnowledgeGraphService } from '../knowledge-graph';
+import type { ScannedDish, ScannedIngredient, ScanResult } from '../../types';
+import type { VlmIngredient } from './vlmTypes';
+
+// ---------------------------------------------------------------------------
+// Proxy constants (when KG has no data for an ingredient)
+// ---------------------------------------------------------------------------
+
+const PROXY_KCAL_PER_G   = 1.5;
+const PROXY_PROTEIN_PER_G = 0.08;
+const PROXY_CARBS_PER_G  = 0.20;
+const PROXY_FAT_PER_G    = 0.06;
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function generateId(): string {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);
+  });
+}
+
+type NutritionFields = Pick<
+  ScannedIngredient,
+  'calories' | 'protein' | 'carbs' | 'fat' | 'fiber' | 'sodium' | 'nutritionSource'
+>;
+
+async function lookupNutrition(name: string, amount_g: number): Promise<NutritionFields> {
+  try {
+    const kg = await getKnowledgeGraphService();
+    if (kg) {
+      const result = await kg.calculateDishNutrition(name, amount_g);
+      if (result) {
+        return {
+          calories: result.calories,
+          protein: result.protein,
+          carbs:   result.carbs,
+          fat:     result.fat,
+          fiber:   0,
+          sodium:  0,
+          nutritionSource: 'kg',
+        };
+      }
+    }
+  } catch {
+    // KG unavailable or ingredient not found — fall through to proxy
+  }
+
+  return {
+    calories: amount_g * PROXY_KCAL_PER_G,
+    protein:  amount_g * PROXY_PROTEIN_PER_G,
+    carbs:    amount_g * PROXY_CARBS_PER_G,
+    fat:      amount_g * PROXY_FAT_PER_G,
+    fiber:    0,
+    sodium:   0,
+    nutritionSource: 'proxy',
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
 /**
- * Identify food items with one silent retry on failure.
+ * Run a full food scan on a photo.
  *
- * @param photoUri - File URI of the photo.
- * @param userText - Optional user-provided meal description for VLM disambiguation.
- * @returns VLM identification result, or { dishes: [] } if both attempts fail.
+ * 1. Check Gemini Nano availability.
+ * 2. If available: run Gemini Nano identification.
+ * 3. If unavailable / empty result: use mock data (flagged with isMock=true).
+ * 4. Look up KG nutrition per ingredient.
+ * 5. Return ScannedDish[] with full nutrition.
  */
-export async function identifyWithRetry(
-  photoUri: string,
-  userText?: string,
-): Promise<VlmFoodResult> {
+export async function scanFood(photoUri: string): Promise<ScanResult> {
+  let isMock = false;
+  let vlmResult;
+
   try {
-    return await vlmService.identify(photoUri, userText);
-  } catch {
-    // Silent retry — one more attempt
-    try {
-      return await vlmService.identify(photoUri, userText);
-    } catch {
-      // Both attempts failed — return empty result (no throw)
-      return { dishes: [] };
-    }
-  }
-}
-
-/**
- * Assign dish names to items sorted by bounding box area descending.
- *
- * Largest bbox gets the first dish name, second largest gets the second, etc.
- * Skips removed items. Only assigns min(items, dishNames) pairs.
- *
- * @param items - Detected items with bounding boxes.
- * @param dishNames - Dish names to assign.
- * @returns Map from item ID to dish name.
- */
-export function assignDishesToBoxes(
-  items: DetectedItem[],
-  dishNames: string[],
-): Map<string, string> {
-  const result = new Map<string, string>();
-
-  // Filter out removed items and sort by bbox area descending
-  const activeItems = items
-    .filter((i) => !i.isRemoved)
-    .sort((a, b) => (b.bbox.w * b.bbox.h) - (a.bbox.w * a.bbox.h));
-
-  const count = Math.min(activeItems.length, dishNames.length);
-  for (let i = 0; i < count; i++) {
-    result.set(activeItems[i].id, dishNames[i]);
-  }
-
-  return result;
-}
-
-/**
- * Run VLM identification on detected items (primary identification, not refinement).
- *
- * @param photoUri - File URI of the photo.
- * @param items - YOLO-detected items (all labeled 'Food Region').
- * @param userText - Optional user-provided meal description for VLM disambiguation.
- * @returns Items with vlmLabel/vlmCuisine/vlmIngredients populated for matches.
- */
-export async function runVlmIdentification(
-  photoUri: string,
-  items: DetectedItem[],
-  userText?: string,
-): Promise<DetectedItem[]> {
-  // VLM is required — YOLO labels alone are not usable
-  if (!vlmService.isReady) {
-    throw new Error('VLM model is not loaded. Download the VLM pack first.');
-  }
-
-  // Run VLM inference with retry
-  const vlmResult = await identifyWithRetry(photoUri, userText);
-
-  // If VLM returned no dishes, return items unchanged
-  if (vlmResult.dishes.length === 0) {
-    return items;
-  }
-
-  // Positional matching: assign dishes to items by bbox area descending
-  const matchMap = matchVlmToItems(items, vlmResult);
-
-  // Look up KG nutrition for matched VLM dishes
-  const kgService = await getKnowledgeGraphService();
-
-  // Build identified items
-  const identified = await Promise.all(
-    items.map(async (item) => {
-      const vlmDish = matchMap.get(item.id);
-      if (!vlmDish) return item;
-
-      // Try KG lookup for the VLM dish name
-      if (kgService) {
-        try {
-          await kgService.searchDish(vlmDish.name);
-        } catch {
-          // KG lookup failed -- still apply VLM label
-        }
+    const status = await geminiNanoModule.checkAvailability();
+    if (status === 'available') {
+      vlmResult = await geminiNanoService.identify(photoUri);
+      if (!vlmResult || vlmResult.dishes.length === 0) {
+        isMock = true;
+        vlmResult = getMockScanResult();
       }
+    } else {
+      isMock = true;
+      vlmResult = getMockScanResult();
+    }
+  } catch {
+    isMock = true;
+    vlmResult = getMockScanResult();
+  }
+
+  const dishes: ScannedDish[] = await Promise.all(
+    vlmResult.dishes.map(async (dish) => {
+      const ingredients: ScannedIngredient[] = await Promise.all(
+        (dish.ingredients as VlmIngredient[]).map(async (ing) => {
+          const nutrition = await lookupNutrition(ing.name, ing.amount_g);
+          return {
+            id: generateId(),
+            name: ing.name,
+            amount_g: ing.amount_g,
+            originalAmount_g: ing.amount_g,
+            userModified: false,
+            ...nutrition,
+          };
+        }),
+      );
 
       return {
-        ...item,
-        vlmLabel: vlmDish.name,
-        vlmCuisine: vlmDish.cuisine,
-        vlmIngredients: vlmDish.ingredients,
-        vlmConfidence: 0.8, // Default VLM confidence (model doesn't output it)
+        id: generateId(),
+        name: dish.name,
+        cuisine: dish.cuisine ?? null,
+        photoUri,
+        ingredients,
+        portionScale: 1.0,
       };
     }),
   );
 
-  return identified;
-}
-
-// ---------------------------------------------------------------------------
-// Internal: Positional VLM-to-item matching
-// ---------------------------------------------------------------------------
-
-/**
- * Match VLM dishes to detected items by positional assignment.
- *
- * Since all items have className 'Food Region' (no meaningful YOLO labels),
- * matching is purely positional: sort non-removed items by bbox area descending,
- * assign first VLM dish to largest bbox, second to next largest, etc.
- *
- * @returns Map from item ID to matched VLM dish.
- */
-function matchVlmToItems(
-  items: DetectedItem[],
-  vlmResult: VlmFoodResult,
-): Map<string, VlmDish> {
-  const result = new Map<string, VlmDish>();
-
-  // Sort non-removed items by bbox area descending (largest first)
-  const activeItems = items
-    .filter((i) => !i.isRemoved)
-    .sort((a, b) => (b.bbox.w * b.bbox.h) - (a.bbox.w * a.bbox.h));
-
-  const count = Math.min(activeItems.length, vlmResult.dishes.length);
-  for (let i = 0; i < count; i++) {
-    result.set(activeItems[i].id, vlmResult.dishes[i]);
-  }
-
-  // Log unmatched dishes in dev mode
-  if (__DEV__ && vlmResult.dishes.length > activeItems.length) {
-    const unmatchedDishes = vlmResult.dishes.slice(activeItems.length);
-    console.log(
-      '[VLM Pipeline] Unmatched VLM dishes (no bounding boxes available):',
-      unmatchedDishes.map((d) => d.name),
-    );
-  }
-
-  return result;
+  return { photoUri, dishes, isMock };
 }

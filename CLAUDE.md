@@ -77,6 +77,16 @@ Important Notes
 - Gemini's context window can handle entire codebases that would overflow Claude's context
 - When checking implementations, be specific about what you're looking for to get accurate results
 
+# Tastimate Debug Log (Obsidian)
+
+When debugging or investigating issues in this project, maintain a running log at:
+
+`/home/me/media/Insync/justingling@gmail.com/Google Drive/(gd) Documents/ObsidianVault/justin/Projects/Tastimate/`
+
+Create a note per investigation area (e.g. `Gemini Nano - Phase 02.7 Debug Log.md`) and document:
+- Each bug found, root cause, fix applied, and whether it worked
+- Keep the log updated as you go — not just at the end
+
 # Architectural Decision Records
 
 Technical decisions are tracked in `docs/adr/`. See [docs/adr/README.md](docs/adr/README.md) for the full index.

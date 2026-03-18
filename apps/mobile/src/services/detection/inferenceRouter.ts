@@ -113,6 +113,8 @@ export async function runBboxDetection(
     numClasses,
     numPredictions,
     classNames,
+    imageWidth,
+    imageHeight,
   );
 
   // All 241 GGCD classes are food -- no COCO filtering needed.

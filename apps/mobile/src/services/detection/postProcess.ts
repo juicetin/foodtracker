@@ -5,7 +5,7 @@
  * The tensor is TRANSPOSED compared to the intuitive [predictions, channels]
  * layout -- access as output[row * numPredictions + col].
  *
- * First 4 rows: cx, cy, w, h (normalised 0-1 coordinates)
+ * First 4 rows: cx, cy, w, h (pixel coordinates, normalised to 0-1 by decodeYoloOutput)
  * Remaining rows: per-class confidence scores
  */
 
@@ -22,14 +22,18 @@ import type { RawDetection } from './types';
  * @param numClasses   - Number of object classes (nc)
  * @param numPredictions - Number of predictions (typically 8400 for 640x640 input)
  * @param classNames   - Human-readable class labels, indexed by classId
+ * @param inputWidth   - Model input width (e.g. 640) for normalising pixel coords to 0-1
+ * @param inputHeight  - Model input height (e.g. 640) for normalising pixel coords to 0-1
  * @param confThreshold - Minimum confidence to keep a detection (default 0.25)
- * @returns Filtered and NMS-processed detections
+ * @returns Filtered and NMS-processed detections with normalised 0-1 coordinates
  */
 export function decodeYoloOutput(
   output: Float32Array,
   numClasses: number,
   numPredictions: number,
   classNames: string[],
+  inputWidth: number,
+  inputHeight: number,
   confThreshold: number = 0.25,
 ): RawDetection[] {
   if (numPredictions === 0) return [];
@@ -38,10 +42,12 @@ export function decodeYoloOutput(
 
   for (let i = 0; i < numPredictions; i++) {
     // Transposed access: output[row * numPredictions + col]
-    const cx = output[0 * numPredictions + i];
-    const cy = output[1 * numPredictions + i];
-    const w = output[2 * numPredictions + i];
-    const h = output[3 * numPredictions + i];
+    // Raw values are in pixel coordinates (0-inputWidth/inputHeight).
+    // Normalise to 0-1 for consistent downstream use.
+    const cx = output[0 * numPredictions + i] / inputWidth;
+    const cy = output[1 * numPredictions + i] / inputHeight;
+    const w = output[2 * numPredictions + i] / inputWidth;
+    const h = output[3 * numPredictions + i] / inputHeight;
 
     // Find class with maximum confidence
     let maxConf = 0;
@@ -57,7 +63,7 @@ export function decodeYoloOutput(
     // Filter by confidence threshold
     if (maxConf >= confThreshold) {
       detections.push({
-        // Convert center-format to corner-format
+        // Convert center-format to corner-format (already normalised)
         x: cx - w / 2,
         y: cy - h / 2,
         w,

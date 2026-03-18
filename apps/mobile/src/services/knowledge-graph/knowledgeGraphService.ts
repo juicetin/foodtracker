@@ -265,6 +265,60 @@ export class KnowledgeGraphService {
     return this.searchDish(className);
   }
 
+  /**
+   * Search for ingredient names across dishes and recipe ingredients.
+   * Returns deduplicated names, best matches first.
+   * Used by the ingredient picker UI.
+   */
+  async searchIngredients(query: string, limit: number = 15): Promise<string[]> {
+    const db = this.getDb();
+    const normalized = this.normalize(query);
+    if (normalized.length === 0) return [];
+
+    const results: string[] = [];
+    const seen = new Set<string>();
+
+    // 1. FTS on dishes (dish names that match)
+    try {
+      const ftsQuery = `${normalized}*`;
+      const dishRows = await db.execute(
+        `SELECT d.canonical_name FROM dish_fts fts JOIN dish d ON d.id = fts.rowid WHERE dish_fts MATCH ? ORDER BY rank LIMIT ?`,
+        [ftsQuery, limit],
+      );
+      for (const row of dishRows.rows as Array<Record<string, unknown>>) {
+        const name = row.canonical_name as string;
+        const lower = name.toLowerCase();
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          results.push(name);
+        }
+      }
+    } catch {
+      // FTS may not be available
+    }
+
+    // 2. LIKE search on recipe_ingredient names
+    try {
+      const likeQuery = `%${normalized}%`;
+      const ingRows = await db.execute(
+        `SELECT DISTINCT ri.ingredient_name FROM recipe_ingredient ri WHERE ri.ingredient_name LIKE ? ORDER BY ri.ingredient_name LIMIT ?`,
+        [likeQuery, limit],
+      );
+      for (const row of ingRows.rows as Array<Record<string, unknown>>) {
+        const name = row.ingredient_name as string;
+        const lower = name.toLowerCase();
+        if (!seen.has(lower)) {
+          seen.add(lower);
+          results.push(name);
+        }
+      }
+    } catch {
+      // Table may not exist
+    }
+
+    return results.slice(0, limit);
+  }
+
   // ── Private helpers ──
 
   /**

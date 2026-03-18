@@ -13,7 +13,7 @@
 
 import { initLlama } from 'llama.rn';
 import { buildFoodPrompt } from './vlmPrompts';
-import { FOOD_IDENTIFICATION_SCHEMA, type VlmFoodResult } from './vlmTypes';
+import { FOOD_IDENTIFICATION_SCHEMA, type VlmDish, type VlmFoodResult } from './vlmTypes';
 
 /** Inactivity timeout before releasing context (milliseconds). */
 const INACTIVITY_TIMEOUT_MS = 60_000;
@@ -108,20 +108,28 @@ export const vlmService = {
           ],
         },
       ],
-      response_format: {
-        type: 'json_schema',
-        json_schema: FOOD_IDENTIFICATION_SCHEMA,
-      },
+      // Pass json_schema directly as native param (string) instead of
+      // response_format — the response_format→json_schema extraction in
+      // llama.rn's completion() wasn't applying the grammar correctly.
+      json_schema: JSON.stringify(FOOD_IDENTIFICATION_SCHEMA.schema),
       n_predict: 256,
       temperature: 0.1,
-    });
+    } as any);
 
+    // Try JSON parse first (works when grammar constraint is active)
     try {
-      return JSON.parse(result.text) as VlmFoodResult;
+      const parsed = JSON.parse(result.text) as VlmFoodResult;
+      if (parsed.dishes?.length > 0) {
+        return parsed;
+      }
     } catch {
-      // Grammar constraint should prevent this, but gracefully handle
-      return { dishes: [] };
+      // Grammar constraint not active for multimodal — fall through to text parser
     }
+
+    // Fallback: parse food names from unstructured VLM text output.
+    // llama.rn doesn't apply json_schema grammar for multimodal completions,
+    // so SmolVLM outputs plain text lists instead of JSON.
+    return { dishes: parsePlainTextDishes(result.text) };
   },
 
   /**
@@ -142,3 +150,60 @@ export const vlmService = {
     return context !== null;
   },
 };
+
+/**
+ * Extract food names from unstructured VLM text output.
+ *
+ * Handles common VLM output patterns:
+ *   - "- Pineapple: description..."  (bulleted with colon)
+ *   - "- Pineapple"                  (bulleted without description)
+ *   - "1. Pad Thai"                  (numbered list)
+ *   - "Pineapple, Orange, Grapes"    (comma-separated)
+ */
+function parsePlainTextDishes(text: string): VlmDish[] {
+  const seen = new Set<string>();
+  const dishes: VlmDish[] = [];
+
+  const lines = text.split('\n');
+
+  for (const line of lines) {
+    const trimmed = line.trim();
+    if (!trimmed) continue;
+
+    // Match "- FoodName" or "- FoodName: description" or "* FoodName"
+    const bulletMatch = trimmed.match(/^[-*•]\s+([A-Z][A-Za-z\s'-]+?)(?:\s*[:.]|$)/);
+    if (bulletMatch) {
+      const name = bulletMatch[1].trim();
+      // Skip lines that are clearly descriptions (start with lowercase continuation)
+      if (name.length >= 2 && name.length <= 50 && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        dishes.push({ name, cuisine: '', ingredients: [] });
+      }
+      continue;
+    }
+
+    // Match "1. FoodName" or "1) FoodName"
+    const numberedMatch = trimmed.match(/^\d+[.)]\s+([A-Z][A-Za-z\s'-]+?)(?:\s*[:.]|$)/);
+    if (numberedMatch) {
+      const name = numberedMatch[1].trim();
+      if (name.length >= 2 && name.length <= 50 && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        dishes.push({ name, cuisine: '', ingredients: [] });
+      }
+    }
+  }
+
+  // Fallback: try comma-separated on first line if no bullets found
+  if (dishes.length === 0 && lines.length > 0) {
+    const parts = lines[0].split(/[,;]+/).map((s) => s.trim()).filter(Boolean);
+    for (const part of parts) {
+      const name = part.replace(/^[-*•\d.)]+\s*/, '').trim();
+      if (name.length >= 2 && name.length <= 50 && /^[A-Z]/.test(name) && !seen.has(name.toLowerCase())) {
+        seen.add(name.toLowerCase());
+        dishes.push({ name, cuisine: '', ingredients: [] });
+      }
+    }
+  }
+
+  return dishes;
+}

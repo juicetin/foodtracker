@@ -57,12 +57,17 @@ export const VLM_TIER_CONFIG: Record<Exclude<VlmTier, 'none'>, VlmTierConfig> = 
   },
 };
 
-/** A single dish identified by the VLM. */
+/** An ingredient with Gemini Nano estimated weight. */
+export interface VlmIngredient {
+  name: string;
+  amount_g: number;
+}
+
+/** A single dish identified by Gemini Nano. */
 export interface VlmDish {
   name: string;
-  cuisine: string;
-  ingredients: string[];
-  portion_hint?: string;
+  cuisine: string | null;
+  ingredients: VlmIngredient[];
 }
 
 /** VLM food identification result (array of dishes). */
