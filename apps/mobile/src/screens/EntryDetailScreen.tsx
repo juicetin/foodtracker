@@ -1,11 +1,11 @@
 /**
- * EntryDetailScreen — view a logged food entry's dishes and ingredients.
+ * EntryDetailScreen — view and edit a logged food entry's dishes and ingredients.
  *
- * Shows: photo, dish names, all ingredients with weights and nutrition,
- * macro totals. Read-only for now (editing is a future feature).
+ * Read mode: photo, dish names, ingredients with weights and nutrition, macro totals.
+ * Edit mode: inline weight editing, ingredient removal, add ingredient, dish rename.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
   View,
@@ -14,12 +14,22 @@ import {
   ScrollView,
   Image,
   Pressable,
+  TextInput,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { opsqlite } from '../../db/client';
 import type { RootStackParamList } from '../types';
 import { addFavourite, isFavourited } from '../services/favourites';
 import { useFoodLogStore } from '../store/useFoodLogStore';
+import {
+  updateIngredientWeight,
+  updateIngredientName,
+  removeIngredient as removeIngredientDb,
+  addIngredient as addIngredientDb,
+  updateDishName as updateDishNameDb,
+  recalculateEntryTotals,
+} from '../services/entryEditor/entryEditorService';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -126,11 +136,12 @@ function loadEntry(entryId: string): EntryDetail | null {
 export default function EntryDetailScreen() {
   const navigation = useNavigation();
   const route = useRoute<RouteProp<RootStackParamList, 'EntryDetail'>>();
-  const { deleteEntry } = useFoodLogStore();
+  const { deleteEntry, loadTodayEntries } = useFoodLogStore();
   const [entry, setEntry] = useState<EntryDetail | null>(null);
   const [alreadyFaved, setAlreadyFaved] = useState(false);
+  const [editing, setEditing] = useState(false);
 
-  useEffect(() => {
+  const reload = useCallback(() => {
     const loaded = loadEntry(route.params.entryId);
     setEntry(loaded);
     if (loaded && loaded.dishes.length > 0) {
@@ -138,10 +149,81 @@ export default function EntryDetailScreen() {
     }
   }, [route.params.entryId]);
 
+  useEffect(() => {
+    reload();
+  }, [reload]);
+
+  const handleSave = useCallback(() => {
+    if (!entry) return;
+    recalculateEntryTotals(entry.id);
+    loadTodayEntries();
+    reload();
+    setEditing(false);
+  }, [entry, reload, loadTodayEntries]);
+
+  const handleRemoveIngredient = useCallback((ingId: string) => {
+    Alert.alert('Remove Ingredient', 'Remove this ingredient?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => {
+          removeIngredientDb(ingId);
+          if (entry) {
+            recalculateEntryTotals(entry.id);
+            reload();
+          }
+        },
+      },
+    ]);
+  }, [entry, reload]);
+
+  const handleWeightChange = useCallback((ingId: string, text: string) => {
+    const grams = parseFloat(text);
+    if (!isNaN(grams) && grams > 0) {
+      updateIngredientWeight(ingId, grams);
+      if (entry) {
+        recalculateEntryTotals(entry.id);
+        reload();
+      }
+    }
+  }, [entry, reload]);
+
+  const handleNameChange = useCallback((ingId: string, newName: string) => {
+    if (newName.trim()) {
+      updateIngredientName(ingId, newName.trim());
+      reload();
+    }
+  }, [reload]);
+
+  const handleDishNameChange = useCallback((dishId: string, newName: string) => {
+    if (newName.trim()) {
+      updateDishNameDb(dishId, newName.trim());
+      reload();
+    }
+  }, [reload]);
+
+  const handleAddIngredient = useCallback((dishId: string) => {
+    if (!entry) return;
+    addIngredientDb({
+      entryId: entry.id,
+      dishId,
+      name: 'New ingredient',
+      amountG: 100,
+      calories: 0,
+      protein: 0,
+      carbs: 0,
+      fat: 0,
+      fiber: 0,
+    });
+    recalculateEntryTotals(entry.id);
+    reload();
+  }, [entry, reload]);
+
   if (!entry) {
     return (
       <View style={styles.container}>
-        <Text style={styles.loadingText}>Loading…</Text>
+        <Text style={styles.loadingText}>Loading...</Text>
       </View>
     );
   }
@@ -159,10 +241,29 @@ export default function EntryDetailScreen() {
 
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.mealBadge}>
-            <Text style={styles.mealBadgeText}>{mealLabel}</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, flex: 1 }}>
+            <View style={styles.mealBadge}>
+              <Text style={styles.mealBadgeText}>{mealLabel}</Text>
+            </View>
+            <Text style={styles.timeText}>{time}</Text>
           </View>
-          <Text style={styles.timeText}>{time}</Text>
+
+          {/* Edit / Save toggle */}
+          {entry.dishes.length > 0 && (
+            <Pressable
+              style={editing ? styles.saveBtn : styles.editBtn}
+              onPress={editing ? handleSave : () => setEditing(true)}
+            >
+              <Ionicons
+                name={editing ? 'checkmark' : 'pencil'}
+                size={16}
+                color={editing ? '#FFF' : '#3B82F6'}
+              />
+              <Text style={editing ? styles.saveBtnText : styles.editBtnText}>
+                {editing ? 'Save' : 'Edit'}
+              </Text>
+            </Pressable>
+          )}
         </View>
 
         {/* Totals */}
@@ -179,7 +280,7 @@ export default function EntryDetailScreen() {
         </View>
 
         {/* Save to favourites */}
-        {entry.dishes.length > 0 && !alreadyFaved && (
+        {!editing && entry.dishes.length > 0 && !alreadyFaved && (
           <Pressable
             style={styles.favBtn}
             onPress={() => {
@@ -195,12 +296,12 @@ export default function EntryDetailScreen() {
               Alert.alert('Saved', `"${name}" added to favourites.`);
             }}
           >
-            <Text style={styles.favBtnText}>⭐ Save to Favourites</Text>
+            <Text style={styles.favBtnText}>Save to Favourites</Text>
           </Pressable>
         )}
-        {alreadyFaved && (
+        {!editing && alreadyFaved && (
           <View style={styles.favedBadge}>
-            <Text style={styles.favedBadgeText}>⭐ In your favourites</Text>
+            <Text style={styles.favedBadgeText}>In your favourites</Text>
           </View>
         )}
 
@@ -208,30 +309,73 @@ export default function EntryDetailScreen() {
         {entry.dishes.map((dish) => (
           <View key={dish.id} style={styles.dishCard}>
             <View style={styles.dishHeader}>
-              <Text style={styles.dishName}>{dish.name}</Text>
+              {editing ? (
+                <EditableText
+                  value={dish.name}
+                  onSubmit={(v) => handleDishNameChange(dish.id, v)}
+                  style={styles.dishName}
+                />
+              ) : (
+                <Text style={styles.dishName}>{dish.name}</Text>
+              )}
               {dish.cuisine && (
                 <View style={styles.cuisinePill}>
                   <Text style={styles.cuisineText}>{dish.cuisine}</Text>
                 </View>
               )}
-              {dish.portionScale !== 1 && (
-                <Text style={styles.scaleText}>{dish.portionScale}×</Text>
+              {!editing && dish.portionScale !== 1 && (
+                <Text style={styles.scaleText}>{dish.portionScale}x</Text>
               )}
             </View>
 
             {dish.ingredients.map((ing) => (
               <View key={ing.id} style={styles.ingRow}>
-                <View style={styles.ingLeft}>
-                  <Text style={styles.ingName}>{ing.name}</Text>
-                  <Text style={styles.ingCal}>{Math.round(ing.calories)} kcal</Text>
-                </View>
-                <View style={styles.ingWeightChip}>
-                  <Text style={styles.ingWeightText}>{Math.round(ing.amountG)}g</Text>
-                </View>
+                {editing ? (
+                  <>
+                    <View style={styles.ingLeft}>
+                      <EditableText
+                        value={ing.name}
+                        onSubmit={(v) => handleNameChange(ing.id, v)}
+                        style={styles.ingName}
+                      />
+                      <Text style={styles.ingCal}>{Math.round(ing.calories)} kcal</Text>
+                    </View>
+                    <EditableWeight
+                      value={ing.amountG}
+                      onSubmit={(v) => handleWeightChange(ing.id, v)}
+                    />
+                    <Pressable
+                      style={styles.removeBtn}
+                      onPress={() => handleRemoveIngredient(ing.id)}
+                    >
+                      <Ionicons name="close-circle" size={20} color="#EF4444" />
+                    </Pressable>
+                  </>
+                ) : (
+                  <>
+                    <View style={styles.ingLeft}>
+                      <Text style={styles.ingName}>{ing.name}</Text>
+                      <Text style={styles.ingCal}>{Math.round(ing.calories)} kcal</Text>
+                    </View>
+                    <View style={styles.ingWeightChip}>
+                      <Text style={styles.ingWeightText}>{Math.round(ing.amountG)}g</Text>
+                    </View>
+                  </>
+                )}
               </View>
             ))}
 
-            {dish.ingredients.length === 0 && (
+            {editing && (
+              <Pressable
+                style={styles.addIngBtn}
+                onPress={() => handleAddIngredient(dish.id)}
+              >
+                <Ionicons name="add-circle-outline" size={18} color="#16A34A" />
+                <Text style={styles.addIngText}>Add Ingredient</Text>
+              </Pressable>
+            )}
+
+            {!editing && dish.ingredients.length === 0 && (
               <Text style={styles.noIngText}>No ingredients recorded</Text>
             )}
           </View>
@@ -244,27 +388,81 @@ export default function EntryDetailScreen() {
         )}
 
         {/* Delete */}
-        <Pressable
-          style={styles.deleteBtn}
-          onPress={() => {
-            Alert.alert('Delete Meal', 'Are you sure? This cannot be undone.', [
-              { text: 'Cancel', style: 'cancel' },
-              {
-                text: 'Delete',
-                style: 'destructive',
-                onPress: async () => {
-                  await deleteEntry(entry.id);
-                  if (navigation.canGoBack()) navigation.goBack();
+        {!editing && (
+          <Pressable
+            style={styles.deleteBtn}
+            onPress={() => {
+              Alert.alert('Delete Meal', 'Are you sure? This cannot be undone.', [
+                { text: 'Cancel', style: 'cancel' },
+                {
+                  text: 'Delete',
+                  style: 'destructive',
+                  onPress: async () => {
+                    await deleteEntry(entry.id);
+                    if (navigation.canGoBack()) navigation.goBack();
+                  },
                 },
-              },
-            ]);
-          }}
-        >
-          <Text style={styles.deleteBtnText}>Delete Meal</Text>
-        </Pressable>
+              ]);
+            }}
+          >
+            <Text style={styles.deleteBtnText}>Delete Meal</Text>
+          </Pressable>
+        )}
 
         <View style={{ height: 40 }} />
       </ScrollView>
+    </View>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Edit subcomponents
+// ---------------------------------------------------------------------------
+
+function EditableText({
+  value,
+  onSubmit,
+  style,
+}: {
+  value: string;
+  onSubmit: (v: string) => void;
+  style: object;
+}) {
+  const [text, setText] = useState(value);
+  return (
+    <TextInput
+      style={[style, styles.editableText]}
+      value={text}
+      onChangeText={setText}
+      onBlur={() => onSubmit(text)}
+      onSubmitEditing={() => onSubmit(text)}
+      returnKeyType="done"
+      selectTextOnFocus
+    />
+  );
+}
+
+function EditableWeight({
+  value,
+  onSubmit,
+}: {
+  value: number;
+  onSubmit: (text: string) => void;
+}) {
+  const [text, setText] = useState(String(Math.round(value)));
+  return (
+    <View style={styles.editWeightChip}>
+      <TextInput
+        style={styles.editWeightInput}
+        value={text}
+        onChangeText={setText}
+        onBlur={() => onSubmit(text)}
+        onSubmitEditing={() => onSubmit(text)}
+        keyboardType="numeric"
+        returnKeyType="done"
+        selectTextOnFocus
+      />
+      <Text style={styles.editWeightUnit}>g</Text>
     </View>
   );
 }
@@ -289,7 +487,7 @@ const styles = StyleSheet.create({
 
   photo: { width: '100%', height: 240 },
   header: {
-    flexDirection: 'row', alignItems: 'center', gap: 10,
+    flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFF',
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
   },
@@ -298,6 +496,19 @@ const styles = StyleSheet.create({
   },
   mealBadgeText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
   timeText: { fontSize: 14, color: '#6B7280' },
+
+  // Edit/Save buttons
+  editBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#EFF6FF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+    borderWidth: 1, borderColor: '#BFDBFE',
+  },
+  editBtnText: { fontSize: 13, fontWeight: '600', color: '#3B82F6' },
+  saveBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: '#16A34A', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+  },
+  saveBtnText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
 
   totalsCard: {
     backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
@@ -355,6 +566,28 @@ const styles = StyleSheet.create({
   },
   ingWeightText: { fontSize: 13, fontWeight: '600', color: '#16A34A' },
   noIngText: { textAlign: 'center', padding: 16, color: '#9CA3AF', fontSize: 13 },
+
+  // Edit mode styles
+  editableText: {
+    backgroundColor: '#F3F4F6', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4,
+    borderWidth: 1, borderColor: '#E5E7EB',
+  },
+  editWeightChip: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2,
+    borderWidth: 1, borderColor: '#FDE68A',
+  },
+  editWeightInput: {
+    fontSize: 13, fontWeight: '700', color: '#92400E', minWidth: 40, textAlign: 'center',
+    paddingVertical: 2,
+  },
+  editWeightUnit: { fontSize: 12, color: '#92400E', marginLeft: 2 },
+  removeBtn: { marginLeft: 8, padding: 4 },
+  addIngBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#F3F4F6',
+  },
+  addIngText: { fontSize: 13, fontWeight: '600', color: '#16A34A' },
 
   notesCard: {
     backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
