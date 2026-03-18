@@ -176,6 +176,14 @@ export function loadRecipe(recipeId: string): RecipeDetail | null {
   };
 }
 
+/** Update a recipe's name. */
+export function updateRecipeName(recipeId: string, name: string): void {
+  opsqlite.execute(
+    `UPDATE custom_recipes SET name = ?, updated_at = datetime('now') WHERE id = ?`,
+    [name, recipeId],
+  );
+}
+
 /** Delete a recipe (cascade deletes ingredients). */
 export function deleteRecipe(recipeId: string): void {
   opsqlite.execute('DELETE FROM custom_recipes WHERE id = ?', [recipeId]);

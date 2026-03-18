@@ -30,6 +30,7 @@ import {
   addRecipeIngredient,
   removeRecipeIngredient,
   updateRecipeIngredient,
+  updateRecipeName,
   deleteRecipe,
   logRecipeAsEntry,
   type RecipeSummary,
@@ -215,7 +216,20 @@ export default function RecipeScreen() {
           <Pressable onPress={() => { setActiveRecipe(null); refreshList(); }}>
             <Ionicons name="arrow-back" size={24} color="#111827" />
           </Pressable>
-          <Text style={styles.builderTitle} numberOfLines={1}>{activeRecipe.name}</Text>
+          <TextInput
+            style={styles.builderTitleInput}
+            defaultValue={activeRecipe.name}
+            onEndEditing={(e) => {
+              const name = e.nativeEvent.text.trim();
+              if (name && name !== activeRecipe.name) {
+                updateRecipeName(activeRecipe.id, name);
+                refreshActiveRecipe();
+                refreshList();
+              }
+            }}
+            returnKeyType="done"
+            selectTextOnFocus
+          />
           <Pressable onPress={() => handleDeleteRecipe(activeRecipe.id)}>
             <Ionicons name="trash-outline" size={22} color="#DC2626" />
           </Pressable>
@@ -439,7 +453,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16, paddingTop: 50, paddingBottom: 12,
     backgroundColor: '#FFF', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
   },
-  builderTitle: { fontSize: 17, fontWeight: '700', color: '#111827', flex: 1, textAlign: 'center', marginHorizontal: 12 },
+  builderTitleInput: {
+    fontSize: 17, fontWeight: '700', color: '#111827', flex: 1, textAlign: 'center',
+    marginHorizontal: 12, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+  },
   builderContent: { padding: 16, paddingBottom: 40 },
 
   totalsRow: {
