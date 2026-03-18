@@ -19,18 +19,31 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { Ionicons } from '@expo/vector-icons';
 import { getKnowledgeGraphService, type DishResult, type MacroResult } from '../services/knowledge-graph';
+import { searchProducts, type OFFProduct } from '../services/openfoodfacts/openFoodFactsService';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import { autoDetectMealType } from '../services/detection/types';
+
+/** Unified search result — either from KG or OFF. */
+interface SearchResult {
+  id: string;
+  name: string;
+  brand?: string | null;
+  calorieHint?: number;
+  source: 'kg' | 'off';
+  kgDish?: DishResult;
+  offProduct?: OFFProduct;
+}
 
 export default function FoodSearchScreen() {
   const navigation = useNavigation();
   const { addEntry, loadTodayEntries } = useFoodLogStore();
 
   const [query, setQuery] = useState('');
-  const [results, setResults] = useState<DishResult[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedDish, setSelectedDish] = useState<DishResult | null>(null);
+  const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
   const [portionG, setPortionG] = useState('100');
   const [nutrition, setNutrition] = useState<MacroResult | null>(null);
 
@@ -44,19 +57,42 @@ export default function FoodSearchScreen() {
     }
     setLoading(true);
     try {
+      const unified: SearchResult[] = [];
+
+      // Search KG first (local, fast)
       const kg = await getKnowledgeGraphService();
       if (kg) {
-        const matches = await kg.searchIngredients(trimmed, 20);
-        // Convert ingredient names to DishResult-like objects for display
-        const dishResults: DishResult[] = [];
-        for (const name of matches.slice(0, 15)) {
+        const matches = await kg.searchIngredients(trimmed, 15);
+        for (const name of matches.slice(0, 10)) {
           const dish = await kg.searchDish(name);
-          if (dish) dishResults.push(dish);
+          if (dish) {
+            unified.push({
+              id: `kg-${dish.id}`,
+              name: dish.canonicalName,
+              calorieHint: dish.avgCaloriesPerServing ?? undefined,
+              source: 'kg',
+              kgDish: dish,
+            });
+          }
         }
-        setResults(dishResults);
       }
+
+      // Also search OFF (remote, broader coverage)
+      const offResults = await searchProducts(trimmed, 10);
+      for (const p of offResults) {
+        unified.push({
+          id: `off-${p.barcode}`,
+          name: p.name,
+          brand: p.brand,
+          calorieHint: p.nutrimentsPer100g.calories,
+          source: 'off',
+          offProduct: p,
+        });
+      }
+
+      setResults(unified);
     } catch {
-      // KG unavailable
+      // Search failed
     } finally {
       setLoading(false);
     }
@@ -68,44 +104,76 @@ export default function FoodSearchScreen() {
     debounceRef.current = setTimeout(() => doSearch(text), 300);
   }
 
-  async function handleSelectDish(dish: DishResult) {
-    setSelectedDish(dish);
-    setPortionG(String(dish.defaultServingGrams ?? 100));
-    // Calculate nutrition for default portion
-    const grams = dish.defaultServingGrams ?? 100;
-    try {
-      const kg = await getKnowledgeGraphService();
-      if (kg) {
-        const result = await kg.calculateDishNutrition(dish.canonicalName, grams);
-        setNutrition(result);
+  async function handleSelectResult(result: SearchResult) {
+    setSelectedResult(result);
+
+    if (result.source === 'kg' && result.kgDish) {
+      const grams = result.kgDish.defaultServingGrams ?? 100;
+      setPortionG(String(grams));
+      try {
+        const kg = await getKnowledgeGraphService();
+        if (kg) {
+          const n = await kg.calculateDishNutrition(result.kgDish.canonicalName, grams);
+          setNutrition(n);
+        }
+      } catch {
+        setNutrition(null);
       }
-    } catch {
-      setNutrition(null);
+    } else if (result.source === 'off' && result.offProduct) {
+      const serving = result.offProduct.servingQuantityG ?? 100;
+      setPortionG(String(Math.round(serving)));
+      // Build MacroResult from OFF data
+      const scale = serving / 100;
+      const n = result.offProduct.nutrimentsPer100g;
+      setNutrition({
+        calories: n.calories * scale,
+        protein: n.protein * scale,
+        carbs: n.carbs * scale,
+        fat: n.fat * scale,
+        source: 'off' as any,
+      });
     }
   }
 
   async function handlePortionChange(text: string) {
     setPortionG(text);
     const grams = parseFloat(text);
-    if (isNaN(grams) || grams <= 0 || !selectedDish) {
+    if (isNaN(grams) || grams <= 0 || !selectedResult) {
       setNutrition(null);
       return;
     }
-    try {
-      const kg = await getKnowledgeGraphService();
-      if (kg) {
-        const result = await kg.calculateDishNutrition(selectedDish.canonicalName, grams);
-        setNutrition(result);
+
+    if (selectedResult.source === 'kg' && selectedResult.kgDish) {
+      try {
+        const kg = await getKnowledgeGraphService();
+        if (kg) {
+          const n = await kg.calculateDishNutrition(selectedResult.kgDish.canonicalName, grams);
+          setNutrition(n);
+        }
+      } catch {
+        setNutrition(null);
       }
-    } catch {
-      setNutrition(null);
+    } else if (selectedResult.source === 'off' && selectedResult.offProduct) {
+      const scale = grams / 100;
+      const n = selectedResult.offProduct.nutrimentsPer100g;
+      setNutrition({
+        calories: n.calories * scale,
+        protein: n.protein * scale,
+        carbs: n.carbs * scale,
+        fat: n.fat * scale,
+        source: 'off' as any,
+      });
     }
   }
 
   async function handleAddFood() {
-    if (!selectedDish || !nutrition) return;
+    if (!selectedResult || !nutrition) return;
     const grams = parseFloat(portionG);
     if (isNaN(grams) || grams <= 0) return;
+
+    const displayName = selectedResult.brand
+      ? `${selectedResult.brand} — ${selectedResult.name}`
+      : selectedResult.name;
 
     await addEntry({
       mealType: autoDetectMealType(),
@@ -113,20 +181,20 @@ export default function FoodSearchScreen() {
       totalProtein: Math.round(nutrition.protein),
       totalCarbs: Math.round(nutrition.carbs),
       totalFat: Math.round(nutrition.fat),
-      notes: `${selectedDish.canonicalName} (${Math.round(grams)}g)`,
+      notes: `${displayName} (${Math.round(grams)}g)`,
     });
     await loadTodayEntries();
 
     Alert.alert(
       'Added',
-      `${selectedDish.canonicalName} (${Math.round(grams)}g) — ${Math.round(nutrition.calories)} kcal`,
-      [{ text: 'OK', onPress: () => { setSelectedDish(null); setQuery(''); setResults([]); } }],
+      `${displayName} (${Math.round(grams)}g) — ${Math.round(nutrition.calories)} kcal`,
+      [{ text: 'OK', onPress: () => { setSelectedResult(null); setQuery(''); setResults([]); } }],
     );
   }
 
   function handleGoBack() {
-    if (selectedDish) {
-      setSelectedDish(null);
+    if (selectedResult) {
+      setSelectedResult(null);
       setNutrition(null);
     } else if (navigation.canGoBack()) {
       navigation.goBack();
@@ -134,7 +202,19 @@ export default function FoodSearchScreen() {
   }
 
   // ── Detail view (food selected) ──
-  if (selectedDish) {
+  if (selectedResult) {
+    const displayName = selectedResult.brand
+      ? `${selectedResult.brand} — ${selectedResult.name}`
+      : selectedResult.name;
+    const sourceLabel =
+      selectedResult.source === 'off'
+        ? 'Open Food Facts'
+        : nutrition?.source === 'recipe'
+          ? 'Recipe decomposition'
+          : nutrition?.source === 'dish_average'
+            ? 'Dish average'
+            : 'Estimate';
+
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.detailContainer}>
@@ -142,7 +222,7 @@ export default function FoodSearchScreen() {
             <Text style={styles.backBtnText}>← Back to search</Text>
           </Pressable>
 
-          <Text style={styles.detailName}>{selectedDish.canonicalName}</Text>
+          <Text style={styles.detailName}>{displayName}</Text>
 
           <View style={styles.portionRow}>
             <Text style={styles.portionLabel}>Portion:</Text>
@@ -168,7 +248,7 @@ export default function FoodSearchScreen() {
                 <NutritionPill value={nutrition.fat} label="Fat" color="#16A34A" />
               </View>
               <Text style={styles.nutritionSource}>
-                Source: {nutrition.source === 'recipe' ? 'Recipe decomposition' : nutrition.source === 'dish_average' ? 'Dish average' : 'Estimate'}
+                Source: {sourceLabel}
               </Text>
             </View>
           )}
@@ -190,7 +270,7 @@ export default function FoodSearchScreen() {
       >
         <View style={styles.header}>
           <Pressable onPress={handleGoBack} style={styles.headerClose}>
-            <Text style={styles.headerCloseText}>✕</Text>
+            <Ionicons name="close" size={22} color="#9CA3AF" />
           </Pressable>
           <Text style={styles.headerTitle}>Search Food</Text>
           <View style={{ width: 36 }} />
@@ -210,17 +290,25 @@ export default function FoodSearchScreen() {
 
         <FlatList
           data={results}
-          keyExtractor={(item) => String(item.id)}
+          keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="handled"
           contentContainerStyle={styles.listContent}
           renderItem={({ item }) => (
-            <Pressable style={styles.resultRow} onPress={() => handleSelectDish(item)}>
-              <Text style={styles.resultName}>{item.canonicalName}</Text>
-              {item.avgCaloriesPerServing != null && (
-                <Text style={styles.resultCal}>
-                  {Math.round(item.avgCaloriesPerServing)} kcal/serving
-                </Text>
-              )}
+            <Pressable style={styles.resultRow} onPress={() => handleSelectResult(item)}>
+              <View style={styles.resultLeft}>
+                <Text style={styles.resultName} numberOfLines={1}>{item.name}</Text>
+                {item.brand && <Text style={styles.resultBrand} numberOfLines={1}>{item.brand}</Text>}
+              </View>
+              <View style={styles.resultRight}>
+                {item.calorieHint != null && (
+                  <Text style={styles.resultCal}>
+                    {Math.round(item.calorieHint)} kcal
+                  </Text>
+                )}
+                <View style={[styles.sourceBadge, item.source === 'off' ? styles.sourceBadgeOff : styles.sourceBadgeKg]}>
+                  <Text style={styles.sourceBadgeText}>{item.source === 'off' ? 'OFF' : 'KG'}</Text>
+                </View>
+              </View>
             </Pressable>
           )}
           ListEmptyComponent={
@@ -271,9 +359,17 @@ const styles = StyleSheet.create({
   resultRow: {
     backgroundColor: '#FFF', marginHorizontal: 16, marginBottom: 4,
     borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
+    flexDirection: 'row', alignItems: 'center',
   },
+  resultLeft: { flex: 1, marginRight: 8 },
+  resultRight: { alignItems: 'flex-end', gap: 4 },
   resultName: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  resultCal: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  resultBrand: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
+  resultCal: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
+  sourceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+  sourceBadgeKg: { backgroundColor: '#DCFCE7' },
+  sourceBadgeOff: { backgroundColor: '#DBEAFE' },
+  sourceBadgeText: { fontSize: 10, fontWeight: '700', color: '#374151' },
   emptyList: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyText: { fontSize: 15, color: '#6B7280', textAlign: 'center', marginBottom: 4 },
   emptySubtext: { fontSize: 13, color: '#9CA3AF', textAlign: 'center' },
