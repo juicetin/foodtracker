@@ -22,6 +22,7 @@ import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { getKnowledgeGraphService, type DishResult, type MacroResult } from '../services/knowledge-graph';
 import { searchProducts, type OFFProduct } from '../services/openfoodfacts/openFoodFactsService';
+import { deduplicateResults } from '../services/search/searchDedup';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import { autoDetectMealType } from '../services/detection/types';
 
@@ -90,7 +91,7 @@ export default function FoodSearchScreen() {
         });
       }
 
-      setResults(unified);
+      setResults(deduplicateResults(unified));
     } catch {
       // Search failed
     } finally {
