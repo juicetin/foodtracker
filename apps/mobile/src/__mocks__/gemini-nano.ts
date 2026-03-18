@@ -4,5 +4,6 @@
 
 export const geminiNanoModule = {
   checkAvailability: jest.fn().mockResolvedValue('not_supported'),
+  requestDownload: jest.fn().mockResolvedValue('started'),
   identifyFood: jest.fn().mockResolvedValue(''),
 };

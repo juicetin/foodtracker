@@ -36,17 +36,38 @@ export default function GeminiNanoTestScreen() {
       .catch(() => setAvailability('not_supported'));
   }, []);
 
+  const [downloadState, setDownloadState] = useState<'idle' | 'requesting' | 'started'>('idle');
+
   const availabilityLabel: Record<AvailabilityStatus, string> = {
     available: 'Available',
     downloading: 'Model Downloading...',
-    not_supported: 'Not Supported on This Device',
+    downloadable: 'Model Not Downloaded (tap to download)',
+    unavailable: 'Not Supported on This Device',
   };
 
   const availabilityColor: Record<AvailabilityStatus, string> = {
     available: '#2e7d32',
     downloading: '#e65100',
-    not_supported: '#c62828',
+    downloadable: '#f57c00',
+    unavailable: '#c62828',
   };
+
+  async function triggerDownload() {
+    setDownloadState('requesting');
+    try {
+      const result = await geminiNanoModule.requestDownload();
+      if (result === 'started' || result === 'already_available') {
+        setDownloadState('started');
+        // Re-poll availability so status updates
+        const status = await geminiNanoModule.checkAvailability();
+        setAvailability(status);
+      } else {
+        setDownloadState('idle');
+      }
+    } catch {
+      setDownloadState('idle');
+    }
+  }
 
   async function pickFromCamera() {
     const result = await ImagePicker.launchCameraAsync({
@@ -110,6 +131,23 @@ export default function GeminiNanoTestScreen() {
           </Text>
         )}
       </View>
+
+      {/* Download button when model not yet on device */}
+      {availability === 'downloadable' && (
+        <TouchableOpacity
+          style={[styles.downloadButton, downloadState === 'requesting' && styles.runButtonDisabled]}
+          onPress={triggerDownload}
+          disabled={downloadState === 'requesting'}
+        >
+          {downloadState === 'requesting' ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.runButtonText}>
+              {downloadState === 'started' ? 'Download Started — Check Status' : 'Download Gemini Nano Model'}
+            </Text>
+          )}
+        </TouchableOpacity>
+      )}
 
       {/* Image pickers */}
       <View style={styles.buttonRow}>
@@ -196,6 +234,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   runButtonDisabled: { backgroundColor: '#aaa' },
+  downloadButton: {
+    backgroundColor: '#f57c00',
+    padding: 14,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 16,
+  },
   runButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
   timing: { textAlign: 'center', color: '#555', fontSize: 13, marginBottom: 12 },
   errorBox: {

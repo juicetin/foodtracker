@@ -3,6 +3,7 @@ package expo.modules.geminanano
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
+import com.google.mlkit.genai.common.DownloadStatus
 import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.GenerateContentRequest
 import com.google.mlkit.genai.prompt.Generation
@@ -11,6 +12,7 @@ import com.google.mlkit.genai.prompt.TextPart
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
+import kotlinx.coroutines.flow.first
 
 class GeminiNanoModule : Module() {
 
@@ -20,16 +22,44 @@ class GeminiNanoModule : Module() {
     override fun definition() = ModuleDefinition {
         Name("GeminiNano")
 
+        // Returns: "available" | "downloading" | "downloadable" | "unavailable"
+        // "downloadable" = device supports Gemini Nano, model not yet downloaded — call requestDownload()
+        // "unavailable"  = device does not support Gemini Nano (no AICore / wrong device)
         AsyncFunction("checkAvailability") Coroutine { ->
             try {
                 when (model.checkStatus()) {
-                    FeatureStatus.AVAILABLE -> "available"
-                    FeatureStatus.DOWNLOADING -> "downloading"
-                    else -> "not_supported"
+                    FeatureStatus.AVAILABLE    -> "available"
+                    FeatureStatus.DOWNLOADING  -> "downloading"
+                    FeatureStatus.DOWNLOADABLE -> "downloadable"
+                    else                       -> "unavailable"
                 }
             } catch (e: Exception) {
                 // Handles: unlocked bootloader, AICore not initialized, binding errors
-                "not_supported"
+                "unavailable"
+            }
+        }
+
+        // Triggers AICore to download the Gemini Nano model.
+        // Returns: "started" | "already_available" | "unavailable" | "error:<message>"
+        AsyncFunction("requestDownload") Coroutine { ->
+            try {
+                when (model.checkStatus()) {
+                    FeatureStatus.AVAILABLE -> "already_available"
+                    FeatureStatus.UNAVAILABLE -> "unavailable"
+                    else -> {
+                        // Collect the first event from the download flow to kick it off.
+                        // The flow emits DownloadStatus events; we return after the first one fires.
+                        val firstStatus = model.download().first()
+                        when (firstStatus) {
+                            is DownloadStatus.DownloadStarted   -> "started"
+                            is DownloadStatus.DownloadCompleted -> "already_available"
+                            is DownloadStatus.DownloadFailed    -> "error:${firstStatus.e.message}"
+                            else                                -> "started"
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                "error:${e.message}"
             }
         }
 
