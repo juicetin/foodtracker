@@ -23,7 +23,8 @@
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
-      "package": "com.jtingexpo.mobile"
+      "package": "com.jtingexpo.mobile",
+      "minSdkVersion": 26
     },
     "web": {
       "favicon": "./assets/favicon.png"
