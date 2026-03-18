@@ -24,6 +24,7 @@ import { usePreferencesStore } from '../store/usePreferencesStore';
 import { opsqlite } from '../../db/client';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import { autoDetectMealType, type MealType } from '../services/detection/types';
+import { loadDailyTotals, computeTrendStats, type DayTotals } from '../services/trends/trendsService';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -138,37 +139,20 @@ function getPreviousDayStr(dateStr: string): string {
   return dateToStr(d);
 }
 
-interface DayTotal {
-  date: string;
-  dayLabel: string;
-  calories: number;
-}
-
-function loadWeeklyTotals(): DayTotal[] {
-  const days: DayTotal[] = [];
-  const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-  for (let i = 6; i >= 0; i--) {
-    const d = new Date();
-    d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split('T')[0];
-    const result = opsqlite.execute(
-      'SELECT SUM(total_calories) AS cal FROM food_entries WHERE entry_date = ? AND is_deleted = 0',
-      [dateStr],
-    ).rows as Array<Record<string, unknown>>;
-    days.push({
-      date: dateStr,
-      dayLabel: dayNames[d.getDay()],
-      calories: (result[0]?.cal as number) ?? 0,
-    });
-  }
-  return days;
-}
+type TrendRange = 7 | 14 | 30 | 0;
+const TREND_RANGES: { value: TrendRange; label: string }[] = [
+  { value: 7, label: '7D' },
+  { value: 14, label: '14D' },
+  { value: 30, label: '30D' },
+  { value: 0, label: 'All' },
+];
 
 export default function DiaryScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedDate, setSelectedDate] = useState(getTodayDateStr());
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
-  const [weeklyTotals, setWeeklyTotals] = useState<DayTotal[]>([]);
+  const [trendRange, setTrendRange] = useState<TrendRange>(7);
+  const [trendDays, setTrendDays] = useState<DayTotals[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { addEntry } = useFoodLogStore();
   const { nutritionGoals } = usePreferencesStore();
@@ -177,8 +161,8 @@ export default function DiaryScreen() {
 
   const refresh = useCallback(() => {
     setEntries(loadEntriesForDate(selectedDate));
-    setWeeklyTotals(loadWeeklyTotals());
-  }, [selectedDate]);
+    setTrendDays(loadDailyTotals(trendRange));
+  }, [selectedDate, trendRange]);
 
   const goToPreviousDay = useCallback(() => {
     setSelectedDate((prev) => {
@@ -302,41 +286,13 @@ export default function DiaryScreen() {
           </View>
         )}
 
-        {/* Weekly trends */}
-        {weeklyTotals.some((d) => d.calories > 0) && (
-          <View style={styles.weeklyCard}>
-            <Text style={styles.weeklyTitle}>This Week</Text>
-            <View style={styles.weeklyBars}>
-              {weeklyTotals.map((day) => {
-                const pct = nutritionGoals.calories > 0
-                  ? Math.min(1, day.calories / nutritionGoals.calories)
-                  : 0;
-                const isToday = day.date === getTodayDateStr();
-                return (
-                  <View key={day.date} style={styles.barCol}>
-                    <Text style={styles.barCalLabel}>
-                      {day.calories > 0 ? Math.round(day.calories) : ''}
-                    </Text>
-                    <View style={styles.barTrack}>
-                      <View
-                        style={[
-                          styles.barFill,
-                          {
-                            height: `${Math.max(pct * 100, day.calories > 0 ? 4 : 0)}%`,
-                            backgroundColor: pct >= 1 ? '#EF4444' : isToday ? '#16A34A' : '#93C5FD',
-                          },
-                        ]}
-                      />
-                    </View>
-                    <Text style={[styles.barDayLabel, isToday && styles.barDayLabelToday]}>
-                      {day.dayLabel}
-                    </Text>
-                  </View>
-                );
-              })}
-            </View>
-          </View>
-        )}
+        {/* Trends */}
+        <TrendsCard
+          days={trendDays}
+          range={trendRange}
+          onRangeChange={(r) => setTrendRange(r)}
+          calorieGoal={nutritionGoals.calories}
+        />
 
         {/* Grouped entries */}
         {grouped.length === 0 ? (
@@ -373,6 +329,112 @@ export default function DiaryScreen() {
 // ---------------------------------------------------------------------------
 // Subcomponents
 // ---------------------------------------------------------------------------
+
+function TrendsCard({
+  days,
+  range,
+  onRangeChange,
+  calorieGoal,
+}: {
+  days: DayTotals[];
+  range: TrendRange;
+  onRangeChange: (r: TrendRange) => void;
+  calorieGoal: number;
+}) {
+  const stats = computeTrendStats(days, calorieGoal);
+  const maxCal = Math.max(...days.map((d) => d.calories), 1);
+  const todayStr = getTodayDateStr();
+  const showLabels = days.length <= 14; // Only show day labels for 7/14 range
+
+  if (days.length === 0 || stats.daysLogged === 0) return null;
+
+  return (
+    <View style={styles.trendsCard}>
+      {/* Range toggle */}
+      <View style={styles.rangeRow}>
+        <Text style={styles.trendsTitle}>Trends</Text>
+        <View style={styles.rangePills}>
+          {TREND_RANGES.map((r) => (
+            <Pressable
+              key={r.value}
+              style={[styles.rangePill, range === r.value && styles.rangePillActive]}
+              onPress={() => onRangeChange(r.value)}
+            >
+              <Text style={[styles.rangePillText, range === r.value && styles.rangePillTextActive]}>
+                {r.label}
+              </Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      {/* Calorie bars */}
+      <View style={styles.barsContainer}>
+        {days.map((day) => {
+          const pct = maxCal > 0 ? Math.min(1, day.calories / maxCal) : 0;
+          const isDayToday = day.date === todayStr;
+          const overGoal = day.calories > calorieGoal;
+          return (
+            <View key={day.date} style={[styles.barCol, { flex: days.length <= 14 ? 1 : undefined, width: days.length > 14 ? Math.max(4, 300 / days.length) : undefined }]}>
+              <View style={styles.barTrack}>
+                <View
+                  style={[
+                    styles.barFill,
+                    {
+                      height: `${Math.max(pct * 100, day.calories > 0 ? 4 : 0)}%`,
+                      backgroundColor: overGoal ? '#EF4444' : isDayToday ? '#16A34A' : '#93C5FD',
+                    },
+                  ]}
+                />
+              </View>
+              {showLabels && (
+                <Text style={[styles.barDayLabel, isDayToday && styles.barDayLabelToday]}>
+                  {day.dayLabel}
+                </Text>
+              )}
+            </View>
+          );
+        })}
+      </View>
+
+      {/* Stats row */}
+      <View style={styles.statsRow}>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{stats.avgCalories}</Text>
+          <Text style={styles.statLabel}>Avg kcal</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{stats.goalAdherencePct}%</Text>
+          <Text style={styles.statLabel}>On target</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{stats.daysLogged}/{stats.totalDays}</Text>
+          <Text style={styles.statLabel}>Days logged</Text>
+        </View>
+        <View style={styles.statItem}>
+          <Text style={styles.statValue}>{stats.currentStreak}</Text>
+          <Text style={styles.statLabel}>Streak</Text>
+        </View>
+      </View>
+
+      {/* Macro averages */}
+      <View style={styles.macroAvgRow}>
+        <View style={[styles.macroAvgPill, { backgroundColor: '#EFF6FF' }]}>
+          <Text style={[styles.macroAvgNum, { color: '#3B82F6' }]}>{Math.round(stats.avgProtein)}g</Text>
+          <Text style={styles.macroAvgLabel}>Avg P</Text>
+        </View>
+        <View style={[styles.macroAvgPill, { backgroundColor: '#FFFBEB' }]}>
+          <Text style={[styles.macroAvgNum, { color: '#D97706' }]}>{Math.round(stats.avgCarbs)}g</Text>
+          <Text style={styles.macroAvgLabel}>Avg C</Text>
+        </View>
+        <View style={[styles.macroAvgPill, { backgroundColor: '#F0FDF4' }]}>
+          <Text style={[styles.macroAvgNum, { color: '#16A34A' }]}>{Math.round(stats.avgFat)}g</Text>
+          <Text style={styles.macroAvgLabel}>Avg F</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
 
 function EntryCard({ entry }: { entry: DiaryEntry }) {
   const time = new Date(entry.createdAt).toLocaleTimeString([], {
@@ -443,23 +505,46 @@ const styles = StyleSheet.create({
   },
   copyBtnText: { fontSize: 13, fontWeight: '600', color: '#3B82F6' },
 
-  // Weekly trends
-  weeklyCard: {
+  // Trends card
+  trendsCard: {
     backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
-  weeklyTitle: { fontSize: 16, fontWeight: '700', color: '#111827', marginBottom: 12 },
-  weeklyBars: { flexDirection: 'row', gap: 4, height: 120 },
-  barCol: { flex: 1, alignItems: 'center' },
-  barCalLabel: { fontSize: 9, color: '#9CA3AF', marginBottom: 4, height: 12 },
-  barTrack: {
-    flex: 1, width: '100%', backgroundColor: '#F3F4F6', borderRadius: 4,
-    justifyContent: 'flex-end', overflow: 'hidden',
+  rangeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 },
+  trendsTitle: { fontSize: 16, fontWeight: '700', color: '#111827' },
+  rangePills: { flexDirection: 'row', gap: 4 },
+  rangePill: {
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8,
+    backgroundColor: '#F3F4F6',
   },
-  barFill: { width: '100%', borderRadius: 4 },
-  barDayLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '500', marginTop: 4 },
+  rangePillActive: { backgroundColor: '#16A34A' },
+  rangePillText: { fontSize: 12, fontWeight: '600', color: '#6B7280' },
+  rangePillTextActive: { color: '#FFF' },
+  barsContainer: { flexDirection: 'row', gap: 2, height: 100, marginBottom: 12 },
+  barCol: { alignItems: 'center' },
+  barTrack: {
+    flex: 1, width: '100%', backgroundColor: '#F3F4F6', borderRadius: 3,
+    justifyContent: 'flex-end', overflow: 'hidden', minWidth: 4,
+  },
+  barFill: { width: '100%', borderRadius: 3 },
+  barDayLabel: { fontSize: 9, color: '#9CA3AF', fontWeight: '500', marginTop: 3 },
   barDayLabelToday: { color: '#16A34A', fontWeight: '700' },
+  statsRow: {
+    flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#F3F4F6',
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+    marginBottom: 10,
+  },
+  statItem: { alignItems: 'center', flex: 1 },
+  statValue: { fontSize: 16, fontWeight: '800', color: '#111827' },
+  statLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '500', marginTop: 2 },
+  macroAvgRow: { flexDirection: 'row', gap: 8 },
+  macroAvgPill: {
+    flex: 1, borderRadius: 10, paddingVertical: 8, alignItems: 'center',
+  },
+  macroAvgNum: { fontSize: 15, fontWeight: '700' },
+  macroAvgLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '500', marginTop: 2 },
 
   // Summary
   summaryCard: {
