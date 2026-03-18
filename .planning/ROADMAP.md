@@ -20,6 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
 - [x] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
+- [ ] **Phase 02.7: Gemini Nano System-Managed VLM Integration** - Tier 0 Gemini Nano via ML Kit GenAI Prompt API, quality spike + human gate, pipeline integration
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
 - [ ] **Phase 5: Scale OCR + Notifications + Health Data** - Kitchen scale reading, container weights, daily macro notifications, Apple Health/Google Fit
@@ -81,10 +82,11 @@ Plans:
   4. GeminiNanoService produces VlmFoodResult (same shape as vlmService) from Prompt API JSON output
   5. runVlmIdentification() checks Gemini Nano availability first; falls back to SmolVLM if unavailable or fails; Pixel 7 Pro experience unchanged
   6. No model download required on Pixel 9 Pro / Galaxy S25+ — AICore provides the model system-managed
-**Plans:** TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 02.7 to break down)
+- [ ] 02.7-01-PLAN.md -- Wave 1 spike: GeminiNano native module (Kotlin + TS bindings), GeminiNanoTestScreen, navigation wiring, unit tests, human checkpoint on Pixel 9 Pro
+- [ ] 02.7-02-PLAN.md -- Wave 2 integration (GATED): wire geminiNanoService into vlmPipeline.ts as Tier 0, unit tests, APK verify
 
 ### Phase 02.1: Pre-trained model acquisition and TFLite integration (INSERTED)
 
@@ -242,7 +244,7 @@ Plans:
 **Depends on**: Phase 2, Phase 3
 **Requirements**: GAL-01, GAL-02, GAL-03, GAL-04, GAL-05
 **Success Criteria** (what must be TRUE):
-  1. User can manually trigger a gallery scan and see newly discovered food photos queued for processing
+  1. User can manually trigger a gallery scan and see newly discovered food photos queued for resources
   2. App performs periodic background scanning that surfaces new food photos without user intervention, operating within platform constraints (iOS 30-second BGTask, Android WorkManager) using chunked processing blocks
   3. Multiple photos of the same meal (taken within 5-minute window with GPS proximity) are grouped into a single meal event instead of creating duplicates
   4. Each discovered photo displays EXIF-derived context (timestamp as meal time, location as meal venue)
@@ -286,7 +288,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 7 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -298,9 +300,11 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
 | 2.5. Food Knowledge Graph | 6/6 | Complete | 2026-03-14 |
 | 2.6. On-Device VLM Integration | 6/6 | Complete | 2026-03-14 |
+| 02.7. Gemini Nano VLM Integration | 0/2 | Planned | - |
 | 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete   | 2026-03-15 |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
 | 6. Sync + Distribution | 0/2 | Not started | - |
+
 
