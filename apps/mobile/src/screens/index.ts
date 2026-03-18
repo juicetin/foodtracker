@@ -3,3 +3,4 @@ export { default as DiaryScreen } from './DiaryScreen';
 export { default as ProfileScreen } from './ProfileScreen';
 export { DetectionScreen } from './DetectionScreen';
 export { default as VlmDownloadScreen } from './VlmDownloadScreen';
+export { default as GeminiNanoTestScreen } from './GeminiNanoTestScreen';

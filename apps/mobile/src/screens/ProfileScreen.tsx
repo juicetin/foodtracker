@@ -57,6 +57,13 @@ export default function ProfileScreen({ navigation }: ProfileScreenProps) {
           <Text style={styles.label}>VLM Model</Text>
           <Text style={styles.value}>Manage</Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.row}
+          onPress={() => rootNavigation.navigate('GeminiNanoTest')}
+        >
+          <Text style={styles.label}>Gemini Nano Test</Text>
+          <Text style={styles.value}>Debug</Text>
+        </TouchableOpacity>
       </View>
     </View>
   );

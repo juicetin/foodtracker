@@ -4,6 +4,7 @@ export type RootStackParamList = {
   EntryDetail: { entryId: string };
   Detection: undefined;
   VlmDownload: undefined;
+  GeminiNanoTest: undefined;
 };
 
 export type MainTabParamList = {
