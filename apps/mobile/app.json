@@ -40,6 +40,12 @@
       ],
       "expo-asset",
       [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow Tastimate to use the camera for scanning food and barcodes."
+        }
+      ],
+      [
         "llama.rn",
         {
           "enableEntitlements": true,

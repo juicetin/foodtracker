@@ -17,6 +17,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import { useFoodLogStore } from '../store/useFoodLogStore';
@@ -223,11 +224,15 @@ export default function HomeScreen() {
       {/* Action buttons */}
       <View style={styles.actionRow}>
         <Pressable style={styles.actionBtn} onPress={() => navigation.navigate('Detection')}>
-          <Text style={styles.actionIcon}>📷</Text>
+          <Ionicons name="camera-outline" size={22} color="#FFF" />
           <Text style={styles.actionLabel}>Scan Food</Text>
         </Pressable>
+        <Pressable style={[styles.actionBtn, { backgroundColor: '#7C3AED' }]} onPress={() => navigation.navigate('BarcodeScan')}>
+          <Ionicons name="barcode-outline" size={22} color="#FFF" />
+          <Text style={styles.actionLabel}>Barcode</Text>
+        </Pressable>
         <Pressable style={[styles.actionBtn, styles.actionBtnSecondary]} onPress={() => setQuickAddVisible(true)}>
-          <Text style={styles.actionIcon}>⚡</Text>
+          <Ionicons name="flash-outline" size={22} color="#FFF" />
           <Text style={styles.actionLabel}>Quick Add</Text>
         </Pressable>
       </View>

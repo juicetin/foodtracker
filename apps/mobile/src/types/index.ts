@@ -4,6 +4,7 @@ export type RootStackParamList = {
   EntryDetail: { entryId: string };
   Detection: undefined;
   FoodSearch: undefined;
+  BarcodeScan: undefined;
   VlmDownload: undefined;
   GeminiNanoTest: undefined;
 };

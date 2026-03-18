@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import MainTabNavigator from './MainTabNavigator';
-import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen } from '../screens';
+import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen, BarcodeScanScreen } from '../screens';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -45,6 +45,15 @@ export default function RootNavigator() {
         <Stack.Screen
           name="FoodSearch"
           component={FoodSearchScreen}
+          options={{
+            animation: 'slide_from_bottom',
+            presentation: 'fullScreenModal',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="BarcodeScan"
+          component={BarcodeScanScreen}
           options={{
             animation: 'slide_from_bottom',
             presentation: 'fullScreenModal',

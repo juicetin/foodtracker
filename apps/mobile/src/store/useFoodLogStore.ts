@@ -21,6 +21,17 @@ function generateId(): string {
   return id;
 }
 
+interface BarcodeProductInput {
+  name: string;
+  barcode: string;
+  totalCalories: number;
+  totalProtein: number;
+  totalCarbs: number;
+  totalFat: number;
+  portionG: number;
+  mealType: string;
+}
+
 interface FoodLogState {
   entries: FoodEntry[];
   selectedPhotos: Photo[];
@@ -29,6 +40,7 @@ interface FoodLogState {
   // Actions
   addEntry: (entry: Omit<FoodEntry, 'id' | 'createdAt' | 'updatedAt' | 'isSynced' | 'isDeleted' | 'entryDate' | 'photos' | 'ingredients'> & { photos?: Photo[]; ingredients?: FoodEntry['ingredients'] }) => Promise<void>;
   logScanResult: (result: ScanResult, mealType: MealType) => Promise<void>;
+  logBarcodeProduct: (product: BarcodeProductInput) => Promise<void>;
   updateEntry: (id: string, updates: Partial<FoodEntry>) => Promise<void>;
   deleteEntry: (id: string) => Promise<void>;
   loadTodayEntries: () => Promise<void>;
@@ -136,6 +148,29 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     }));
 
     set({ entries });
+  },
+
+  logBarcodeProduct: async (product) => {
+    const id = generateId();
+    const now = new Date().toISOString();
+    const entryDate = getTodayDateStr();
+
+    await userDb.insert(foodEntries).values({
+      id,
+      mealType: product.mealType,
+      entryDate,
+      totalCalories: product.totalCalories,
+      totalProtein: product.totalProtein,
+      totalCarbs: product.totalCarbs,
+      totalFat: product.totalFat,
+      notes: `Barcode: ${product.barcode} | ${product.name} (${product.portionG}g)`,
+      createdAt: now,
+      updatedAt: now,
+      isSynced: false,
+      isDeleted: false,
+    });
+
+    await get().loadTodayEntries();
   },
 
   logScanResult: async (result, mealType) => {
