@@ -1,0 +1,10 @@
+{
+  "name": "gemini-nano",
+  "version": "1.0.0",
+  "description": "Expo native module for ML Kit GenAI Prompt API (Gemini Nano via AICore)",
+  "main": "src/geminiNanoModule",
+  "files": ["src", "android", "expo-module.config.json"],
+  "peerDependencies": {
+    "expo": "*"
+  }
+}
