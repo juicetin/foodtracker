@@ -69,6 +69,23 @@ Plans:
 - 01-05 (model export) -> CoreML/LiteRT export pipeline
 - 01-06 (mobile ML integration) -> react-native-fast-tflite integration + inference router
 
+### Phase 02.7: Gemini Nano System-Managed VLM Integration (INSERTED)
+
+**Goal:** Integrate Gemini Nano (system-managed, via ML Kit GenAI Prompt API) as Tier 0 above SmolVLM in the food identification pipeline. Wave 1 is a quality spike — a minimal native module + test screen to evaluate Gemini Nano output on a Pixel 9 Pro before committing to full integration. Wave 2 (gated on spike quality) wires GeminiNanoService into runVlmIdentification() as the primary path, with SmolVLM as fallback on unsupported devices.
+**Requirements**: DET-03
+**Depends on:** Phase 02.6
+**Success Criteria** (what must be TRUE):
+  1. Native Expo module wraps ML Kit GenAI Prompt API with checkAvailability() and identifyFood(uri, prompt) — works on Pixel 9 Pro, returns graceful unavailable on Pixel 7 Pro
+  2. GeminiNanoTestScreen (debug/settings) shows Gemini Nano food identification output side-by-side comparison for quality evaluation
+  3. Human checkpoint passed: Gemini Nano quality judged sufficient on Pixel 9 Pro before Wave 2 proceeds
+  4. GeminiNanoService produces VlmFoodResult (same shape as vlmService) from Prompt API JSON output
+  5. runVlmIdentification() checks Gemini Nano availability first; falls back to SmolVLM if unavailable or fails; Pixel 7 Pro experience unchanged
+  6. No model download required on Pixel 9 Pro / Galaxy S25+ — AICore provides the model system-managed
+**Plans:** TBD
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 02.7 to break down)
+
 ### Phase 02.1: Pre-trained model acquisition and TFLite integration (INSERTED)
 
 **Goal:** Acquire pre-trained ML models (Google AIY Food V1 + YOLO26n COCO) and wire them into the existing three-stage detection pipeline, producing a testable APK with on-device inference
@@ -286,3 +303,4 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
 | 6. Sync + Distribution | 0/2 | Not started | - |
+

@@ -236,6 +236,7 @@ Recent decisions affecting current work:
 - Phase 5 scope reduced: VLM + KG hidden ingredients moved to 2.5+2.6. Phase 5 retains Scale OCR, notifications, health data import.
 - Phase 3 dependency updated: now depends on Phase 2.5 (KG) + Phase 2.6 (VLM) instead of just Phase 2.
 - Phase 7 added: Remove YOLO and EfficientNet pipeline entirely — VLM-only detection
+- Phase 02.7 inserted after Phase 02.6: Gemini Nano System-Managed VLM Integration — spike-first quality test of ML Kit GenAI APIs (Prompt API) on Pixel 9 Pro, then proper pipeline integration as Tier 0 above SmolVLM.
 
 ### Pending Todos
 
