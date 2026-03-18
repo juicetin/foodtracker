@@ -43,6 +43,8 @@ interface DetailIngredient {
   protein: number;
   carbs: number;
   fat: number;
+  fiber: number;
+  sugar: number;
 }
 
 interface DetailDish {
@@ -93,7 +95,7 @@ function loadEntry(entryId: string): EntryDetail | null {
   const dishes: DetailDish[] = dishRows.map((d) => {
     const dishId = d.id as string;
     const ingRows = opsqlite.execute(
-      `SELECT id, name, amount_g, calories, protein, carbs, fat
+      `SELECT id, name, amount_g, calories, protein, carbs, fat, fiber, sugar
        FROM ingredients WHERE dish_id = ? ORDER BY created_at`,
       [dishId],
     ).rows as Array<Record<string, unknown>>;
@@ -111,6 +113,8 @@ function loadEntry(entryId: string): EntryDetail | null {
         protein: (i.protein as number) ?? 0,
         carbs: (i.carbs as number) ?? 0,
         fat: (i.fat as number) ?? 0,
+        fiber: (i.fiber as number) ?? 0,
+        sugar: (i.sugar as number) ?? 0,
       })),
     };
   });
@@ -279,6 +283,32 @@ export default function EntryDetailScreen() {
           </View>
         </View>
 
+        {/* Micronutrient panel */}
+        {!editing && (() => {
+          const allIngs = entry.dishes.flatMap((d) => d.ingredients);
+          const totalFiber = allIngs.reduce((s, i) => s + i.fiber, 0);
+          const totalSugar = allIngs.reduce((s, i) => s + i.sugar, 0);
+          const hasMicros = totalFiber > 0 || totalSugar > 0;
+          if (!hasMicros) return null;
+          return (
+            <View style={styles.microCard}>
+              <Text style={styles.microTitle}>Additional Nutrients</Text>
+              {totalFiber > 0 && (
+                <View style={styles.microRow}>
+                  <Text style={styles.microLabel}>Fiber</Text>
+                  <Text style={styles.microValue}>{totalFiber.toFixed(1)}g</Text>
+                </View>
+              )}
+              {totalSugar > 0 && (
+                <View style={styles.microRow}>
+                  <Text style={styles.microLabel}>Sugar</Text>
+                  <Text style={styles.microValue}>{totalSugar.toFixed(1)}g</Text>
+                </View>
+              )}
+            </View>
+          );
+        })()}
+
         {/* Save to favourites */}
         {!editing && entry.dishes.length > 0 && !alreadyFaved && (
           <Pressable
@@ -355,7 +385,12 @@ export default function EntryDetailScreen() {
                   <>
                     <View style={styles.ingLeft}>
                       <Text style={styles.ingName}>{ing.name}</Text>
-                      <Text style={styles.ingCal}>{Math.round(ing.calories)} kcal</Text>
+                      <Text style={styles.ingCal}>
+                        {Math.round(ing.calories)} kcal
+                        {ing.protein > 0 || ing.carbs > 0 || ing.fat > 0
+                          ? `  ·  P${Math.round(ing.protein)} C${Math.round(ing.carbs)} F${Math.round(ing.fat)}`
+                          : ''}
+                      </Text>
                     </View>
                     <View style={styles.ingWeightChip}>
                       <Text style={styles.ingWeightText}>{Math.round(ing.amountG)}g</Text>
@@ -526,6 +561,19 @@ const styles = StyleSheet.create({
   },
   macroPillNum: { fontSize: 13, fontWeight: '700' },
   macroPillLabel: { fontSize: 11, fontWeight: '600' },
+
+  microCard: {
+    backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
+    shadowRadius: 8, elevation: 3,
+  },
+  microTitle: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 8 },
+  microRow: {
+    flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+  },
+  microLabel: { fontSize: 14, color: '#6B7280' },
+  microValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
 
   favBtn: {
     backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12, marginHorizontal: 16,
