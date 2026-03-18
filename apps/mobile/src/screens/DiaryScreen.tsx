@@ -16,6 +16,7 @@ import {
   Pressable,
   RefreshControl,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
@@ -69,27 +70,40 @@ function getTodayDateStr(): string {
   return new Date().toISOString().split('T')[0];
 }
 
-function loadTodayEntries(): DiaryEntry[] {
-  const todayStr = getTodayDateStr();
+function dateToStr(d: Date): string {
+  return d.toISOString().split('T')[0];
+}
 
+function formatDateLabel(dateStr: string): string {
+  const today = getTodayDateStr();
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayStr = dateToStr(yesterday);
+
+  if (dateStr === today) return 'Today';
+  if (dateStr === yesterdayStr) return 'Yesterday';
+
+  const d = new Date(dateStr + 'T12:00:00');
+  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
+}
+
+function loadEntriesForDate(dateStr: string): DiaryEntry[] {
   const entryRows = opsqlite.execute(
     `SELECT id, meal_type, total_calories, total_protein, total_carbs, total_fat, notes, created_at
      FROM food_entries
      WHERE entry_date = ? AND is_deleted = 0
      ORDER BY created_at DESC`,
-    [todayStr],
+    [dateStr],
   ).rows as Array<Record<string, unknown>>;
 
   return entryRows.map((row) => {
     const entryId = row.id as string;
 
-    // Load photo
     const photoRows = opsqlite.execute(
       'SELECT uri FROM photos WHERE entry_id = ? LIMIT 1',
       [entryId],
     ).rows as Array<Record<string, unknown>>;
 
-    // Load dishes
     const dishRows = opsqlite.execute(
       'SELECT id, name, cuisine FROM scanned_dishes WHERE entry_id = ? ORDER BY created_at',
       [entryId],
@@ -118,39 +132,10 @@ function loadTodayEntries(): DiaryEntry[] {
 // Component
 // ---------------------------------------------------------------------------
 
-function getYesterdayDateStr(): string {
-  const d = new Date();
+function getPreviousDayStr(dateStr: string): string {
+  const d = new Date(dateStr + 'T12:00:00');
   d.setDate(d.getDate() - 1);
-  return d.toISOString().split('T')[0];
-}
-
-function loadYesterdayEntries(): DiaryEntry[] {
-  const yesterdayStr = getYesterdayDateStr();
-  const entryRows = opsqlite.execute(
-    `SELECT id, meal_type, total_calories, total_protein, total_carbs, total_fat, notes, created_at
-     FROM food_entries WHERE entry_date = ? AND is_deleted = 0 ORDER BY created_at`,
-    [yesterdayStr],
-  ).rows as Array<Record<string, unknown>>;
-
-  return entryRows.map((row) => {
-    const entryId = row.id as string;
-    const photoRows = opsqlite.execute('SELECT uri FROM photos WHERE entry_id = ? LIMIT 1', [entryId]).rows as Array<Record<string, unknown>>;
-    const dishRows = opsqlite.execute('SELECT id, name, cuisine FROM scanned_dishes WHERE entry_id = ? ORDER BY created_at', [entryId]).rows as Array<Record<string, unknown>>;
-    return {
-      id: entryId,
-      mealType: row.meal_type as MealType,
-      totalCalories: (row.total_calories as number) ?? 0,
-      totalProtein: (row.total_protein as number) ?? 0,
-      totalCarbs: (row.total_carbs as number) ?? 0,
-      totalFat: (row.total_fat as number) ?? 0,
-      notes: (row.notes as string) ?? null,
-      createdAt: row.created_at as string,
-      photoUri: photoRows.length > 0 ? (photoRows[0].uri as string) : null,
-      dishes: dishRows.map((d) => ({
-        id: d.id as string, name: d.name as string, cuisine: (d.cuisine as string) ?? null,
-      })),
-    };
-  });
+  return dateToStr(d);
 }
 
 interface DayTotal {
@@ -181,18 +166,43 @@ function loadWeeklyTotals(): DayTotal[] {
 
 export default function DiaryScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [selectedDate, setSelectedDate] = useState(getTodayDateStr());
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
   const [weeklyTotals, setWeeklyTotals] = useState<DayTotal[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { addEntry } = useFoodLogStore();
   const { nutritionGoals } = usePreferencesStore();
 
+  const isToday = selectedDate === getTodayDateStr();
+
   const refresh = useCallback(() => {
-    setEntries(loadTodayEntries());
+    setEntries(loadEntriesForDate(selectedDate));
     setWeeklyTotals(loadWeeklyTotals());
+  }, [selectedDate]);
+
+  const goToPreviousDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev + 'T12:00:00');
+      d.setDate(d.getDate() - 1);
+      return dateToStr(d);
+    });
   }, []);
 
-  // Refresh on screen focus (e.g. after logging a meal)
+  const goToNextDay = useCallback(() => {
+    setSelectedDate((prev) => {
+      const d = new Date(prev + 'T12:00:00');
+      d.setDate(d.getDate() + 1);
+      const next = dateToStr(d);
+      // Don't go past today
+      return next > getTodayDateStr() ? prev : next;
+    });
+  }, []);
+
+  const goToToday = useCallback(() => {
+    setSelectedDate(getTodayDateStr());
+  }, []);
+
+  // Refresh on screen focus or date change
   useFocusEffect(
     useCallback(() => {
       refresh();
@@ -231,15 +241,29 @@ export default function DiaryScreen() {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#16A34A" />
         }
       >
-        <View style={styles.headerRow}>
-          <View>
-            <Text style={styles.title}>Food Diary</Text>
-            <Text style={styles.dateLabel}>Today</Text>
-          </View>
+        {/* Date navigation */}
+        <View style={styles.dateNav}>
+          <Pressable onPress={goToPreviousDay} style={styles.dateArrow}>
+            <Ionicons name="chevron-back" size={24} color="#374151" />
+          </Pressable>
+          <Pressable onPress={goToToday} style={styles.dateLabelBtn}>
+            <Text style={styles.dateTitle}>{formatDateLabel(selectedDate)}</Text>
+            {!isToday && (
+              <Text style={styles.dateSubtitle}>Tap for today</Text>
+            )}
+          </Pressable>
+          <Pressable onPress={goToNextDay} style={[styles.dateArrow, isToday && { opacity: 0.3 }]} disabled={isToday}>
+            <Ionicons name="chevron-forward" size={24} color="#374151" />
+          </Pressable>
+        </View>
+
+        {/* Copy previous day */}
+        {isToday && (
           <Pressable
             style={styles.copyBtn}
             onPress={async () => {
-              const yesterday = loadYesterdayEntries();
+              const prevDayStr = getPreviousDayStr(selectedDate);
+              const yesterday = loadEntriesForDate(prevDayStr);
               if (yesterday.length === 0) {
                 Alert.alert('No meals', 'No meals logged yesterday to copy.');
                 return;
@@ -258,9 +282,10 @@ export default function DiaryScreen() {
               Alert.alert('Copied', `${yesterday.length} meal(s) from yesterday added.`);
             }}
           >
-            <Text style={styles.copyBtnText}>📋 Copy Yesterday</Text>
+            <Ionicons name="copy-outline" size={14} color="#3B82F6" />
+            <Text style={styles.copyBtnText}>Copy Yesterday</Text>
           </Pressable>
-        </View>
+        )}
 
         {/* Day summary card */}
         {entries.length > 0 && (
@@ -403,13 +428,18 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   scroll: { flex: 1 },
   scrollContent: { paddingTop: 60, paddingHorizontal: 16 },
-  headerRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16,
+  dateNav: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+    marginBottom: 16,
   },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827', marginBottom: 4 },
-  dateLabel: { fontSize: 15, color: '#6B7280', fontWeight: '500' },
+  dateArrow: { padding: 8 },
+  dateLabelBtn: { alignItems: 'center', flex: 1 },
+  dateTitle: { fontSize: 20, fontWeight: '800', color: '#111827' },
+  dateSubtitle: { fontSize: 11, color: '#16A34A', fontWeight: '500', marginTop: 2 },
   copyBtn: {
-    backgroundColor: '#EFF6FF', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8, marginTop: 4,
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+    backgroundColor: '#EFF6FF', borderRadius: 10, paddingHorizontal: 12, paddingVertical: 8,
+    marginBottom: 12, alignSelf: 'center',
   },
   copyBtnText: { fontSize: 13, fontWeight: '600', color: '#3B82F6' },
 
