@@ -3,11 +3,12 @@ package expo.modules.geminanano
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
-import com.google.mlkit.genai.prompt.FeatureStatus
+import com.google.mlkit.genai.common.FeatureStatus
 import com.google.mlkit.genai.prompt.GenerateContentRequest
 import com.google.mlkit.genai.prompt.Generation
 import com.google.mlkit.genai.prompt.ImagePart
 import com.google.mlkit.genai.prompt.TextPart
+import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
 
@@ -46,12 +47,11 @@ class GeminiNanoModule : Module() {
                 val rawBitmap = BitmapFactory.decodeStream(stream)
                 val bitmap = scaleBitmapIfNeeded(rawBitmap, 1024)
 
-                val request = GenerateContentRequest
-                    .builder(ImagePart(bitmap), TextPart(prompt))
-                    .setTemperature(0.2f)
-                    .setMaxOutputTokens(256)
-                    .setTopK(10)
-                    .build()
+                val requestBuilder = GenerateContentRequest.Builder(ImagePart(bitmap), TextPart(prompt))
+                requestBuilder.temperature = 0.2f
+                requestBuilder.maxOutputTokens = 256
+                requestBuilder.topK = 10
+                val request = requestBuilder.build()
 
                 val response = model.generateContent(request)
                 response.candidates.firstOrNull()?.text ?: ""

@@ -90,7 +90,8 @@ android {
     namespace 'com.jtingexpo.mobile'
     defaultConfig {
         applicationId 'com.jtingexpo.mobile'
-        minSdkVersion rootProject.ext.minSdkVersion
+        // ML Kit genai-prompt requires minSdk 26 (Expo default is 24)
+        minSdkVersion Math.max(rootProject.ext.minSdkVersion as int, 26)
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0.0"
