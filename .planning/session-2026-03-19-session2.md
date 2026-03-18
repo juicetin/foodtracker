@@ -30,4 +30,12 @@
 - Phase 3.1 (Barcode + OFF): COMPLETE
 - Phase 3.2 (Entry Editing): COMPLETE
 - Phase 3.3 (Recipe Builder): COMPLETE (basic version)
-- Phase 3.4 (Polish): NOT STARTED
+- Phase 3.4 (Polish): IN PROGRESS
+
+### Phase 3.4 Polish Work
+10. `23511a1d` feat: add date navigation to DiaryScreen
+
+#### Decision 8: Diary Date Navigation
+Left/right chevron arrows with date label that shows "Today"/"Yesterday"/formatted date.
+Tap date label jumps to today. Forward arrow disabled on today.
+Copy Yesterday only visible on today's view.
