@@ -3,6 +3,7 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, RootStackParamList } from '../types';
 import { HomeScreen, DiaryScreen, ProfileScreen } from '../screens';
 
@@ -26,10 +27,6 @@ function DetectTabButton({ children }: { children: React.ReactNode }) {
       </View>
     </Pressable>
   );
-}
-
-function TabIcon({ emoji, color }: { emoji: string; color: string }) {
-  return <Text style={{ fontSize: 20, color }}>{emoji}</Text>;
 }
 
 export default function MainTabNavigator() {
@@ -56,7 +53,7 @@ export default function MainTabNavigator() {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color }) => <TabIcon emoji="🏠" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -74,7 +71,7 @@ export default function MainTabNavigator() {
         component={DiaryScreen}
         options={{
           tabBarLabel: 'Diary',
-          tabBarIcon: ({ color }) => <TabIcon emoji="📓" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -82,7 +79,7 @@ export default function MainTabNavigator() {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color }) => <TabIcon emoji="👤" color={color} />,
+          tabBarIcon: ({ color, size }) => <Ionicons name="person-outline" size={size} color={color} />,
         }}
       />
     </Tab.Navigator>

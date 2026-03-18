@@ -10,6 +10,7 @@
     "postinstall": "patch-package"
   },
   "dependencies": {
+    "@expo/vector-icons": "^15.0.3",
     "@gorhom/bottom-sheet": "^5.2.8",
     "@op-engineering/op-sqlite": "^15.2.5",
     "@react-native-async-storage/async-storage": "^2.2.0",
@@ -20,6 +21,7 @@
     "drizzle-orm": "^0.45.1",
     "expo": "~54.0.33",
     "expo-asset": "~12.0.12",
+    "expo-camera": "~17.0.10",
     "expo-crypto": "~15.0.8",
     "expo-device": "^55.0.9",
     "expo-file-system": "^19.0.21",
@@ -29,6 +31,7 @@
     "expo-localization": "~17.0.8",
     "expo-media-library": "^18.2.1",
     "expo-status-bar": "~3.0.9",
+    "gemini-nano": "file:./modules/gemini-nano",
     "llama.rn": "^0.11.4",
     "pako": "^2.1.0",
     "react": "19.1.0",
@@ -38,8 +41,7 @@
     "react-native-reanimated": "~4.1.1",
     "react-native-safe-area-context": "^5.6.2",
     "react-native-screens": "~4.16.0",
-    "zustand": "^5.0.11",
-    "gemini-nano": "file:./modules/gemini-nano"
+    "zustand": "^5.0.11"
   },
   "devDependencies": {
     "@testing-library/jest-native": "^5.4.3",
