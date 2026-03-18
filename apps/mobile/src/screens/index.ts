@@ -4,3 +4,5 @@ export { default as ProfileScreen } from './ProfileScreen';
 export { DetectionScreen } from './DetectionScreen';
 export { default as VlmDownloadScreen } from './VlmDownloadScreen';
 export { default as GeminiNanoTestScreen } from './GeminiNanoTestScreen';
+export { default as EntryDetailScreen } from './EntryDetailScreen';
+export { default as FoodSearchScreen } from './FoodSearchScreen';

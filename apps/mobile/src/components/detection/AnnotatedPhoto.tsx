@@ -1,5 +1,5 @@
 import React from 'react';
-import { Image, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
   useAnimatedStyle,
@@ -15,6 +15,8 @@ interface AnnotatedPhotoProps {
   photoUri: string;
   photoWidth: number;
   photoHeight: number;
+  displayWidth: number;
+  displayHeight: number;
   children?: React.ReactNode; // BoundingBoxOverlay goes here
 }
 
@@ -39,13 +41,10 @@ export function AnnotatedPhoto({
   photoUri,
   photoWidth,
   photoHeight,
+  displayWidth,
+  displayHeight,
   children,
 }: AnnotatedPhotoProps) {
-  const { width: screenWidth } = useWindowDimensions();
-
-  const aspectRatio = photoWidth > 0 ? photoHeight / photoWidth : 1;
-  const displayWidth = screenWidth;
-  const displayHeight = screenWidth * aspectRatio;
 
   // Shared values for gestures
   const scale = useSharedValue(1);
@@ -123,14 +122,16 @@ export function AnnotatedPhoto({
   return (
     <View style={[styles.container, { width: displayWidth, height: displayHeight }]}>
       <GestureDetector gesture={composed}>
-        <Animated.View style={[styles.inner, animatedStyle]}>
+        <Animated.View style={[{ width: displayWidth, height: displayHeight }, animatedStyle]}>
           <Image
             source={{ uri: photoUri }}
             style={{ width: displayWidth, height: displayHeight }}
-            resizeMode="contain"
+            resizeMode="stretch"
           />
           {/* Bounding box overlay sits on top of the image */}
-          <View style={StyleSheet.absoluteFill}>{children}</View>
+          <View style={{ position: 'absolute', top: 0, left: 0, width: displayWidth, height: displayHeight }}>
+            {children}
+          </View>
         </Animated.View>
       </GestureDetector>
     </View>
@@ -145,8 +146,5 @@ const styles = StyleSheet.create({
   container: {
     overflow: 'hidden',
     backgroundColor: '#000',
-  },
-  inner: {
-    flex: 1,
   },
 });

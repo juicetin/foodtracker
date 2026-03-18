@@ -8,19 +8,10 @@ import { HomeScreen, DiaryScreen, ProfileScreen } from '../screens';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-/**
- * Placeholder component for the "Detect" tab.
- * This screen is never rendered because the tab's listener intercepts the
- * press and navigates to the Detection stack screen instead.
- */
 function DetectPlaceholder() {
   return <View />;
 }
 
-/**
- * Custom tab bar button that opens DetectionScreen as a full-screen modal
- * instead of rendering within the tab navigator.
- */
 function DetectTabButton({ children }: { children: React.ReactNode }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -37,16 +28,26 @@ function DetectTabButton({ children }: { children: React.ReactNode }) {
   );
 }
 
+function TabIcon({ emoji, color }: { emoji: string; color: string }) {
+  return <Text style={{ fontSize: 20, color }}>{emoji}</Text>;
+}
+
 export default function MainTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#007AFF',
-        tabBarInactiveTintColor: '#999',
+        tabBarActiveTintColor: '#16A34A',
+        tabBarInactiveTintColor: '#9CA3AF',
         tabBarStyle: {
-          borderTopWidth: 1,
-          borderTopColor: '#E5E5E5',
+          borderTopWidth: StyleSheet.hairlineWidth,
+          borderTopColor: '#E5E7EB',
+          backgroundColor: '#FFFFFF',
+          paddingTop: 4,
+        },
+        tabBarLabelStyle: {
+          fontSize: 11,
+          fontWeight: '600',
         },
       }}
     >
@@ -55,10 +56,7 @@ export default function MainTabNavigator() {
         component={HomeScreen}
         options={{
           tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => (
-            // TODO: Add proper icons
-            <></>
-          ),
+          tabBarIcon: ({ color }) => <TabIcon emoji="🏠" color={color} />,
         }}
       />
       <Tab.Screen
@@ -68,7 +66,7 @@ export default function MainTabNavigator() {
           tabBarButton: (props) => (
             <DetectTabButton>{props.children}</DetectTabButton>
           ),
-          tabBarLabel: 'Detect',
+          tabBarLabel: '',
         }}
       />
       <Tab.Screen
@@ -76,10 +74,7 @@ export default function MainTabNavigator() {
         component={DiaryScreen}
         options={{
           tabBarLabel: 'Diary',
-          tabBarIcon: ({ color, size }) => (
-            // TODO: Add proper icons
-            <></>
-          ),
+          tabBarIcon: ({ color }) => <TabIcon emoji="📓" color={color} />,
         }}
       />
       <Tab.Screen
@@ -87,10 +82,7 @@ export default function MainTabNavigator() {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-          tabBarIcon: ({ color, size }) => (
-            // TODO: Add proper icons
-            <></>
-          ),
+          tabBarIcon: ({ color }) => <TabIcon emoji="👤" color={color} />,
         }}
       />
     </Tab.Navigator>
@@ -108,7 +100,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: 26,
-    backgroundColor: '#22C55E',
+    backgroundColor: '#16A34A',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,

@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { geminiNanoModule, type AvailabilityStatus } from '../../modules/gemini-nano/src/geminiNanoModule';
-import { SPIKE_PROMPT } from '../services/vlm/geminiNanoService';
+import { SPIKE_PROMPT, SPIKE_NUTRITION_PROMPT } from '../services/vlm/geminiNanoService';
 
 type TestState = 'idle' | 'running' | 'done' | 'error';
 
@@ -33,7 +33,7 @@ export default function GeminiNanoTestScreen() {
     geminiNanoModule
       .checkAvailability()
       .then(setAvailability)
-      .catch(() => setAvailability('not_supported'));
+      .catch(() => setAvailability('unavailable'));
   }, []);
 
   const [downloadState, setDownloadState] = useState<'idle' | 'requesting' | 'started'>('idle');
@@ -43,6 +43,7 @@ export default function GeminiNanoTestScreen() {
     downloading: 'Model Downloading...',
     downloadable: 'Model Not Downloaded (tap to download)',
     unavailable: 'Not Supported on This Device',
+    needs_update: 'Update Android AICore to use this feature (Play Store → AICore)',
   };
 
   const availabilityColor: Record<AvailabilityStatus, string> = {
@@ -50,6 +51,7 @@ export default function GeminiNanoTestScreen() {
     downloading: '#e65100',
     downloadable: '#f57c00',
     unavailable: '#c62828',
+    needs_update: '#c62828',
   };
 
   async function triggerDownload() {
@@ -95,7 +97,7 @@ export default function GeminiNanoTestScreen() {
     }
   }
 
-  async function runTest() {
+  async function runTest(prompt: string) {
     if (!photoUri) return;
     setTestState('running');
     setRawOutput('');
@@ -103,7 +105,7 @@ export default function GeminiNanoTestScreen() {
     setElapsedMs(null);
     const start = Date.now();
     try {
-      const result = await geminiNanoModule.identifyFood(photoUri, SPIKE_PROMPT);
+      const result = await geminiNanoModule.identifyFood(photoUri, prompt);
       setElapsedMs(Date.now() - start);
       setRawOutput(result || '(empty response)');
       setTestState('done');
@@ -149,6 +151,24 @@ export default function GeminiNanoTestScreen() {
         </TouchableOpacity>
       )}
 
+      {/* Text-only smoke test */}
+      <TouchableOpacity
+        style={[styles.button, { marginBottom: 12, backgroundColor: '#7b1fa2' }]}
+        onPress={async () => {
+          setTestState('running');
+          setRawOutput('');
+          setErrorMessage('');
+          const start = Date.now();
+          const result = await geminiNanoModule.testTextOnly('Reply with exactly: {"ok":true}');
+          setElapsedMs(Date.now() - start);
+          setRawOutput(result);
+          setTestState('done');
+        }}
+        disabled={testState === 'running'}
+      >
+        <Text style={styles.buttonText}>Test Text Only (no image)</Text>
+      </TouchableOpacity>
+
       {/* Image pickers */}
       <View style={styles.buttonRow}>
         <TouchableOpacity style={styles.button} onPress={pickFromCamera}>
@@ -166,18 +186,31 @@ export default function GeminiNanoTestScreen() {
         </Text>
       )}
 
-      {/* Run Test button */}
-      <TouchableOpacity
-        style={[styles.runButton, (!photoUri || testState === 'running') && styles.runButtonDisabled]}
-        onPress={runTest}
-        disabled={!photoUri || testState === 'running'}
-      >
-        {testState === 'running' ? (
-          <ActivityIndicator color="#fff" />
-        ) : (
-          <Text style={styles.runButtonText}>Run Test</Text>
-        )}
-      </TouchableOpacity>
+      {/* Run Test buttons */}
+      <View style={styles.buttonRow}>
+        <TouchableOpacity
+          style={[styles.runButton, { flex: 1 }, (!photoUri || testState === 'running') && styles.runButtonDisabled]}
+          onPress={() => runTest(SPIKE_PROMPT)}
+          disabled={!photoUri || testState === 'running'}
+        >
+          {testState === 'running' ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.runButtonText}>Basic</Text>
+          )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.runButton, { flex: 1, backgroundColor: '#1565c0' }, (!photoUri || testState === 'running') && styles.runButtonDisabled]}
+          onPress={() => runTest(SPIKE_NUTRITION_PROMPT)}
+          disabled={!photoUri || testState === 'running'}
+        >
+          {testState === 'running' ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.runButtonText}>+ Weights</Text>
+          )}
+        </TouchableOpacity>
+      </View>
 
       {/* Timing */}
       {elapsedMs !== null && (
@@ -199,10 +232,14 @@ export default function GeminiNanoTestScreen() {
         </View>
       )}
 
-      {/* Prompt shown for reference */}
+      {/* Prompts shown for reference */}
       <View style={styles.promptBox}>
-        <Text style={styles.promptLabel}>Spike Prompt:</Text>
+        <Text style={styles.promptLabel}>Basic Prompt:</Text>
         <Text style={styles.promptText}>{SPIKE_PROMPT}</Text>
+      </View>
+      <View style={[styles.promptBox, { marginTop: 8, backgroundColor: '#e3f2fd' }]}>
+        <Text style={[styles.promptLabel, { color: '#1565c0' }]}>Weighted Ingredients Prompt:</Text>
+        <Text style={styles.promptText}>{SPIKE_NUTRITION_PROMPT}</Text>
       </View>
     </ScrollView>
   );

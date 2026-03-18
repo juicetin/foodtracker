@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import MainTabNavigator from './MainTabNavigator';
-import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen } from '../screens';
+import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen } from '../screens';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -42,7 +42,24 @@ export default function RootNavigator() {
             animation: 'slide_from_right',
           }}
         />
-        {/* TODO: Add EntryDetail screen */}
+        <Stack.Screen
+          name="FoodSearch"
+          component={FoodSearchScreen}
+          options={{
+            animation: 'slide_from_bottom',
+            presentation: 'fullScreenModal',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="EntryDetail"
+          component={EntryDetailScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Meal Detail',
+            animation: 'slide_from_right',
+          }}
+        />
       </Stack.Navigator>
     </NavigationContainer>
   );

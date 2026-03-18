@@ -1,109 +1,212 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+/**
+ * ProfileScreen — nutrition goals editor, preferences, AI model management.
+ */
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  Pressable,
+  TextInput,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
-import { ProfileScreenNavigationProp } from '../navigation/types';
+import { usePreferencesStore } from '../store/usePreferencesStore';
 
-interface ProfileScreenProps {
-  navigation: ProfileScreenNavigationProp;
-}
+export default function ProfileScreen() {
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { nutritionGoals, setNutritionGoals, region, units, setRegion, setUnits } = usePreferencesStore();
 
-export default function ProfileScreen({ navigation }: ProfileScreenProps) {
-  const rootNavigation =
-    useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [editingGoals, setEditingGoals] = useState(false);
+  const [calGoal, setCalGoal] = useState(String(nutritionGoals.calories));
+  const [proteinGoal, setProteinGoal] = useState(String(nutritionGoals.protein));
+  const [carbsGoal, setCarbsGoal] = useState(String(nutritionGoals.carbs));
+  const [fatGoal, setFatGoal] = useState(String(nutritionGoals.fat));
+
+  function saveGoals() {
+    const cal = parseInt(calGoal, 10);
+    const p = parseInt(proteinGoal, 10);
+    const c = parseInt(carbsGoal, 10);
+    const f = parseInt(fatGoal, 10);
+
+    if ([cal, p, c, f].some((v) => isNaN(v) || v <= 0)) {
+      Alert.alert('Invalid', 'All goals must be positive numbers.');
+      return;
+    }
+
+    setNutritionGoals({ calories: cal, protein: p, carbs: c, fat: f });
+    setEditingGoals(false);
+  }
+
+  function cancelGoalEdit() {
+    setCalGoal(String(nutritionGoals.calories));
+    setProteinGoal(String(nutritionGoals.protein));
+    setCarbsGoal(String(nutritionGoals.carbs));
+    setFatGoal(String(nutritionGoals.fat));
+    setEditingGoals(false);
+  }
+
+  const regionLabels: Record<string, string> = {
+    AU: 'Australia', US: 'United States', CA: 'Canada',
+    UK: 'United Kingdom', FR: 'France', global: 'Global',
+  };
+
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>Profile</Text>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Goals</Text>
+      {/* Goals */}
+      <View style={styles.card}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.cardTitle}>Daily Goals</Text>
+          {!editingGoals ? (
+            <Pressable onPress={() => setEditingGoals(true)}>
+              <Text style={styles.editBtn}>Edit</Text>
+            </Pressable>
+          ) : (
+            <View style={styles.editActions}>
+              <Pressable onPress={cancelGoalEdit}>
+                <Text style={styles.cancelBtn}>Cancel</Text>
+              </Pressable>
+              <Pressable onPress={saveGoals}>
+                <Text style={styles.saveBtn}>Save</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+
+        <GoalRow
+          label="Calories"
+          unit="kcal"
+          value={calGoal}
+          editing={editingGoals}
+          onChange={setCalGoal}
+          color="#EF4444"
+        />
+        <GoalRow
+          label="Protein"
+          unit="g"
+          value={proteinGoal}
+          editing={editingGoals}
+          onChange={setProteinGoal}
+          color="#3B82F6"
+        />
+        <GoalRow
+          label="Carbs"
+          unit="g"
+          value={carbsGoal}
+          editing={editingGoals}
+          onChange={setCarbsGoal}
+          color="#D97706"
+        />
+        <GoalRow
+          label="Fat"
+          unit="g"
+          value={fatGoal}
+          editing={editingGoals}
+          onChange={setFatGoal}
+          color="#16A34A"
+        />
+      </View>
+
+      {/* Preferences */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Preferences</Text>
         <View style={styles.row}>
-          <Text style={styles.label}>Daily Calories</Text>
-          <Text style={styles.value}>2000 kcal</Text>
+          <Text style={styles.rowLabel}>Region</Text>
+          <Text style={styles.rowValue}>{regionLabels[region] ?? region}</Text>
         </View>
         <View style={styles.row}>
-          <Text style={styles.label}>Protein</Text>
-          <Text style={styles.value}>150g</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Carbs</Text>
-          <Text style={styles.value}>200g</Text>
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.label}>Fat</Text>
-          <Text style={styles.value}>65g</Text>
+          <Text style={styles.rowLabel}>Units</Text>
+          <Text style={styles.rowValue}>{units === 'metric' ? 'Metric' : 'Imperial'}</Text>
         </View>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Preferences</Text>
-        <TouchableOpacity style={styles.row}>
-          <Text style={styles.label}>Region</Text>
-          <Text style={styles.value}>Australia</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.row}>
-          <Text style={styles.label}>Units</Text>
-          <Text style={styles.value}>Metric</Text>
-        </TouchableOpacity>
+      {/* AI Models */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>AI Models</Text>
+        <Pressable style={styles.row} onPress={() => rootNavigation.navigate('GeminiNanoTest')}>
+          <Text style={styles.rowLabel}>Gemini Nano Test</Text>
+          <Text style={styles.rowChevron}>→</Text>
+        </Pressable>
       </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>AI Models</Text>
-        <TouchableOpacity
-          style={styles.row}
-          onPress={() => rootNavigation.navigate('VlmDownload')}
-        >
-          <Text style={styles.label}>VLM Model</Text>
-          <Text style={styles.value}>Manage</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={styles.row}
-          onPress={() => rootNavigation.navigate('GeminiNanoTest')}
-        >
-          <Text style={styles.label}>Gemini Nano Test</Text>
-          <Text style={styles.value}>Debug</Text>
-        </TouchableOpacity>
+      <View style={{ height: 100 }} />
+    </ScrollView>
+  );
+}
+
+function GoalRow({ label, unit, value, editing, onChange, color }: {
+  label: string; unit: string; value: string; editing: boolean;
+  onChange: (v: string) => void; color: string;
+}) {
+  return (
+    <View style={styles.goalRow}>
+      <View style={styles.goalLabelRow}>
+        <View style={[styles.goalDot, { backgroundColor: color }]} />
+        <Text style={styles.goalLabel}>{label}</Text>
       </View>
+      {editing ? (
+        <View style={styles.goalInputRow}>
+          <TextInput
+            style={styles.goalInput}
+            value={value}
+            onChangeText={onChange}
+            keyboardType="number-pad"
+            selectTextOnFocus
+          />
+          <Text style={styles.goalUnit}>{unit}</Text>
+        </View>
+      ) : (
+        <Text style={styles.goalValue}>{value} {unit}</Text>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    paddingTop: 60,
-    paddingHorizontal: 20,
+  container: { flex: 1, backgroundColor: '#F5F5F5' },
+  content: { paddingTop: 60, paddingHorizontal: 16 },
+  title: { fontSize: 28, fontWeight: '800', color: '#111827', marginBottom: 20 },
+
+  card: {
+    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
+    shadowRadius: 8, elevation: 3,
   },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    marginBottom: 24,
+  cardHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12,
   },
-  section: {
-    marginBottom: 32,
+  cardTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  editBtn: { fontSize: 15, fontWeight: '600', color: '#3B82F6' },
+  editActions: { flexDirection: 'row', gap: 16 },
+  cancelBtn: { fontSize: 15, fontWeight: '500', color: '#6B7280' },
+  saveBtn: { fontSize: 15, fontWeight: '700', color: '#16A34A' },
+
+  goalRow: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
   },
-  sectionTitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 12,
-    color: '#333',
+  goalLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+  goalDot: { width: 10, height: 10, borderRadius: 5 },
+  goalLabel: { fontSize: 15, fontWeight: '500', color: '#374151' },
+  goalValue: { fontSize: 15, fontWeight: '600', color: '#111827' },
+  goalInputRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  goalInput: {
+    backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+    fontSize: 15, fontWeight: '600', color: '#111827', minWidth: 70, textAlign: 'right',
   },
+  goalUnit: { fontSize: 13, color: '#6B7280' },
+
   row: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F0F0F0',
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
   },
-  label: {
-    fontSize: 16,
-    color: '#333',
-  },
-  value: {
-    fontSize: 16,
-    color: '#666',
-  },
+  rowLabel: { fontSize: 15, color: '#374151' },
+  rowValue: { fontSize: 15, color: '#6B7280' },
+  rowChevron: { fontSize: 16, color: '#D1D5DB' },
 });
