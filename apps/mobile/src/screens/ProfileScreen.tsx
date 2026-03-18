@@ -4,6 +4,7 @@
 
 import React, { useState } from 'react';
 import {
+  ActivityIndicator,
   View,
   Text,
   StyleSheet,
@@ -12,10 +13,20 @@ import {
   TextInput,
   Alert,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RootStackParamList } from '../types';
 import { usePreferencesStore } from '../store/usePreferencesStore';
+import * as FileSystem from 'expo-file-system';
+import * as Sharing from 'expo-sharing';
+import {
+  loadExportEntries,
+  loadExportRecipes,
+  loadExportFavourites,
+  generateCsv,
+  generateJson,
+} from '../services/export/exportService';
 
 export default function ProfileScreen() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -135,6 +146,9 @@ export default function ProfileScreen() {
         </Pressable>
       </View>
 
+      {/* Export Data */}
+      <ExportCard />
+
       {/* AI Models */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>AI Models</Text>
@@ -146,6 +160,66 @@ export default function ProfileScreen() {
 
       <View style={{ height: 100 }} />
     </ScrollView>
+  );
+}
+
+function ExportCard() {
+  const [exporting, setExporting] = useState(false);
+
+  async function handleExport(format: 'csv' | 'json') {
+    setExporting(true);
+    try {
+      const entries = loadExportEntries();
+      const recipes = loadExportRecipes();
+      const favourites = loadExportFavourites();
+
+      const content = format === 'csv'
+        ? generateCsv(entries, recipes, favourites)
+        : generateJson(entries, recipes, favourites);
+
+      const ext = format === 'csv' ? 'csv' : 'json';
+      const date = new Date().toISOString().split('T')[0];
+      const filename = `tastimate-export-${date}.${ext}`;
+      const fileUri = `${FileSystem.documentDirectory}${filename}`;
+
+      await FileSystem.writeAsStringAsync(fileUri, content, {
+        encoding: FileSystem.EncodingType.UTF8,
+      });
+
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(fileUri, {
+          mimeType: format === 'csv' ? 'text/csv' : 'application/json',
+          dialogTitle: `Export ${format.toUpperCase()}`,
+        });
+      } else {
+        Alert.alert('Saved', `Exported to ${fileUri}`);
+      }
+    } catch (err) {
+      Alert.alert('Error', 'Failed to export data.');
+    } finally {
+      setExporting(false);
+    }
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Export Data</Text>
+      {exporting ? (
+        <ActivityIndicator size="small" color="#16A34A" style={{ paddingVertical: 16 }} />
+      ) : (
+        <>
+          <Pressable style={styles.exportBtn} onPress={() => handleExport('csv')}>
+            <Ionicons name="document-text-outline" size={18} color="#16A34A" />
+            <Text style={styles.exportBtnText}>Export as CSV</Text>
+          </Pressable>
+          <Pressable style={styles.exportBtn} onPress={() => handleExport('json')}>
+            <Ionicons name="code-slash-outline" size={18} color="#3B82F6" />
+            <Text style={[styles.exportBtnText, { color: '#3B82F6' }]}>Export as JSON</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
   );
 }
 
@@ -218,4 +292,9 @@ const styles = StyleSheet.create({
   rowLabel: { fontSize: 15, color: '#374151' },
   rowValue: { fontSize: 15, color: '#6B7280' },
   rowChevron: { fontSize: 16, color: '#D1D5DB' },
+  exportBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+  },
+  exportBtnText: { fontSize: 15, fontWeight: '500', color: '#16A34A' },
 });
