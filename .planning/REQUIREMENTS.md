@@ -60,6 +60,15 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **MDL-01**: Android app delivers ML models via Play for On-Device AI with device targeting by RAM and chipset
 - [ ] **MDL-02**: iOS app delivers optional models via On-Demand Resources or Background Assets API
 
+### Backup & Sync
+
+- [x] **BKP-01**: op-sqlite updateHook writes to a change journal table recording table, rowid, operation, and timestamp for every INSERT/UPDATE/DELETE
+- [x] **BKP-02**: Manual or automatic backup trigger exports journal entries as a JSON changeset file (incremental diff since last backup)
+- [x] **BKP-03**: Periodic full backup via VACUUM INTO creates a clean, portable .db snapshot
+- [x] **BKP-04**: Compaction tool replays incremental JSON diffs onto the last full backup to produce a merged full backup
+- [x] **BKP-05**: Backup includes ALL user data: food entries, ingredients, dishes, photos, recipes, favourites, OFF cache, preferences
+- [x] **BKP-06**: Backup files stored on local device storage accessible via Files app
+
 ### ML Pipeline Expansion
 
 - [x] **ML-01**: App uses a custom-trained 335+ class food classifier (EfficientNet-Lite0) replacing the generic AIY Food V1 model, with ImageNet-normalized 224x224 input
@@ -149,9 +158,16 @@ Deferred to future release. Tracked but not in current roadmap.
 | ML-04 | Phase 2.5 | Complete |
 | ML-05 | Phase 2.5 | Complete |
 
+| BKP-01 | Phase 3.6 | Complete |
+| BKP-02 | Phase 3.6 | Complete |
+| BKP-03 | Phase 3.6 | Complete |
+| BKP-04 | Phase 3.6 | Complete |
+| BKP-05 | Phase 3.6 | Complete |
+| BKP-06 | Phase 3.6 | Complete |
+
 **Coverage:**
-- v1 requirements: 33 total
-- Mapped to phases: 33
+- v1 requirements: 39 total
+- Mapped to phases: 39
 - Unmapped: 0
 
 ---
