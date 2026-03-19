@@ -267,7 +267,12 @@ Plans:
   4. Compaction tool replays incremental JSON diffs onto the last full backup to produce a merged full backup
   5. Backup includes ALL user data: food entries, ingredients, dishes, photos, recipes, favourites, OFF cache, preferences
   6. Backup files stored on local device storage accessible via Files app
-**Plans**: TBD
+**Requirements**: BKP-01, BKP-02, BKP-03, BKP-04, BKP-05, BKP-06
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03.6-01-PLAN.md -- Change journal, backup types, backupService (incremental JSON, full VACUUM INTO, compaction, retention)
+- [ ] 03.6-02-PLAN.md -- Background auto-backup scheduler, ProfileScreen backup card, iOS file visibility config
 
 ### Phase 3.7: Google Drive Sync (INSERTED)
 **Goal**: Users can sync backups to Google Drive for cross-device restore and cloud safety
@@ -345,7 +350,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete   | 2026-03-15 |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
 | 3.5. OFF Cache + Attribution | 0/2 | Planned | - |
-| 3.6. Incremental Backup System | 0/? | Not started | - |
+| 3.6. Incremental Backup System | 0/2 | Planned | - |
 | 3.7. Google Drive Sync | 0/? | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
