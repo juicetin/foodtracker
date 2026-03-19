@@ -251,7 +251,11 @@ Plans:
   3. Adaptive rate limiter respects OFF limits (100 product/min, 10 search/min) with variable debounce that ramps up as rolling window approaches capacity
   4. ODbL attribution link displayed in Profile/About screen crediting Open Food Facts
   5. OFF cache is included in data export (CSV/JSON) and backup system
-**Plans**: TBD
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03.5-01-PLAN.md -- SQLite cache layer: two cache tables, offCacheService, stale-while-revalidate wrapping of OFF API
+- [ ] 03.5-02-PLAN.md -- Export integration + ODbL attribution: OFF cache in CSV/JSON exports, About section in ProfileScreen
 
 ### Phase 3.6: Incremental Backup System (INSERTED)
 **Goal**: Users can back up all data (entries, recipes, favourites, OFF cache, settings) with incremental diffs and periodic full snapshots
@@ -325,7 +329,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3 -> 3.5 -> 3.6 -> 3.7 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -340,8 +344,9 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 02.7. Gemini Nano VLM Integration | 0/2 | Planned | - |
 | 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete   | 2026-03-15 |
 | 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
+| 3.5. OFF Cache + Attribution | 0/2 | Planned | - |
+| 3.6. Incremental Backup System | 0/? | Not started | - |
+| 3.7. Google Drive Sync | 0/? | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
 | 6. Sync + Distribution | 0/2 | Not started | - |
-
-
