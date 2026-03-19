@@ -1,3 +1,6 @@
+// Register background backup task at module load (must run before React renders)
+import './src/services/backup/backupScheduler';
+
 import { useEffect } from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';

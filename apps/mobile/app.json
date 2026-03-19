@@ -14,7 +14,11 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jtingexpo.mobile"
+      "bundleIdentifier": "com.jtingexpo.mobile",
+      "infoPlist": {
+        "UIFileSharingEnabled": true,
+        "LSSupportsOpeningDocumentsInPlace": true
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -53,7 +57,8 @@
           "forceCxx20": true,
           "enableOpenCL": true
         }
-      ]
+      ],
+      "expo-background-task"
     ],
     "extra": {
       "eas": {
