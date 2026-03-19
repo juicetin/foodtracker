@@ -19,6 +19,7 @@ import {
   View,
 } from 'react-native';
 import { getKnowledgeGraphService } from '../../services/knowledge-graph';
+import { searchProducts } from '../../services/openfoodfacts/openFoodFactsService';
 
 interface Props {
   visible: boolean;
@@ -34,7 +35,7 @@ export default function IngredientSearchSheet({
   onDismiss,
 }: Props) {
   const [query, setQuery] = useState(initialQuery);
-  const [results, setResults] = useState<string[]>([]);
+  const [results, setResults] = useState<{ name: string; source: 'kg' | 'off' }[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -58,13 +59,28 @@ export default function IngredientSearchSheet({
 
     setLoading(true);
     try {
+      const unified: { name: string; source: 'kg' | 'off' }[] = [];
+
+      // KG search (local, fast)
       const kg = await getKnowledgeGraphService();
       if (kg) {
-        const matches = await kg.searchIngredients(trimmed, 20);
-        setResults(matches);
-      } else {
-        setResults([]);
+        const matches = await kg.searchIngredients(trimmed, 15);
+        for (const name of matches) {
+          unified.push({ name, source: 'kg' });
+        }
       }
+
+      // OFF search (remote, broader coverage)
+      const offResults = await searchProducts(trimmed, 8);
+      const kgNames = new Set(unified.map((r) => r.name.toLowerCase()));
+      for (const p of offResults) {
+        const displayName = p.brand ? `${p.name} (${p.brand})` : p.name;
+        if (!kgNames.has(p.name.toLowerCase())) {
+          unified.push({ name: displayName, source: 'off' });
+        }
+      }
+
+      setResults(unified);
     } catch {
       setResults([]);
     } finally {
@@ -78,8 +94,8 @@ export default function IngredientSearchSheet({
     debounceRef.current = setTimeout(() => doSearch(text), 250);
   }
 
-  function handleSelectResult(name: string) {
-    onSelect(name);
+  function handleSelectResult(item: { name: string; source: string }) {
+    onSelect(item.name);
   }
 
   function handleSubmitCustom() {
@@ -135,7 +151,7 @@ export default function IngredientSearchSheet({
           {/* Results */}
           <FlatList
             data={results}
-            keyExtractor={(item, index) => `${item}-${index}`}
+            keyExtractor={(item, index) => `${item.name}-${index}`}
             keyboardShouldPersistTaps="handled"
             style={styles.list}
             renderItem={({ item }) => (
@@ -143,7 +159,10 @@ export default function IngredientSearchSheet({
                 style={styles.resultRow}
                 onPress={() => handleSelectResult(item)}
               >
-                <Text style={styles.resultText}>{item}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <Text style={[styles.resultText, { flex: 1 }]} numberOfLines={1}>{item.name}</Text>
+                  <Text style={styles.sourceTag}>{item.source === 'off' ? 'OFF' : 'KG'}</Text>
+                </View>
               </Pressable>
             )}
             ListEmptyComponent={
@@ -238,6 +257,16 @@ const styles = StyleSheet.create({
   resultText: {
     fontSize: 15,
     color: '#111827',
+  },
+  sourceTag: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#9CA3AF',
+    backgroundColor: '#F3F4F6',
+    borderRadius: 4,
+    paddingHorizontal: 5,
+    paddingVertical: 2,
+    marginLeft: 8,
   },
   emptyText: {
     fontSize: 14,
