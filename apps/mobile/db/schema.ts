@@ -217,6 +217,27 @@ export const containerWeights = sqliteTable('container_weights', {
   createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
+// ── OFF Product Cache (Phase 03.5 -- Open Food Facts API response cache) ──
+
+export const offProductCache = sqliteTable('off_product_cache', {
+  barcode: text('barcode').primaryKey(),
+  name: text('name').notNull(),
+  brand: text('brand'),
+  responseJson: text('response_json').notNull(), // Full OFFProduct JSON
+  cachedAt: text('cached_at').default(sql`(datetime('now'))`),
+});
+
+// ── OFF Search Cache (Phase 03.5 -- Open Food Facts search response cache) ──
+
+export const offSearchCache = sqliteTable('off_search_cache', {
+  cacheKey: text('cache_key').primaryKey(), // normalized_query::pageSize
+  query: text('query').notNull(),
+  pageSize: integer('page_size').notNull(),
+  responseJson: text('response_json').notNull(), // JSON array of OFFProduct
+  resultCount: integer('result_count').notNull(),
+  cachedAt: text('cached_at').default(sql`(datetime('now'))`),
+});
+
 // ── Model Cache (new) ──
 
 export const modelCache = sqliteTable('model_cache', {

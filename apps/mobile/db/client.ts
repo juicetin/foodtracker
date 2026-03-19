@@ -99,6 +99,23 @@ opsqlite.execute(`CREATE TABLE IF NOT EXISTS scanned_dishes (
   created_at TEXT DEFAULT (datetime('now'))
 )`);
 
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS off_product_cache (
+  barcode TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  brand TEXT,
+  response_json TEXT NOT NULL,
+  cached_at TEXT DEFAULT (datetime('now'))
+)`);
+
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS off_search_cache (
+  cache_key TEXT PRIMARY KEY NOT NULL,
+  query TEXT NOT NULL,
+  page_size INTEGER NOT NULL,
+  response_json TEXT NOT NULL,
+  result_count INTEGER NOT NULL,
+  cached_at TEXT DEFAULT (datetime('now'))
+)`);
+
 opsqlite.execute(`CREATE TABLE IF NOT EXISTS correction_history (
   id TEXT PRIMARY KEY NOT NULL,
   original_class_name TEXT NOT NULL,
