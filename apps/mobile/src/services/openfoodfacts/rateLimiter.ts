@@ -92,5 +92,14 @@ export class OFFRateLimiter {
   }
 }
 
+/**
+ * User-facing message when rate limited.
+ * Mentions shared IP/VPN as a possible cause since OFF limits are per-IP.
+ */
+export const RATE_LIMIT_MESSAGE =
+  'Food database search is temporarily limited. ' +
+  'If you\'re on a VPN or shared network, other users may be consuming the shared quota. ' +
+  'Try again in a minute, or switch to a different network.';
+
 /** Singleton instance for app-wide use. */
 export const offRateLimiter = new OFFRateLimiter();

@@ -22,6 +22,9 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
 - [ ] **Phase 02.7: Gemini Nano System-Managed VLM Integration** - Tier 0 Gemini Nano via ML Kit GenAI Prompt API, quality spike + human gate, pipeline integration
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
+- [ ] **Phase 3.5: OFF Cache + Attribution** - SQLite cache for OFF API responses, stale-while-revalidate, offline fallback, adaptive rate limiting, ODbL attribution
+- [ ] **Phase 3.6: Incremental Backup System** - updateHook change journal, JSON changeset export, VACUUM INTO full backup, compaction, includes OFF cache + all user data
+- [ ] **Phase 3.7: Google Drive Sync** - react-native-cloud-storage, Google OAuth, upload/download backups, auto-sync on background, restore on fresh install
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
 - [ ] **Phase 5: Scale OCR + Notifications + Health Data** - Kitchen scale reading, container weights, daily macro notifications, Apple Health/Google Fit
 - [ ] **Phase 6: Sync + Distribution** - Google Drive and iCloud sync, Play for On-Device AI, iOS On-Demand Resources, Gemini Nano adapter
@@ -238,6 +241,40 @@ Plans:
 - [ ] 03-01: TBD
 - [ ] 03-02: TBD
 - [ ] 03-03: TBD
+
+### Phase 3.5: OFF Cache + Attribution (INSERTED)
+**Goal**: OFF API responses cached locally in SQLite for offline use, with adaptive rate limiting and proper ODbL attribution
+**Depends on**: Phase 3
+**Success Criteria** (what must be TRUE):
+  1. OFF barcode lookups and text search results are cached in a local SQLite table with stale-while-revalidate pattern (serve cache first, refresh from network)
+  2. When offline, cached OFF results are returned — user sees previously looked-up foods without internet
+  3. Adaptive rate limiter respects OFF limits (100 product/min, 10 search/min) with variable debounce that ramps up as rolling window approaches capacity
+  4. ODbL attribution link displayed in Profile/About screen crediting Open Food Facts
+  5. OFF cache is included in data export (CSV/JSON) and backup system
+**Plans**: TBD
+
+### Phase 3.6: Incremental Backup System (INSERTED)
+**Goal**: Users can back up all data (entries, recipes, favourites, OFF cache, settings) with incremental diffs and periodic full snapshots
+**Depends on**: Phase 3.5
+**Success Criteria** (what must be TRUE):
+  1. op-sqlite updateHook writes to a `_change_journal` table recording table, rowid, operation, and timestamp for every INSERT/UPDATE/DELETE
+  2. Manual or automatic backup trigger exports journal entries as a JSON changeset file (incremental diff since last backup)
+  3. Periodic full backup via VACUUM INTO creates a clean, portable .db snapshot
+  4. Compaction tool replays incremental JSON diffs onto the last full backup to produce a merged full backup
+  5. Backup includes ALL user data: food entries, ingredients, dishes, photos, recipes, favourites, OFF cache, preferences
+  6. Backup files stored on local device storage accessible via Files app
+**Plans**: TBD
+
+### Phase 3.7: Google Drive Sync (INSERTED)
+**Goal**: Users can sync backups to Google Drive for cross-device restore and cloud safety
+**Depends on**: Phase 3.6
+**Success Criteria** (what must be TRUE):
+  1. Google OAuth sign-in flow integrated via react-native-cloud-storage or equivalent
+  2. Incremental backups auto-upload to Google Drive on app background
+  3. Manual full backup upload available from Profile screen
+  4. Fresh app install can discover and restore from Google Drive backup
+  5. Restore applies full backup + incremental diffs in order to reconstruct complete database
+**Plans**: TBD
 
 ### Phase 4: Gallery Scanning + Deduplication
 **Goal**: Users no longer need to manually trigger photo analysis -- the app discovers food photos from the gallery automatically
