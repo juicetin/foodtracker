@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03.6-01-PLAN.md
-last_updated: "2026-03-19T05:55:13.700Z"
+stopped_at: Completed 03.6-02-PLAN.md
+last_updated: "2026-03-19T05:58:58.664Z"
 progress:
   total_phases: 17
-  completed_phases: 9
+  completed_phases: 10
   total_plans: 42
-  completed_plans: 38
+  completed_plans: 39
 ---
 
 # Project State
@@ -95,6 +95,7 @@ Plan: 2 of 2
 | Phase 03.5 P01 | 4min | 2 tasks | 6 files |
 | Phase 03.5 P02 | 3min | 2 tasks | 2 files |
 | Phase 03.6 P01 | 3min | 2 tasks | 4 files |
+| Phase 03.6 P02 | 2min | 2 tasks | 5 files |
 
 ## Accumulated Context
 
@@ -233,6 +234,7 @@ Recent decisions affecting current work:
 - [Phase 03.5]: OFF cache CSV uses comment-style header matching existing Recipes/Favourites pattern
 - [Phase 03.6]: expo-file-system v19 class API (Paths, File, Directory) for backup file operations
 - [Phase 03.6]: Copy-and-replay compaction (not VACUUM INTO shortcut) per user decision
+- [Phase 03.6]: Side-effect import in App.tsx ensures defineTask runs at module load before React renders
 
 ### Roadmap Evolution
 
@@ -258,6 +260,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T05:55:13.696Z
-Stopped at: Completed 03.6-01-PLAN.md
+Last session: 2026-03-19T05:58:58.660Z
+Stopped at: Completed 03.6-02-PLAN.md
 Resume file: None
