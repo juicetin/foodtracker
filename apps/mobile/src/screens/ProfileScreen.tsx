@@ -12,6 +12,7 @@ import {
   Pressable,
   TextInput,
   Alert,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -156,6 +157,23 @@ export default function ProfileScreen() {
         <Pressable style={styles.row} onPress={() => rootNavigation.navigate('GeminiNanoTest')}>
           <Text style={styles.rowLabel}>Gemini Nano Test</Text>
           <Text style={styles.rowChevron}>→</Text>
+        </Pressable>
+      </View>
+
+      {/* About */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>About</Text>
+        <Pressable
+          style={styles.row}
+          onPress={() => Linking.openURL('https://openfoodfacts.org')}
+        >
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel}>Food product data provided by Open Food Facts</Text>
+            <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
+              Licensed under the Open Database License (ODbL)
+            </Text>
+          </View>
+          <Ionicons name="open-outline" size={16} color="#9CA3AF" />
         </Pressable>
       </View>
 
