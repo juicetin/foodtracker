@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 3.5 context gathered
-last_updated: "2026-03-19T04:55:20.416Z"
+stopped_at: Completed 03.5-01-PLAN.md
+last_updated: "2026-03-19T05:00:27Z"
 progress:
   total_phases: 17
   completed_phases: 8
   total_plans: 40
-  completed_plans: 35
+  completed_plans: 36
 ---
 
 # Project State
@@ -91,6 +91,8 @@ Plan: 2 of 2 (COMPLETE)
 | Phase 07 P02 | 4min | 2 tasks | 4 files |
 | Phase 07 P01 | 9min | 2 tasks | 11 files |
 | Phase 07 P03 | 15min | 3 tasks | 7 files |
+
+| Phase 03.5 P01 | 4min | 2 tasks | 6 files |
 | Phase 03.5 P02 | 3min | 2 tasks | 2 files |
 
 ## Accumulated Context
@@ -224,6 +226,8 @@ Recent decisions affecting current work:
 - [Phase 07]: All detection items labelled 'Food Region' with isRefining=true -- VLM provides actual food names
 - [Phase 07]: YOLO labels logged in __DEV__ mode only for debugging, not displayed to user
 - [Phase 07]: RefiningBadge replaced by inline shimmer inside bbox and list items (not header)
+- [Phase 03.5]: Stale-while-revalidate for OFF cache: products 7-day, searches 24-hour freshness
+- [Phase 03.5]: INSERT OR REPLACE for cache upserts; normalized cache keys (trim+lowercase) for search
 - [Phase 03.5]: loadExportOFFCache returns [] on error -- safe if off_product_cache table not yet created
 - [Phase 03.5]: OFF cache CSV uses comment-style header matching existing Recipes/Favourites pattern
 
@@ -251,6 +255,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-19T04:58:37Z
-Stopped at: Completed 03.5-02-PLAN.md
-Resume file: .planning/phases/03.5-off-cache-attribution-inserted/03.5-02-SUMMARY.md
+Last session: 2026-03-19T05:00:27Z
+Stopped at: Completed 03.5-01-PLAN.md (Plan 02 already complete from prior session)
+Resume file: .planning/phases/03.5-off-cache-attribution-inserted/03.5-01-SUMMARY.md
