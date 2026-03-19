@@ -22,7 +22,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
 - [ ] **Phase 02.7: Gemini Nano System-Managed VLM Integration** - Tier 0 Gemini Nano via ML Kit GenAI Prompt API, quality spike + human gate, pipeline integration
 - [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
-- [ ] **Phase 3.5: OFF Cache + Attribution** - SQLite cache for OFF API responses, stale-while-revalidate, offline fallback, adaptive rate limiting, ODbL attribution
+- [x] **Phase 3.5: OFF Cache + Attribution** - SQLite cache for OFF API responses, stale-while-revalidate, offline fallback, adaptive rate limiting, ODbL attribution (completed 2026-03-19)
 - [ ] **Phase 3.6: Incremental Backup System** - updateHook change journal, JSON changeset export, VACUUM INTO full backup, compaction, includes OFF cache + all user data
 - [ ] **Phase 3.7: Google Drive Sync** - react-native-cloud-storage, Google OAuth, upload/download backups, auto-sync on background, restore on fresh install
 - [ ] **Phase 4: Gallery Scanning + Deduplication** - Photo discovery, EXIF extraction, temporal clustering, batch processing within platform constraints
