@@ -2,7 +2,7 @@
  * ProfileScreen — nutrition goals editor, preferences, AI model management.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   View,
@@ -29,6 +29,10 @@ import {
   generateCsv,
   generateJson,
 } from '../services/export/exportService';
+import { performIncrementalBackup, performFullBackup, listBackups } from '../services/backup/backupService';
+import { getJournalCount } from '../services/backup/changeJournal';
+import { registerAutoBackup } from '../services/backup/backupScheduler';
+import type { BackupMetadata } from '../services/backup/types';
 
 export default function ProfileScreen() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -151,6 +155,9 @@ export default function ProfileScreen() {
       {/* Export Data */}
       <ExportCard />
 
+      {/* Backups */}
+      <BackupCard />
+
       {/* AI Models */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>AI Models</Text>
@@ -236,6 +243,106 @@ function ExportCard() {
           <Pressable style={styles.exportBtn} onPress={() => handleExport('json')}>
             <Ionicons name="code-slash-outline" size={18} color="#3B82F6" />
             <Text style={[styles.exportBtnText, { color: '#3B82F6' }]}>Export as JSON</Text>
+          </Pressable>
+        </>
+      )}
+    </View>
+  );
+}
+
+function relativeTime(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `${hours}h ago`;
+  const days = Math.floor(hours / 24);
+  return `${days}d ago`;
+}
+
+function formatBytes(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
+}
+
+function BackupCard() {
+  const [backing, setBacking] = useState(false);
+  const [backups, setBackups] = useState<BackupMetadata[]>([]);
+  const [pendingChanges, setPendingChanges] = useState(0);
+
+  useEffect(() => {
+    setBackups(listBackups());
+    setPendingChanges(getJournalCount());
+    registerAutoBackup();
+  }, []);
+
+  function refreshState() {
+    setBackups(listBackups());
+    setPendingChanges(getJournalCount());
+  }
+
+  async function handleIncremental() {
+    setBacking(true);
+    try {
+      const result = await performIncrementalBackup();
+      if (result) {
+        Alert.alert('Backup saved', `${result.filename}\n${result.changeCount} changes backed up.`);
+      } else {
+        Alert.alert('No changes', 'No changes to back up.');
+      }
+      refreshState();
+    } catch {
+      Alert.alert('Error', 'Failed to create incremental backup.');
+    } finally {
+      setBacking(false);
+    }
+  }
+
+  async function handleFull() {
+    setBacking(true);
+    try {
+      const result = await performFullBackup();
+      Alert.alert('Full backup saved', `${result.filename}\nSize: ${formatBytes(result.sizeBytes)}`);
+      refreshState();
+    } catch {
+      Alert.alert('Error', 'Failed to create full backup.');
+    } finally {
+      setBacking(false);
+    }
+  }
+
+  const lastBackup = backups.length > 0 ? relativeTime(backups[0]!.createdAt) : 'Never';
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Backups</Text>
+
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Last backup</Text>
+        <Text style={styles.rowValue}>{lastBackup}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Pending changes</Text>
+        <Text style={styles.rowValue}>{pendingChanges}</Text>
+      </View>
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Total backups</Text>
+        <Text style={styles.rowValue}>{backups.length}</Text>
+      </View>
+
+      {backing ? (
+        <ActivityIndicator size="small" color="#16A34A" style={{ paddingVertical: 16 }} />
+      ) : (
+        <>
+          <Pressable style={styles.exportBtn} onPress={handleIncremental}>
+            <Ionicons name="cloud-upload-outline" size={18} color="#16A34A" />
+            <Text style={styles.exportBtnText}>Incremental Backup</Text>
+          </Pressable>
+          <Pressable style={styles.exportBtn} onPress={handleFull}>
+            <Ionicons name="download-outline" size={18} color="#3B82F6" />
+            <Text style={[styles.exportBtnText, { color: '#3B82F6' }]}>Full Backup</Text>
           </Pressable>
         </>
       )}
