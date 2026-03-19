@@ -1,6 +1,7 @@
 import { open } from '@op-engineering/op-sqlite';
 import { drizzle } from 'drizzle-orm/op-sqlite';
 import * as schema from './schema';
+import { TRACKED_TABLES } from '../src/services/backup/types';
 
 // User data -- read-write, migrated via drizzle
 export const opsqlite = open({ name: 'foodtracker.db' });
@@ -123,6 +124,35 @@ opsqlite.execute(`CREATE TABLE IF NOT EXISTS correction_history (
   confidence REAL NOT NULL,
   corrected_at TEXT DEFAULT (datetime('now'))
 )`);
+
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS _change_journal (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  table_name TEXT NOT NULL,
+  row_id INTEGER NOT NULL,
+  operation TEXT NOT NULL CHECK(operation IN ('INSERT','UPDATE','DELETE')),
+  timestamp TEXT NOT NULL DEFAULT (datetime('now'))
+)`);
+opsqlite.execute('CREATE INDEX IF NOT EXISTS idx_change_journal_timestamp ON _change_journal(timestamp)');
+
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS _backup_metadata (
+  id TEXT PRIMARY KEY NOT NULL,
+  type TEXT NOT NULL CHECK(type IN ('full','incremental')),
+  filename TEXT NOT NULL,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  journal_from TEXT,
+  journal_to TEXT,
+  size_bytes INTEGER,
+  parent_full_id TEXT
+)`);
+
+// Register updateHook to track changes on user-data tables
+opsqlite.updateHook((params: { table: string; operation: 'INSERT' | 'DELETE' | 'UPDATE'; rowId: number }) => {
+  if (!TRACKED_TABLES.has(params.table) || params.table === '_change_journal' || params.table === '_backup_metadata') return;
+  opsqlite.executeSync(
+    'INSERT INTO _change_journal (table_name, row_id, operation, timestamp) VALUES (?, ?, ?, ?)',
+    [params.table, params.rowId, params.operation, new Date().toISOString()],
+  );
+});
 
 export const userDb = drizzle(opsqlite, { schema });
 
