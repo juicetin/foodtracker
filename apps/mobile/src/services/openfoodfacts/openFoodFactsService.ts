@@ -94,12 +94,20 @@ function parseProduct(raw: Record<string, unknown>): OFFProduct {
 // Public API
 // ---------------------------------------------------------------------------
 
+import { offRateLimiter } from './rateLimiter';
+
 /**
  * Look up a product by barcode (EAN/UPC).
- * Returns null if the product is not found or on error.
+ * Returns null if the product is not found, rate-limited, or on error.
  */
 export async function lookupBarcode(barcode: string): Promise<OFFProduct | null> {
   try {
+    // Respect rate limits
+    const delay = offRateLimiter.getDelay('product');
+    if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+    if (!offRateLimiter.canRequest('product')) return null;
+
+    offRateLimiter.recordRequest('product');
     const url = `${BASE_URL}/api/v2/product/${barcode}?fields=${PRODUCT_FIELDS}`;
     const response = await fetch(url, { headers: HEADERS });
 
@@ -123,6 +131,12 @@ export async function searchProducts(
   pageSize: number = 20,
 ): Promise<OFFProduct[]> {
   try {
+    // Respect rate limits (search is stricter: 10/min)
+    const delay = offRateLimiter.getDelay('search');
+    if (delay > 0) await new Promise((r) => setTimeout(r, delay));
+    if (!offRateLimiter.canRequest('search')) return [];
+
+    offRateLimiter.recordRequest('search');
     const params = new URLSearchParams({
       search_terms: query,
       search_simple: '1',
