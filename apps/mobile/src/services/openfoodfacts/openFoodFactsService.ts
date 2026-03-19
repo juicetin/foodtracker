@@ -1,8 +1,13 @@
 /**
- * Open Food Facts API service — barcode lookup + text search.
+ * Open Food Facts API service -- barcode lookup + text search.
  *
  * Uses OFF API v2 (https://wiki.openfoodfacts.org/API).
  * All nutrition values are per 100g.
+ *
+ * Implements stale-while-revalidate via offCacheService:
+ *  - Cache hit (fresh): return immediately, skip network
+ *  - Cache hit (stale): return immediately, refresh in background
+ *  - Cache miss: fetch from network, cache result
  */
 
 // ---------------------------------------------------------------------------
@@ -91,18 +96,27 @@ function parseProduct(raw: Record<string, unknown>): OFFProduct {
 }
 
 // ---------------------------------------------------------------------------
-// Public API
+// Imports
 // ---------------------------------------------------------------------------
 
 import { offRateLimiter } from './rateLimiter';
+import {
+  getCachedProduct,
+  cacheProduct,
+  getCachedSearch,
+  cacheSearch,
+} from './offCacheService';
+
+// ---------------------------------------------------------------------------
+// Network helpers (private -- not exported)
+// ---------------------------------------------------------------------------
 
 /**
- * Look up a product by barcode (EAN/UPC).
- * Returns null if the product is not found, rate-limited, or on error.
+ * Fetch a product from the OFF API by barcode.
+ * Returns null on not found, rate-limited, or error.
  */
-export async function lookupBarcode(barcode: string): Promise<OFFProduct | null> {
+async function fetchBarcodeFromNetwork(barcode: string): Promise<OFFProduct | null> {
   try {
-    // Respect rate limits
     const delay = offRateLimiter.getDelay('product');
     if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     if (!offRateLimiter.canRequest('product')) return null;
@@ -123,15 +137,14 @@ export async function lookupBarcode(barcode: string): Promise<OFFProduct | null>
 }
 
 /**
- * Search products by text query.
- * Returns an array of matching products (empty on error).
+ * Search products from the OFF API by text query.
+ * Returns empty array on error.
  */
-export async function searchProducts(
+async function fetchSearchFromNetwork(
   query: string,
-  pageSize: number = 20,
+  pageSize: number,
 ): Promise<OFFProduct[]> {
   try {
-    // Respect rate limits (search is stricter: 10/min)
     const delay = offRateLimiter.getDelay('search');
     if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     if (!offRateLimiter.canRequest('search')) return [];
@@ -158,4 +171,77 @@ export async function searchProducts(
   } catch {
     return [];
   }
+}
+
+// ---------------------------------------------------------------------------
+// Public API (cache-wrapped)
+// ---------------------------------------------------------------------------
+
+/**
+ * Look up a product by barcode (EAN/UPC).
+ *
+ * Cache-first with stale-while-revalidate:
+ *  - Fresh cache hit: return immediately
+ *  - Stale cache hit: return immediately, refresh in background
+ *  - Cache miss: fetch from network, cache result
+ */
+export async function lookupBarcode(barcode: string): Promise<OFFProduct | null> {
+  // Check cache first
+  const cached = getCachedProduct(barcode);
+
+  if (cached && !cached.stale) {
+    return cached.data;
+  }
+
+  if (cached && cached.stale) {
+    // Return stale data immediately, refresh in background
+    setTimeout(async () => {
+      const fresh = await fetchBarcodeFromNetwork(barcode);
+      if (fresh) cacheProduct(barcode, fresh);
+    }, 0);
+    return cached.data;
+  }
+
+  // Cache miss -- fetch from network
+  const result = await fetchBarcodeFromNetwork(barcode);
+  if (result) {
+    cacheProduct(barcode, result);
+  }
+  return result;
+}
+
+/**
+ * Search products by text query.
+ *
+ * Cache-first with stale-while-revalidate:
+ *  - Fresh cache hit: return immediately
+ *  - Stale cache hit: return immediately, refresh in background
+ *  - Cache miss: fetch from network, cache results
+ */
+export async function searchProducts(
+  query: string,
+  pageSize: number = 20,
+): Promise<OFFProduct[]> {
+  // Check cache first
+  const cached = getCachedSearch(query, pageSize);
+
+  if (cached && !cached.stale) {
+    return cached.data;
+  }
+
+  if (cached && cached.stale) {
+    // Return stale data immediately, refresh in background
+    setTimeout(async () => {
+      const fresh = await fetchSearchFromNetwork(query, pageSize);
+      if (fresh.length > 0) cacheSearch(query, pageSize, fresh);
+    }, 0);
+    return cached.data;
+  }
+
+  // Cache miss -- fetch from network
+  const results = await fetchSearchFromNetwork(query, pageSize);
+  if (results.length > 0) {
+    cacheSearch(query, pageSize, results);
+  }
+  return results;
 }
