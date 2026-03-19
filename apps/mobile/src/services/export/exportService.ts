@@ -40,6 +40,17 @@ export interface ExportFavourite {
   timesUsed: number;
 }
 
+export interface ExportOFFProduct {
+  barcode: string;
+  name: string;
+  brand: string | null;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  cachedAt: string;
+}
+
 export interface ExportOptions {
   startDate?: string; // YYYY-MM-DD
   endDate?: string;   // YYYY-MM-DD
@@ -125,6 +136,29 @@ export function loadExportFavourites(): ExportFavourite[] {
   }
 }
 
+export function loadExportOFFCache(): ExportOFFProduct[] {
+  try {
+    const rows = opsqlite.executeSync(
+      'SELECT barcode, name, brand, response_json, cached_at FROM off_product_cache ORDER BY cached_at DESC',
+    ).rows as Array<Record<string, unknown>>;
+    return rows.map((r) => {
+      const product = JSON.parse(r.response_json as string);
+      return {
+        barcode: r.barcode as string,
+        name: r.name as string,
+        brand: (r.brand as string) ?? null,
+        calories: Math.round(product.nutrimentsPer100g?.calories ?? 0),
+        protein: Math.round(product.nutrimentsPer100g?.protein ?? 0),
+        carbs: Math.round(product.nutrimentsPer100g?.carbs ?? 0),
+        fat: Math.round(product.nutrimentsPer100g?.fat ?? 0),
+        cachedAt: r.cached_at as string,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 // ---------------------------------------------------------------------------
 // CSV generation
 // ---------------------------------------------------------------------------
@@ -142,6 +176,7 @@ export function generateCsv(
   entries: ExportEntry[],
   recipes: ExportRecipe[],
   favourites: ExportFavourite[],
+  offCache?: ExportOFFProduct[],
 ): string {
   const lines: string[] = [];
 
@@ -181,6 +216,16 @@ export function generateCsv(
     }
   }
 
+  // Open Food Facts Cache
+  if (offCache && offCache.length > 0) {
+    lines.push('');
+    lines.push('# Open Food Facts Cache');
+    lines.push('barcode,name,brand,calories,protein_g,carbs_g,fat_g,cached_at');
+    for (const p of offCache) {
+      lines.push([escapeCsv(p.barcode), escapeCsv(p.name), escapeCsv(p.brand), p.calories, p.protein, p.carbs, p.fat, p.cachedAt].join(','));
+    }
+  }
+
   return lines.join('\n');
 }
 
@@ -192,6 +237,7 @@ export function generateJson(
   entries: ExportEntry[],
   recipes: ExportRecipe[],
   favourites: ExportFavourite[],
+  offCache?: ExportOFFProduct[],
 ): string {
   return JSON.stringify({
     app: 'Tastimate',
@@ -200,5 +246,6 @@ export function generateJson(
     entries,
     recipes,
     favourites,
+    offProductCache: offCache ?? [],
   }, null, 2);
 }

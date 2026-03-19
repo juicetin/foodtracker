@@ -24,6 +24,7 @@ import {
   loadExportEntries,
   loadExportRecipes,
   loadExportFavourites,
+  loadExportOFFCache,
   generateCsv,
   generateJson,
 } from '../services/export/exportService';
@@ -172,10 +173,11 @@ function ExportCard() {
       const entries = loadExportEntries();
       const recipes = loadExportRecipes();
       const favourites = loadExportFavourites();
+      const offCache = loadExportOFFCache();
 
       const content = format === 'csv'
-        ? generateCsv(entries, recipes, favourites)
-        : generateJson(entries, recipes, favourites);
+        ? generateCsv(entries, recipes, favourites, offCache)
+        : generateJson(entries, recipes, favourites, offCache);
 
       const ext = format === 'csv' ? 'csv' : 'json';
       const date = new Date().toISOString().split('T')[0];
