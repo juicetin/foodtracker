@@ -209,7 +209,7 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
 
     // Photo
     const photoId = generateId();
-    opsqlite.execute(
+    opsqlite.executeSync(
       'INSERT INTO photos (id, entry_id, uri, uploaded_at) VALUES (?, ?, ?, ?)',
       [photoId, entryId, result.photoUri, now],
     );
@@ -217,13 +217,13 @@ export const useFoodLogStore = create<FoodLogState>((set, get) => ({
     // Dishes + ingredients
     for (const dish of result.dishes) {
       const dishId = generateId();
-      opsqlite.execute(
+      opsqlite.executeSync(
         'INSERT INTO scanned_dishes (id, entry_id, name, cuisine, portion_scale, created_at) VALUES (?, ?, ?, ?, ?, ?)',
         [dishId, entryId, dish.name, dish.cuisine ?? null, dish.portionScale, now],
       );
       for (const ing of dish.ingredients) {
         const s = ing.originalAmount_g > 0 ? ing.amount_g / ing.originalAmount_g : 1;
-        opsqlite.execute(
+        opsqlite.executeSync(
           `INSERT INTO ingredients
             (id, entry_id, dish_id, name, quantity, unit, amount_g, original_amount_g,
              calories, protein, carbs, fat, fiber, database_source, user_modified, created_at, updated_at)

@@ -73,7 +73,7 @@ interface EntryDetail {
 // ---------------------------------------------------------------------------
 
 function loadEntry(entryId: string): EntryDetail | null {
-  const entryRows = opsqlite.execute(
+  const entryRows = opsqlite.executeSync(
     `SELECT id, meal_type, total_calories, total_protein, total_carbs, total_fat, notes, created_at
      FROM food_entries WHERE id = ?`,
     [entryId],
@@ -82,19 +82,19 @@ function loadEntry(entryId: string): EntryDetail | null {
   if (entryRows.length === 0) return null;
   const row = entryRows[0];
 
-  const photoRows = opsqlite.execute(
+  const photoRows = opsqlite.executeSync(
     'SELECT uri FROM photos WHERE entry_id = ? LIMIT 1',
     [entryId],
   ).rows as Array<Record<string, unknown>>;
 
-  const dishRows = opsqlite.execute(
+  const dishRows = opsqlite.executeSync(
     'SELECT id, name, cuisine, portion_scale FROM scanned_dishes WHERE entry_id = ? ORDER BY created_at',
     [entryId],
   ).rows as Array<Record<string, unknown>>;
 
   const dishes: DetailDish[] = dishRows.map((d) => {
     const dishId = d.id as string;
-    const ingRows = opsqlite.execute(
+    const ingRows = opsqlite.executeSync(
       `SELECT id, name, amount_g, calories, protein, carbs, fat, fiber, sugar
        FROM ingredients WHERE dish_id = ? ORDER BY created_at`,
       [dishId],

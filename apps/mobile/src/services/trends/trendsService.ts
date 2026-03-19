@@ -51,7 +51,7 @@ export function loadDailyTotals(days: number): DayTotals[] {
     d.setDate(d.getDate() - i);
     const dateStr = d.toISOString().split('T')[0];
 
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       `SELECT
          COALESCE(SUM(total_calories), 0) AS cal,
          COALESCE(SUM(total_protein), 0) AS pro,
@@ -76,7 +76,7 @@ export function loadDailyTotals(days: number): DayTotals[] {
 
 function loadAllTimeTotals(): DayTotals[] {
   try {
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       `SELECT entry_date,
               SUM(total_calories) AS cal,
               SUM(total_protein) AS pro,

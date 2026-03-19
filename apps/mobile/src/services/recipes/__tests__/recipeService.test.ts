@@ -24,7 +24,7 @@ const mockInsert = jest.fn().mockReturnValue({ values: jest.fn().mockReturnValue
 
 jest.mock('../../../../db/client', () => ({
   opsqlite: {
-    execute: (...args: unknown[]) => mockExecute(...args),
+    executeSync: (...args: unknown[]) => mockExecute(...args),
   },
   userDb: {
     insert: () => mockInsert(),

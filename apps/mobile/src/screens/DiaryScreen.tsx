@@ -89,7 +89,7 @@ function formatDateLabel(dateStr: string): string {
 }
 
 function loadEntriesForDate(dateStr: string): DiaryEntry[] {
-  const entryRows = opsqlite.execute(
+  const entryRows = opsqlite.executeSync(
     `SELECT id, meal_type, total_calories, total_protein, total_carbs, total_fat, notes, created_at
      FROM food_entries
      WHERE entry_date = ? AND is_deleted = 0
@@ -100,12 +100,12 @@ function loadEntriesForDate(dateStr: string): DiaryEntry[] {
   return entryRows.map((row) => {
     const entryId = row.id as string;
 
-    const photoRows = opsqlite.execute(
+    const photoRows = opsqlite.executeSync(
       'SELECT uri FROM photos WHERE entry_id = ? LIMIT 1',
       [entryId],
     ).rows as Array<Record<string, unknown>>;
 
-    const dishRows = opsqlite.execute(
+    const dishRows = opsqlite.executeSync(
       'SELECT id, name, cuisine FROM scanned_dishes WHERE entry_id = ? ORDER BY created_at',
       [entryId],
     ).rows as Array<Record<string, unknown>>;

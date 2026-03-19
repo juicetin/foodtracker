@@ -28,7 +28,7 @@ function generateId(): string {
 
 export function loadFavourites(limit: number = 20): FavouriteMeal[] {
   try {
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       'SELECT * FROM favourite_meals ORDER BY times_used DESC, last_used_at DESC LIMIT ?',
       [limit],
     ).rows as Array<Record<string, unknown>>;
@@ -57,7 +57,7 @@ export function addFavourite(meal: {
   totalFat: number;
 }): string {
   const id = generateId();
-  opsqlite.execute(
+  opsqlite.executeSync(
     `INSERT INTO favourite_meals (id, name, total_calories, total_protein, total_carbs, total_fat, created_at)
      VALUES (?, ?, ?, ?, ?, ?, datetime('now'))`,
     [id, meal.name, meal.totalCalories, meal.totalProtein, meal.totalCarbs, meal.totalFat],
@@ -66,11 +66,11 @@ export function addFavourite(meal: {
 }
 
 export function removeFavourite(id: string): void {
-  opsqlite.execute('DELETE FROM favourite_meals WHERE id = ?', [id]);
+  opsqlite.executeSync('DELETE FROM favourite_meals WHERE id = ?', [id]);
 }
 
 export function incrementFavouriteUsage(id: string): void {
-  opsqlite.execute(
+  opsqlite.executeSync(
     `UPDATE favourite_meals SET times_used = times_used + 1, last_used_at = datetime('now') WHERE id = ?`,
     [id],
   );
@@ -78,7 +78,7 @@ export function incrementFavouriteUsage(id: string): void {
 
 export function isFavourited(name: string): boolean {
   try {
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       'SELECT id FROM favourite_meals WHERE name = ? LIMIT 1',
       [name],
     ).rows;

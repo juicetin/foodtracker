@@ -44,7 +44,7 @@ function generateId(): string {
  */
 export function updateIngredientWeight(ingredientId: string, newAmountG: number): void {
   // Get current values to calculate scale factor
-  const rows = opsqlite.execute(
+  const rows = opsqlite.executeSync(
     'SELECT id, original_amount_g, calories, protein, carbs, fat, fiber FROM ingredients WHERE id = ?',
     [ingredientId],
   ).rows as Array<Record<string, unknown>>;
@@ -65,7 +65,7 @@ export function updateIngredientWeight(ingredientId: string, newAmountG: number)
     // Nutrition values in DB are stored at original_amount_g scale
     // We need to store them at the new scale: (base / oldScale) * newScale
     // But since base IS at originalG, just multiply by newAmountG/originalG
-    opsqlite.execute(
+    opsqlite.executeSync(
       `UPDATE ingredients
        SET amount_g = ?, calories = ?, protein = ?, carbs = ?, fat = ?, fiber = ?,
            user_modified = 1, updated_at = datetime('now')
@@ -82,7 +82,7 @@ export function updateIngredientWeight(ingredientId: string, newAmountG: number)
     );
   } else {
     // No original amount — just update the weight without scaling
-    opsqlite.execute(
+    opsqlite.executeSync(
       `UPDATE ingredients SET amount_g = ?, user_modified = 1, updated_at = datetime('now') WHERE id = ?`,
       [newAmountG, ingredientId],
     );
@@ -93,7 +93,7 @@ export function updateIngredientWeight(ingredientId: string, newAmountG: number)
  * Update an ingredient's name.
  */
 export function updateIngredientName(ingredientId: string, newName: string): void {
-  opsqlite.execute(
+  opsqlite.executeSync(
     `UPDATE ingredients SET name = ?, user_modified = 1, updated_at = datetime('now') WHERE id = ?`,
     [newName, ingredientId],
   );
@@ -103,7 +103,7 @@ export function updateIngredientName(ingredientId: string, newName: string): voi
  * Remove an ingredient from the database.
  */
 export function removeIngredient(ingredientId: string): void {
-  opsqlite.execute('DELETE FROM ingredients WHERE id = ?', [ingredientId]);
+  opsqlite.executeSync('DELETE FROM ingredients WHERE id = ?', [ingredientId]);
 }
 
 /**
@@ -114,7 +114,7 @@ export function addIngredient(data: IngredientUpdate): string {
   const id = generateId();
   const now = new Date().toISOString();
 
-  opsqlite.execute(
+  opsqlite.executeSync(
     `INSERT INTO ingredients
       (id, entry_id, dish_id, name, quantity, unit, amount_g, original_amount_g,
        calories, protein, carbs, fat, fiber, user_modified, created_at, updated_at)
@@ -148,7 +148,7 @@ export function addIngredient(data: IngredientUpdate): string {
  * Update a dish's display name.
  */
 export function updateDishName(dishId: string, newName: string): void {
-  opsqlite.execute(
+  opsqlite.executeSync(
     `UPDATE scanned_dishes SET name = ? WHERE id = ?`,
     [newName, dishId],
   );
@@ -162,7 +162,7 @@ export function updateDishName(dishId: string, newName: string): void {
  * Recalculate and persist an entry's total macros from its ingredients.
  */
 export function recalculateEntryTotals(entryId: string): void {
-  const rows = opsqlite.execute(
+  const rows = opsqlite.executeSync(
     `SELECT
        COALESCE(SUM(calories), 0) as calories,
        COALESCE(SUM(protein), 0) as protein,
@@ -174,7 +174,7 @@ export function recalculateEntryTotals(entryId: string): void {
 
   const totals = rows[0] ?? { calories: 0, protein: 0, carbs: 0, fat: 0 };
 
-  opsqlite.execute(
+  opsqlite.executeSync(
     `UPDATE food_entries
      SET total_calories = ?, total_protein = ?, total_carbs = ?, total_fat = ?,
          updated_at = datetime('now')

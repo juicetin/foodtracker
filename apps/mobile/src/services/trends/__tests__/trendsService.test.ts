@@ -17,7 +17,7 @@ const mockExecute = jest.fn();
 
 jest.mock('../../../../db/client', () => ({
   opsqlite: {
-    execute: (...args: unknown[]) => mockExecute(...args),
+    executeSync: (...args: unknown[]) => mockExecute(...args),
   },
 }));
 

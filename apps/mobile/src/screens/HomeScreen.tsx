@@ -42,7 +42,7 @@ interface RecentMeal {
 
 function loadRecentMeals(limit: number = 5): RecentMeal[] {
   try {
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       `SELECT sd.name AS dish_name, fe.total_calories, fe.total_protein, fe.total_carbs, fe.total_fat,
               fe.meal_type, fe.entry_date, fe.id AS entry_id
        FROM scanned_dishes sd
@@ -74,7 +74,7 @@ function loadRecentMeals(limit: number = 5): RecentMeal[] {
 
 function calculateStreak(): number {
   try {
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       `SELECT DISTINCT entry_date FROM food_entries WHERE is_deleted = 0 ORDER BY entry_date DESC LIMIT 60`,
     ).rows as Array<Record<string, unknown>>;
 

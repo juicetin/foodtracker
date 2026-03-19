@@ -73,7 +73,7 @@ export function loadExportEntries(startDate?: string, endDate?: string): ExportE
   query += ' GROUP BY fe.id ORDER BY fe.entry_date, fe.created_at';
 
   try {
-    const rows = opsqlite.execute(query, params).rows as Array<Record<string, unknown>>;
+    const rows = opsqlite.executeSync(query, params).rows as Array<Record<string, unknown>>;
     return rows.map((r) => ({
       date: r.entry_date as string,
       mealType: r.meal_type as string,
@@ -92,7 +92,7 @@ export function loadExportEntries(startDate?: string, endDate?: string): ExportE
 
 export function loadExportRecipes(): ExportRecipe[] {
   try {
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       'SELECT name, total_calories, total_protein, total_carbs, total_fat FROM custom_recipes ORDER BY name',
     ).rows as Array<Record<string, unknown>>;
     return rows.map((r) => ({
@@ -109,7 +109,7 @@ export function loadExportRecipes(): ExportRecipe[] {
 
 export function loadExportFavourites(): ExportFavourite[] {
   try {
-    const rows = opsqlite.execute(
+    const rows = opsqlite.executeSync(
       'SELECT name, total_calories, total_protein, total_carbs, total_fat, times_used FROM favourite_meals ORDER BY times_used DESC',
     ).rows as Array<Record<string, unknown>>;
     return rows.map((r) => ({
