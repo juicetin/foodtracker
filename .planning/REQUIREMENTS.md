@@ -46,9 +46,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Scale & Weight
 
-- [ ] **SCL-01**: When a kitchen scale is visible in a food photo, the app reads the displayed weight via custom 7-segment TFLite OCR
-- [ ] **SCL-02**: User can save known container/vessel weights, and the app auto-subtracts tare weight from scale readings
-- [ ] **SCL-03**: App learns frequently used container weights over time
+- [x] **SCL-01**: When a kitchen scale is visible in a food photo, the app reads the displayed weight via custom 7-segment TFLite OCR
+- [x] **SCL-02**: User can save known container/vessel weights, and the app auto-subtracts tare weight from scale readings
+- [x] **SCL-03**: App learns frequently used container weights over time
 
 ### Notifications & Tracking
 
@@ -144,9 +144,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | UI-06 | Phase 3 | Complete |
 | UI-07 | Phase 3 | Complete |
 | UI-08 | Phase 3 | Complete |
-| SCL-01 | Phase 5 | Pending |
-| SCL-02 | Phase 5 | Pending |
-| SCL-03 | Phase 5 | Pending |
+| SCL-01 | Phase 5 | Complete |
+| SCL-02 | Phase 5 | Complete |
+| SCL-03 | Phase 5 | Complete |
 | NTF-01 | Phase 5 | Pending |
 | NTF-02 | Phase 5 | Pending |
 | MDL-01 | Phase 6 | Pending |

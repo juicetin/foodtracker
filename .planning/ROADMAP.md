@@ -417,5 +417,5 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 3.4. Recipe Management | 0/2 | Not started | - |
 | 3.7. Google Drive Sync | 2/3 | Gap closure | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
-| 5. Scale OCR + Notifications + Health Data | 0/4 | Not started | - |
+| 5. Scale OCR + Notifications + Health Data | 1/4 | In progress | - |
 | 6. Sync + Distribution | 0/2 | Not started | - |
