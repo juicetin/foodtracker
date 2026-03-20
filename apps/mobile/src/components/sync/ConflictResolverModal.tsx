@@ -16,6 +16,7 @@ import {
   Alert,
 } from 'react-native';
 import { useSyncStore } from '../../store/useSyncStore';
+import { applyResolution, autoResolveConflicts } from '../../services/sync/conflictResolver';
 import type { SyncConflict, SyncResolution } from '../../services/sync/types';
 
 interface Props {
@@ -28,6 +29,21 @@ export default function ConflictResolverModal({ visible, onClose }: Props) {
   const [resolving, setResolving] = useState(false);
 
   function resolveConflict(conflict: SyncConflict, source: 'local' | 'remote') {
+    const resolution: SyncResolution = {
+      table: conflict.table,
+      rowId: conflict.rowId,
+      field: conflict.field,
+      resolvedValue: source === 'local' ? conflict.localValue : conflict.remoteValue,
+      source,
+    };
+
+    try {
+      applyResolution([resolution]);
+    } catch {
+      Alert.alert('Error', 'Failed to apply resolution.');
+      return;
+    }
+
     const remaining = pendingConflicts.filter(
       (c) => !(c.table === conflict.table && c.rowId === conflict.rowId && c.field === conflict.field),
     );
@@ -41,12 +57,16 @@ export default function ConflictResolverModal({ visible, onClose }: Props) {
 
   function resolveAllKeepLatest() {
     setResolving(true);
-    // For each conflict, pick whichever has the more recent timestamp
-    for (const conflict of pendingConflicts) {
-      const localNewer = conflict.localTimestamp >= conflict.remoteTimestamp;
-      // Resolution is just removing from pending -- actual DB apply would happen here
-      // For now we clear all conflicts
+
+    try {
+      const resolutions = autoResolveConflicts(pendingConflicts);
+      applyResolution(resolutions);
+    } catch {
+      setResolving(false);
+      Alert.alert('Error', 'Failed to apply resolutions.');
+      return;
     }
+
     setPendingConflicts([]);
     setResolving(false);
     Alert.alert('All Resolved', 'All conflicts resolved using most recent values.');
