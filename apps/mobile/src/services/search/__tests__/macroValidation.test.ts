@@ -1,3 +1,10 @@
+// Mock opsqlite to prevent db/client.ts side effects
+jest.mock('../../../../db/client', () => ({
+  opsqlite: {
+    execute: jest.fn(),
+  },
+}));
+
 import { validateMacros } from '../historyService';
 
 describe('validateMacros', () => {
