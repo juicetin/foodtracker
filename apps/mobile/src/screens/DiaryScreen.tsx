@@ -1,5 +1,5 @@
 /**
- * DiaryScreen — shows today's logged food entries grouped by meal type.
+ * DiaryScreen — daily food diary with time-period grouping and sticky macro header.
  *
  * Queries food_entries + scanned_dishes + photos from SQLite.
  * Auto-refreshes when navigating back from DetectionScreen.
@@ -12,125 +12,32 @@ import {
   Text,
   StyleSheet,
   ScrollView,
-  Image,
   Pressable,
   RefreshControl,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Gesture, GestureDetector } from 'react-native-gesture-handler';
+import { runOnJS } from 'react-native-reanimated';
 import type { RootStackParamList } from '../types';
 import { usePreferencesStore } from '../store/usePreferencesStore';
-import { opsqlite } from '../../db/client';
 import { useFoodLogStore } from '../store/useFoodLogStore';
-import { autoDetectMealType, type MealType } from '../services/detection/types';
 import { loadDailyTotals, computeTrendStats, type DayTotals } from '../services/trends/trendsService';
+import {
+  loadEntriesForDate,
+  loadWeekEntryPresence,
+  computeDayTotals,
+  getTodayDateStr,
+  dateToStr,
+  formatDateLabel,
+} from '../services/diary/diaryQueries';
+import type { DiaryEntry } from '../services/diary/diaryQueries';
+import { TIME_PERIOD_ORDER } from '../services/diary/timePeriods';
+import { StickyMacroHeader, WeekOverviewBar, TimePeriodSection } from '../components/diary';
 
 // ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-interface DiaryDish {
-  id: string;
-  name: string;
-  cuisine: string | null;
-}
-
-interface DiaryEntry {
-  id: string;
-  mealType: MealType;
-  totalCalories: number;
-  totalProtein: number;
-  totalCarbs: number;
-  totalFat: number;
-  notes: string | null;
-  createdAt: string;
-  photoUri: string | null;
-  dishes: DiaryDish[];
-}
-
-const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'snack', 'dinner'];
-const MEAL_LABELS: Record<MealType, string> = {
-  breakfast: 'Breakfast',
-  lunch: 'Lunch',
-  snack: 'Snack',
-  dinner: 'Dinner',
-};
-const MEAL_ICONS: Record<MealType, string> = {
-  breakfast: '🌅',
-  lunch: '☀️',
-  snack: '🍎',
-  dinner: '🌙',
-};
-
-// ---------------------------------------------------------------------------
-// Data loading
-// ---------------------------------------------------------------------------
-
-function getTodayDateStr(): string {
-  return new Date().toISOString().split('T')[0];
-}
-
-function dateToStr(d: Date): string {
-  return d.toISOString().split('T')[0];
-}
-
-function formatDateLabel(dateStr: string): string {
-  const today = getTodayDateStr();
-  const yesterday = new Date();
-  yesterday.setDate(yesterday.getDate() - 1);
-  const yesterdayStr = dateToStr(yesterday);
-
-  if (dateStr === today) return 'Today';
-  if (dateStr === yesterdayStr) return 'Yesterday';
-
-  const d = new Date(dateStr + 'T12:00:00');
-  return d.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' });
-}
-
-function loadEntriesForDate(dateStr: string): DiaryEntry[] {
-  const entryRows = opsqlite.executeSync(
-    `SELECT id, meal_type, total_calories, total_protein, total_carbs, total_fat, notes, created_at
-     FROM food_entries
-     WHERE entry_date = ? AND is_deleted = 0
-     ORDER BY created_at DESC`,
-    [dateStr],
-  ).rows as Array<Record<string, unknown>>;
-
-  return entryRows.map((row) => {
-    const entryId = row.id as string;
-
-    const photoRows = opsqlite.executeSync(
-      'SELECT uri FROM photos WHERE entry_id = ? LIMIT 1',
-      [entryId],
-    ).rows as Array<Record<string, unknown>>;
-
-    const dishRows = opsqlite.executeSync(
-      'SELECT id, name, cuisine FROM scanned_dishes WHERE entry_id = ? ORDER BY created_at',
-      [entryId],
-    ).rows as Array<Record<string, unknown>>;
-
-    return {
-      id: entryId,
-      mealType: row.meal_type as MealType,
-      totalCalories: (row.total_calories as number) ?? 0,
-      totalProtein: (row.total_protein as number) ?? 0,
-      totalCarbs: (row.total_carbs as number) ?? 0,
-      totalFat: (row.total_fat as number) ?? 0,
-      notes: (row.notes as string) ?? null,
-      createdAt: row.created_at as string,
-      photoUri: photoRows.length > 0 ? (photoRows[0].uri as string) : null,
-      dishes: dishRows.map((d) => ({
-        id: d.id as string,
-        name: d.name as string,
-        cuisine: (d.cuisine as string) ?? null,
-      })),
-    };
-  });
-}
-
-// ---------------------------------------------------------------------------
-// Component
+// Helpers
 // ---------------------------------------------------------------------------
 
 function getPreviousDayStr(dateStr: string): string {
@@ -147,22 +54,31 @@ const TREND_RANGES: { value: TrendRange; label: string }[] = [
   { value: 0, label: 'All' },
 ];
 
+const SWIPE_THRESHOLD = 50;
+
+// ---------------------------------------------------------------------------
+// Component
+// ---------------------------------------------------------------------------
+
 export default function DiaryScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [selectedDate, setSelectedDate] = useState(getTodayDateStr());
   const [entries, setEntries] = useState<DiaryEntry[]>([]);
+  const [weekPresence, setWeekPresence] = useState<Map<string, number>>(new Map());
   const [trendRange, setTrendRange] = useState<TrendRange>(7);
   const [trendDays, setTrendDays] = useState<DayTotals[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const { addEntry } = useFoodLogStore();
-  const { nutritionGoals } = usePreferencesStore();
+  const { nutritionGoals, timePeriodBoundaries } = usePreferencesStore();
 
   const isToday = selectedDate === getTodayDateStr();
+  const dayTotals = computeDayTotals(entries);
 
   const refresh = useCallback(() => {
-    setEntries(loadEntriesForDate(selectedDate));
+    setEntries(loadEntriesForDate(selectedDate, timePeriodBoundaries));
+    setWeekPresence(loadWeekEntryPresence(selectedDate));
     setTrendDays(loadDailyTotals(trendRange));
-  }, [selectedDate, trendRange]);
+  }, [selectedDate, trendRange, timePeriodBoundaries]);
 
   const goToPreviousDay = useCallback(() => {
     setSelectedDate((prev) => {
@@ -199,129 +115,121 @@ export default function DiaryScreen() {
     setRefreshing(false);
   }
 
-  // Group entries by meal type
-  const grouped = MEAL_ORDER.map((type) => ({
-    type,
-    entries: entries.filter((e) => e.mealType === type),
-  })).filter((g) => g.entries.length > 0);
-
-  // Day totals
-  const dayTotals = entries.reduce(
-    (acc, e) => ({
-      calories: acc.calories + e.totalCalories,
-      protein: acc.protein + e.totalProtein,
-      carbs: acc.carbs + e.totalCarbs,
-      fat: acc.fat + e.totalFat,
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 },
-  );
+  // Swipe gesture for date navigation
+  const swipeGesture = Gesture.Pan()
+    .activeOffsetX([-20, 20])
+    .failOffsetY([-10, 10])
+    .onEnd((event) => {
+      if (event.translationX > SWIPE_THRESHOLD) {
+        runOnJS(goToPreviousDay)();
+      } else if (event.translationX < -SWIPE_THRESHOLD) {
+        runOnJS(goToNextDay)();
+      }
+    });
 
   return (
     <View style={styles.container}>
-      <ScrollView
-        style={styles.scroll}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#16A34A" />
-        }
-      >
-        {/* Date navigation */}
-        <View style={styles.dateNav}>
-          <Pressable onPress={goToPreviousDay} style={styles.dateArrow}>
-            <Ionicons name="chevron-back" size={24} color="#374151" />
-          </Pressable>
-          <Pressable onPress={goToToday} style={styles.dateLabelBtn}>
-            <Text style={styles.dateTitle}>{formatDateLabel(selectedDate)}</Text>
-            {!isToday && (
-              <Text style={styles.dateSubtitle}>Tap for today</Text>
-            )}
-          </Pressable>
-          <Pressable onPress={goToNextDay} style={[styles.dateArrow, isToday && { opacity: 0.3 }]} disabled={isToday}>
-            <Ionicons name="chevron-forward" size={24} color="#374151" />
-          </Pressable>
-        </View>
+      {/* Sticky macro header -- OUTSIDE ScrollView */}
+      <StickyMacroHeader
+        totals={dayTotals}
+        goals={nutritionGoals}
+      />
 
-        {/* Copy previous day */}
-        {isToday && (
-          <Pressable
-            style={styles.copyBtn}
-            onPress={async () => {
-              const prevDayStr = getPreviousDayStr(selectedDate);
-              const yesterday = loadEntriesForDate(prevDayStr);
-              if (yesterday.length === 0) {
-                Alert.alert('No meals', 'No meals logged yesterday to copy.');
-                return;
-              }
-              for (const entry of yesterday) {
-                await addEntry({
-                  mealType: entry.mealType,
-                  totalCalories: entry.totalCalories,
-                  totalProtein: entry.totalProtein,
-                  totalCarbs: entry.totalCarbs,
-                  totalFat: entry.totalFat,
-                  notes: `Copied: ${entry.dishes.map((d) => d.name).join(', ') || entry.notes || 'meal'}`,
-                });
-              }
-              refresh();
-              Alert.alert('Copied', `${yesterday.length} meal(s) from yesterday added.`);
-            }}
-          >
-            <Ionicons name="copy-outline" size={14} color="#3B82F6" />
-            <Text style={styles.copyBtnText}>Copy Yesterday</Text>
-          </Pressable>
-        )}
-
-        {/* Day summary card */}
-        {entries.length > 0 && (
-          <View style={styles.summaryCard}>
-            <View style={styles.summaryCalBlock}>
-              <Text style={styles.summaryCalNum}>{Math.round(dayTotals.calories)}</Text>
-              <Text style={styles.summaryCalLabel}>kcal</Text>
-            </View>
-            <View style={styles.summaryMacros}>
-              <MacroPill value={dayTotals.protein} label="Protein" color="#3B82F6" />
-              <MacroPill value={dayTotals.carbs} label="Carbs" color="#D97706" />
-              <MacroPill value={dayTotals.fat} label="Fat" color="#16A34A" />
-            </View>
+      {/* Swipe gesture wraps the scrollable content */}
+      <GestureDetector gesture={swipeGesture}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.scrollContent}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#16A34A" />
+          }
+        >
+          {/* Date navigation */}
+          <View style={styles.dateNav}>
+            <Pressable onPress={goToPreviousDay} style={styles.dateArrow}>
+              <Ionicons name="chevron-back" size={24} color="#374151" />
+            </Pressable>
+            <Pressable onPress={goToToday} style={styles.dateLabelBtn}>
+              <Text style={styles.dateTitle}>{formatDateLabel(selectedDate)}</Text>
+              {!isToday && (
+                <Text style={styles.dateSubtitle}>Tap for today</Text>
+              )}
+            </Pressable>
+            <Pressable onPress={goToNextDay} style={[styles.dateArrow, isToday && { opacity: 0.3 }]} disabled={isToday}>
+              <Ionicons name="chevron-forward" size={24} color="#374151" />
+            </Pressable>
           </View>
-        )}
 
-        {/* Trends */}
-        <TrendsCard
-          days={trendDays}
-          range={trendRange}
-          onRangeChange={(r) => setTrendRange(r)}
-          calorieGoal={nutritionGoals.calories}
-        />
+          {/* Week overview bar */}
+          <WeekOverviewBar
+            selectedDate={selectedDate}
+            onSelectDate={setSelectedDate}
+            entryPresence={weekPresence}
+          />
 
-        {/* Grouped entries */}
-        {grouped.length === 0 ? (
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🍽️</Text>
-            <Text style={styles.emptyText}>No meals logged today</Text>
-            <Text style={styles.emptySubtext}>Tap the + button to scan your food</Text>
-          </View>
-        ) : (
-          grouped.map((group) => (
-            <View key={group.type} style={styles.mealSection}>
-              <View style={styles.mealHeader}>
-                <Text style={styles.mealIcon}>{MEAL_ICONS[group.type]}</Text>
-                <Text style={styles.mealTitle}>{MEAL_LABELS[group.type]}</Text>
-                <Text style={styles.mealCalories}>
-                  {Math.round(group.entries.reduce((s, e) => s + e.totalCalories, 0))} kcal
-                </Text>
-              </View>
-              {group.entries.map((entry) => (
-                <Pressable key={entry.id} onPress={() => nav.navigate('EntryDetail', { entryId: entry.id })}>
-                  <EntryCard entry={entry} />
-                </Pressable>
-              ))}
+          {/* Copy previous day */}
+          {isToday && (
+            <Pressable
+              style={styles.copyBtn}
+              onPress={async () => {
+                const prevDayStr = getPreviousDayStr(selectedDate);
+                const yesterday = loadEntriesForDate(prevDayStr, timePeriodBoundaries);
+                if (yesterday.length === 0) {
+                  Alert.alert('No meals', 'No meals logged yesterday to copy.');
+                  return;
+                }
+                for (const entry of yesterday) {
+                  await addEntry({
+                    mealType: entry.mealType,
+                    totalCalories: entry.totalCalories,
+                    totalProtein: entry.totalProtein,
+                    totalCarbs: entry.totalCarbs,
+                    totalFat: entry.totalFat,
+                    notes: `Copied: ${entry.dishes.map((d) => d.name).join(', ') || entry.notes || 'meal'}`,
+                  });
+                }
+                refresh();
+                Alert.alert('Copied', `${yesterday.length} meal(s) from yesterday added.`);
+              }}
+            >
+              <Ionicons name="copy-outline" size={14} color="#3B82F6" />
+              <Text style={styles.copyBtnText}>Copy Yesterday</Text>
+            </Pressable>
+          )}
+
+          {/* Time-period sections (morning, afternoon, evening) */}
+          {TIME_PERIOD_ORDER.map((period) => {
+            const periodEntries = entries.filter((e) => e.timePeriod === period);
+            return (
+              <TimePeriodSection
+                key={period}
+                period={period}
+                entries={periodEntries}
+                onNavigateToDetail={(id) => nav.navigate('EntryDetail', { entryId: id })}
+              />
+            );
+          })}
+
+          {/* Empty state */}
+          {entries.length === 0 && (
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>🍽️</Text>
+              <Text style={styles.emptyText}>No meals logged today</Text>
+              <Text style={styles.emptySubtext}>Tap the + button to scan your food</Text>
             </View>
-          ))
-        )}
+          )}
 
-        <View style={{ height: 100 }} />
-      </ScrollView>
+          {/* Trends */}
+          <TrendsCard
+            days={trendDays}
+            range={trendRange}
+            onRangeChange={(r) => setTrendRange(r)}
+            calorieGoal={nutritionGoals.calories}
+          />
+
+          <View style={{ height: 100 }} />
+        </ScrollView>
+      </GestureDetector>
     </View>
   );
 }
@@ -436,52 +344,6 @@ function TrendsCard({
   );
 }
 
-function EntryCard({ entry }: { entry: DiaryEntry }) {
-  const time = new Date(entry.createdAt).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-  const dishNames =
-    entry.dishes.length > 0
-      ? entry.dishes.map((d) => d.name).join(', ')
-      : entry.notes ?? 'Logged meal';
-
-  return (
-    <View style={styles.entryCard}>
-      {entry.photoUri && (
-        <Image source={{ uri: entry.photoUri }} style={styles.entryPhoto} resizeMode="cover" />
-      )}
-      <View style={styles.entryInfo}>
-        <Text style={styles.entryDishes} numberOfLines={2}>
-          {dishNames}
-        </Text>
-        <Text style={styles.entryTime}>{time}</Text>
-      </View>
-      <View style={styles.entryNutrition}>
-        <Text style={styles.entryCal}>{Math.round(entry.totalCalories)}</Text>
-        <Text style={styles.entryCalLabel}>kcal</Text>
-      </View>
-    </View>
-  );
-}
-
-function MacroPill({
-  value,
-  label,
-  color,
-}: {
-  value: number;
-  label: string;
-  color: string;
-}) {
-  return (
-    <View style={styles.macroPill}>
-      <Text style={[styles.macroPillNum, { color }]}>{Math.round(value)}g</Text>
-      <Text style={styles.macroPillLabel}>{label}</Text>
-    </View>
-  );
-}
-
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
@@ -489,10 +351,10 @@ function MacroPill({
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#F5F5F5' },
   scroll: { flex: 1 },
-  scrollContent: { paddingTop: 60, paddingHorizontal: 16 },
+  scrollContent: { paddingTop: 16, paddingHorizontal: 16 },
   dateNav: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 12,
   },
   dateArrow: { padding: 8 },
   dateLabelBtn: { alignItems: 'center', flex: 1 },
@@ -545,76 +407,6 @@ const styles = StyleSheet.create({
   },
   macroAvgNum: { fontSize: 15, fontWeight: '700' },
   macroAvgLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '500', marginTop: 2 },
-
-  // Summary
-  summaryCard: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  summaryCalBlock: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-    marginBottom: 12,
-  },
-  summaryCalNum: { fontSize: 32, fontWeight: '800', color: '#111827' },
-  summaryCalLabel: { fontSize: 16, color: '#6B7280', fontWeight: '500' },
-  summaryMacros: { flexDirection: 'row', gap: 8 },
-  macroPill: {
-    flex: 1,
-    backgroundColor: '#F9FAFB',
-    borderRadius: 10,
-    paddingVertical: 8,
-    alignItems: 'center',
-  },
-  macroPillNum: { fontSize: 16, fontWeight: '700' },
-  macroPillLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    fontWeight: '500',
-    marginTop: 2,
-  },
-
-  // Meal sections
-  mealSection: { marginBottom: 20 },
-  mealHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
-    gap: 8,
-  },
-  mealIcon: { fontSize: 16 },
-  mealTitle: { fontSize: 16, fontWeight: '700', color: '#111827', flex: 1 },
-  mealCalories: { fontSize: 14, fontWeight: '600', color: '#6B7280' },
-
-  // Entry cards
-  entryCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 12,
-    marginBottom: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  entryPhoto: { width: 52, height: 52, borderRadius: 10, marginRight: 12 },
-  entryInfo: { flex: 1 },
-  entryDishes: { fontSize: 14, fontWeight: '600', color: '#111827', marginBottom: 2 },
-  entryTime: { fontSize: 12, color: '#9CA3AF' },
-  entryNutrition: { alignItems: 'flex-end', marginLeft: 8 },
-  entryCal: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  entryCalLabel: { fontSize: 11, color: '#9CA3AF' },
 
   // Empty
   emptyState: { alignItems: 'center', paddingVertical: 60 },
