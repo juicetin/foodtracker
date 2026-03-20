@@ -11,17 +11,20 @@ import {
   ActivityIndicator,
   Alert,
   Image,
+  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import { useNavigation } from '@react-navigation/native';
 
-import { scanFood } from '../services/vlm/vlmPipeline';
+import { scanFood, getLastVlmSource } from '../services/vlm/vlmPipeline';
+import { geminiNanoService } from '../services/vlm/geminiNanoService';
 import { useDetectionStore } from '../store/useDetectionStore';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import DishCard from '../components/detection/DishCard';
@@ -51,6 +54,9 @@ export function DetectionScreen() {
   const [flowState, setFlowState] = useState<FlowState>('idle');
   const [error, setError] = useState<string | null>(null);
   const [analyzingPhotoUri, setAnalyzingPhotoUri] = useState<string | null>(null);
+  const [vlmSource, setVlmSource] = useState<'gemini-nano' | 'mock' | null>(null);
+  const [debugModalVisible, setDebugModalVisible] = useState(false);
+  const [rawOutput, setRawOutput] = useState<string | null>(null);
 
   // Ingredient search sheet state
   const [searchTarget, setSearchTarget] = useState<{
@@ -132,6 +138,9 @@ export function DetectionScreen() {
         // Process first photo
         const scanResult = await scanFood(firstUri);
         setScanResult(scanResult);
+        // Capture which model ran + its raw output (for model badge + debug popup)
+        setVlmSource(getLastVlmSource());
+        setRawOutput(geminiNanoService.getLastRawOutput());
         setFlowState('results');
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Analysis failed. Please try again.');
@@ -329,6 +338,23 @@ export function DetectionScreen() {
           </View>
         )}
 
+        {/* Model source badge */}
+        {vlmSource && !isMock && (
+          <View style={styles.modelBadge}>
+            <Text style={styles.modelBadgeText}>
+              {vlmSource === 'gemini-nano' ? '\u2726 Gemini Nano' : '\u25C6 Demo Mode'}
+            </Text>
+            {vlmSource === 'gemini-nano' && rawOutput && (
+              <TouchableOpacity
+                style={styles.debugButton}
+                onPress={() => setDebugModalVisible(true)}
+              >
+                <Text style={styles.debugButtonText}>Raw Output</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        )}
+
         {/* Background processing banner */}
         {pendingPhotos > 0 && (
           <View style={styles.processingBanner}>
@@ -407,6 +433,26 @@ export function DetectionScreen() {
           <Text style={styles.logBtnText}>Log Meal</Text>
         </Pressable>
       </View>
+
+      {/* Debug modal -- shows raw Gemini Nano JSON for inspection */}
+      <Modal
+        visible={debugModalVisible}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setDebugModalVisible(false)}
+      >
+        <View style={styles.debugModal}>
+          <View style={styles.debugModalHeader}>
+            <Text style={styles.debugModalTitle}>Gemini Nano Raw Output</Text>
+            <TouchableOpacity onPress={() => setDebugModalVisible(false)}>
+              <Text style={styles.debugModalClose}>{'\u2715'}</Text>
+            </TouchableOpacity>
+          </View>
+          <ScrollView style={styles.debugModalBody}>
+            <Text style={styles.debugModalText}>{rawOutput ?? '(no output)'}</Text>
+          </ScrollView>
+        </View>
+      </Modal>
 
       {/* Ingredient search sheet (single instance, state-driven) */}
       <IngredientSearchSheet
@@ -506,6 +552,28 @@ const styles = StyleSheet.create({
   mealTypePillTextActive: { color: '#FFFFFF' },
   emptyDishesContainer: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 32, gap: 16 },
   emptyDishesText: { fontSize: 16, color: '#6B7280', textAlign: 'center' },
+
+  // ── Model badge + debug ──
+  modelBadge: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    paddingVertical: 6, paddingHorizontal: 16, backgroundColor: '#FFFFFF',
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+  },
+  modelBadgeText: { fontSize: 12, color: '#555', fontWeight: '500' },
+  debugButton: {
+    backgroundColor: '#e3f2fd', paddingHorizontal: 10, paddingVertical: 3,
+    borderRadius: 12, borderWidth: 1, borderColor: '#90caf9',
+  },
+  debugButtonText: { fontSize: 11, color: '#1565c0', fontWeight: '600' },
+  debugModal: { flex: 1, backgroundColor: '#fff' },
+  debugModalHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee',
+  },
+  debugModalTitle: { fontSize: 17, fontWeight: '700' },
+  debugModalClose: { fontSize: 20, color: '#555', paddingHorizontal: 8 },
+  debugModalBody: { flex: 1, padding: 16 },
+  debugModalText: { fontFamily: 'monospace', fontSize: 12, color: '#1a1a1a', lineHeight: 18 },
 
   // ── Footer ──
   footer: {
