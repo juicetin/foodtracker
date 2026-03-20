@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 04-01-PLAN.md (gallery scan service layer)
-last_updated: "2026-03-20T16:53:00Z"
+stopped_at: Completed 04-02-PLAN.md (gallery scan UI and scheduling)
+last_updated: "2026-03-20T17:01:00Z"
 progress:
   total_phases: 20
-  completed_phases: 17
+  completed_phases: 18
   total_plans: 55
-  completed_plans: 54
+  completed_plans: 55
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Current Position
 
-Phase: 04 (gallery-scanning-deduplication) — EXECUTING
-Plan: 2 of 2
+Phase: 04 (gallery-scanning-deduplication) — COMPLETE
+Plan: 2 of 2 (DONE)
 
 ## Performance Metrics
 
@@ -111,6 +111,7 @@ Plan: 2 of 2
 | Phase 03.7 P02 | 7min | 3 tasks | 10 files |
 | Phase 03.7 P03 | 3min | 2 tasks | 4 files |
 | Phase 04 P01 | 6min | 2 tasks | 12 files |
+| Phase 04 P02 | 5min | 3 tasks | 10 files |
 
 ## Accumulated Context
 
@@ -279,6 +280,9 @@ Recent decisions affecting current work:
 - [Phase 04]: importPhoto takes explicit dimensions param rather than reading asset metadata -- avoids extra async call
 - [Phase 04]: INSERT OR IGNORE on asset_id UNIQUE for idempotent gallery photo discovery
 - [Phase 04]: 500ms pacing between Gemini Nano classify calls to avoid AICore BUSY
+- [Phase 04]: require() instead of dynamic import() in galleryScanScheduler for Jest compatibility
+- [Phase 04]: AppState foreground drain fires triggerForegroundDrain on every app active transition (fire-and-forget)
+- [Phase 04]: Zustand gallery scan store partialize persists only scanEnabled and lastScanResult
 
 ### Roadmap Evolution
 
@@ -304,6 +308,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T16:53:00Z
-Stopped at: Completed 04-01-PLAN.md (gallery scan service layer)
+Last session: 2026-03-20T17:01:00Z
+Stopped at: Completed 04-02-PLAN.md (gallery scan UI and scheduling)
 Resume file: None
