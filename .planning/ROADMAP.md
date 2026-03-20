@@ -393,10 +393,26 @@ Plans:
 - [ ] 06-01-PLAN.md -- FTP backup client: native module (Apache Commons Net), ftpClient/ftpSync services, syncScheduler multi-backend dispatch, SyncSettingsScreen FTP card
 - [ ] 06-02-PLAN.md -- Play for On-Device AI: withAiPack config plugin, ai-pack-delivery native bridge module, packManager AI pack resolution
 
+### Phase 7.1: Integration Wiring + Dead Code Cleanup (GAP CLOSURE)
+**Goal**: Fix 2 broken E2E flows (gallery→diary, scale→portion), add confidence display, and remove orphaned code from YOLO→VLM-only pivot
+**Depends on**: Phase 4, Phase 5, Phase 6
+**Requirements**: DET-05, DET-06
+**Gap Closure:** Closes gaps from v1.0 audit
+**Success Criteria** (what must be TRUE):
+  1. Gallery scan results show "Log Meal" action per meal group that creates diary entries
+  2. ScaleInputScreen returns confirmed netWeight to caller via navigation params callback
+  3. DishCard shows confidence indicator derived from Gemini Nano response quality
+  4. Orphaned SmolVLM code removed (VlmDownloadScreen, vlmService.ts, old detection components)
+  5. portionBridge.ts either wired into active pipeline or removed if Gemini Nano gram estimates suffice
+**Plans:** TBD
+
+Plans:
+- [ ] 07.1-01: TBD
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6 -> 7.1
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -415,8 +431,9 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 3.1. Daily Diary View + Macro Dashboard | 2/2 | Complete | 2026-03-20 |
 | 3.2. Food Search + Manual Add + Quick Add | 2/2 | Complete | 2026-03-20 |
 | 3.3. Meal Editing + Portion Adjustment | 2/2 | Complete | 2026-03-21 |
-| 3.4. Recipe Management | 0/2 | Not started | - |
-| 3.7. Google Drive Sync | 2/3 | Gap closure | - |
-| 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
-| 5. Scale OCR + Notifications + Health Data | 3/4 | In progress | - |
-| 6. Sync + Distribution | 0/2 | Not started | - |
+| 3.4. Recipe Management | 2/2 | Complete | 2026-03-21 |
+| 3.7. Google Drive Sync | 3/3 | Complete | 2026-03-21 |
+| 4. Gallery Scanning + Deduplication | 2/2 | Complete | 2026-03-21 |
+| 5. Scale OCR + Notifications + Health Data | 4/4 | Complete | 2026-03-21 |
+| 6. Sync + Distribution | 2/2 | Complete | 2026-03-21 |
+| 7.1. Integration Wiring + Cleanup | 0/1 | Not started | - |
