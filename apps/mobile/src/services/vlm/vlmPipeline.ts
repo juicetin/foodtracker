@@ -15,6 +15,27 @@ import type { ScannedDish, ScannedIngredient, ScanResult } from '../../types';
 import type { VlmIngredient } from './vlmTypes';
 
 // ---------------------------------------------------------------------------
+// Model source tracking -- consumed by DetectionScreen to show which model ran
+// ---------------------------------------------------------------------------
+
+/** Which VLM ran for the last identification. Read via getLastVlmSource(). */
+let _lastVlmSource: 'gemini-nano' | 'mock' | null = null;
+
+/**
+ * Returns which VLM ran the last scanFood() call in this session.
+ * Used by DetectionScreen to show a model indicator badge.
+ * Returns null if scanFood() hasn't been called yet.
+ */
+export function getLastVlmSource(): 'gemini-nano' | 'mock' | null {
+  return _lastVlmSource;
+}
+
+/** Reset source tracking (for testing only). */
+export function _resetVlmSource(): void {
+  _lastVlmSource = null;
+}
+
+// ---------------------------------------------------------------------------
 // Proxy constants (when KG has no data for an ingredient)
 // ---------------------------------------------------------------------------
 
@@ -95,6 +116,8 @@ export async function scanFood(photoUri: string): Promise<ScanResult> {
       if (!vlmResult || vlmResult.dishes.length === 0) {
         isMock = true;
         vlmResult = getMockScanResult();
+      } else {
+        _lastVlmSource = 'gemini-nano';
       }
     } else {
       isMock = true;
@@ -103,6 +126,11 @@ export async function scanFood(photoUri: string): Promise<ScanResult> {
   } catch {
     isMock = true;
     vlmResult = getMockScanResult();
+  }
+
+  // Track mock fallback as source
+  if (isMock) {
+    _lastVlmSource = 'mock';
   }
 
   const dishes: ScannedDish[] = await Promise.all(

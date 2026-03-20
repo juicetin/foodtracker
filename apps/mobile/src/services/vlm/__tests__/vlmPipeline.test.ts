@@ -13,7 +13,7 @@ import {
   getKnowledgeGraphService,
   type KnowledgeGraphService,
 } from '../../knowledge-graph';
-import { scanFood, getLastVlmSource } from '../vlmPipeline';
+import { scanFood, getLastVlmSource, _resetVlmSource } from '../vlmPipeline';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -217,6 +217,14 @@ describe('KG nutrition lookup', () => {
 });
 
 describe('getLastVlmSource', () => {
+  beforeEach(() => {
+    _resetVlmSource();
+  });
+
+  it('returns null before any scan', () => {
+    expect(getLastVlmSource()).toBeNull();
+  });
+
   it('returns "gemini-nano" after successful Gemini Nano scan', async () => {
     mockGeminiModule.checkAvailability.mockResolvedValue('available');
     mockGeminiService.identify.mockResolvedValue({
