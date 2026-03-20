@@ -273,11 +273,11 @@ Plans:
   4. Editing an ingredient's portion recalculates the entry's total nutrition in real-time
   5. User can trigger VLM re-identification on a meal's photo(s) to get updated food names
   6. All edits are persisted to SQLite and reflected immediately in the diary view and daily macro summary
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03.3-01: TBD
-- [ ] 03.3-02: TBD
+- [ ] 03.3-01-PLAN.md -- Edit infrastructure: editSessionManager (command pattern undo/redo), ServingSizeSelector, IngredientSearchSheet, PhotoViewer, EntryDetailScreen wiring
+- [ ] 03.3-02-PLAN.md -- Re-identification: reidentifyService (Gemini Nano re-scan + KG enrichment), ReidentifyMergeScreen (drag-and-drop diff/merge), human verification
 
 ### Phase 3.4: Recipe Management (INSERTED)
 **Goal**: Users can save any logged meal as a reusable recipe and re-log it in 1-2 taps, building a personal recipe library over time
@@ -406,7 +406,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 3.6. Incremental Backup System | 2/2 | Complete | 2026-03-19 |
 | 3.1. Daily Diary View + Macro Dashboard | 0/? | Not started | - |
 | 3.2. Food Search + Manual Add + Quick Add | 0/2 | Not started | - |
-| 3.3. Meal Editing + Portion Adjustment | 0/? | Not started | - |
+| 3.3. Meal Editing + Portion Adjustment | 0/2 | Not started | - |
 | 3.4. Recipe Management | 0/? | Not started | - |
 | 3.7. Google Drive Sync | 0/? | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
