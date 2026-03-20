@@ -1,8 +1,9 @@
 /**
- * EntryDetailScreen — view and edit a logged food entry's dishes and ingredients.
+ * EntryDetailScreen -- view and edit a logged food entry's dishes and ingredients.
  *
  * Read mode: photo, dish names, ingredients with weights and nutrition, macro totals.
- * Edit mode: inline weight editing, ingredient removal, add ingredient, dish rename.
+ * Edit mode: ServingSizeSelector for portions, IngredientSearchSheet for adding,
+ *   undo/redo via command pattern, photo viewer with pinch-to-zoom, re-scan button.
  */
 
 import React, { useCallback, useEffect, useState } from 'react';
@@ -18,18 +19,26 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { opsqlite } from '../../db/client';
 import type { RootStackParamList } from '../types';
 import { addFavourite, isFavourited } from '../services/favourites';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import {
-  updateIngredientWeight,
-  updateIngredientName,
-  removeIngredient as removeIngredientDb,
-  addIngredient as addIngredientDb,
-  updateDishName as updateDishNameDb,
   recalculateEntryTotals,
+  type IngredientUpdate,
 } from '../services/entryEditor/entryEditorService';
+import {
+  ChangeWeightCommand,
+  AddIngredientCommand,
+  RemoveIngredientCommand,
+  RenameIngredientCommand,
+  RenameDishCommand,
+  type EntrySnapshot,
+} from '../services/entryEditor/editSessionManager';
+import { useEditSession } from '../hooks/useEditSession';
+import { ServingSizeSelector, IngredientSearchSheet, PhotoViewer } from '../components/edit';
+import { geminiNanoService } from '../services/vlm/geminiNanoService';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -65,6 +74,7 @@ interface EntryDetail {
   notes: string | null;
   createdAt: string;
   photoUri: string | null;
+  photos: Array<{ uri: string }>;
   dishes: DetailDish[];
 }
 
@@ -82,10 +92,13 @@ function loadEntry(entryId: string): EntryDetail | null {
   if (entryRows.length === 0) return null;
   const row = entryRows[0];
 
+  // Load ALL photos (no LIMIT 1)
   const photoRows = opsqlite.executeSync(
-    'SELECT uri FROM photos WHERE entry_id = ? LIMIT 1',
+    'SELECT uri FROM photos WHERE entry_id = ?',
     [entryId],
   ).rows as Array<Record<string, unknown>>;
+
+  const photos = photoRows.map((p) => ({ uri: p.uri as string }));
 
   const dishRows = opsqlite.executeSync(
     'SELECT id, name, cuisine, portion_scale FROM scanned_dishes WHERE entry_id = ? ORDER BY created_at',
@@ -128,8 +141,42 @@ function loadEntry(entryId: string): EntryDetail | null {
     totalFat: (row.total_fat as number) ?? 0,
     notes: (row.notes as string) ?? null,
     createdAt: row.created_at as string,
-    photoUri: photoRows.length > 0 ? (photoRows[0].uri as string) : null,
+    photoUri: photos.length > 0 ? photos[0].uri : null,
+    photos,
     dishes,
+  };
+}
+
+/** Convert EntryDetail to EntrySnapshot for undo/redo. */
+function toSnapshot(entry: EntryDetail): EntrySnapshot {
+  return {
+    id: entry.id,
+    mealType: entry.mealType,
+    totalCalories: entry.totalCalories,
+    totalProtein: entry.totalProtein,
+    totalCarbs: entry.totalCarbs,
+    totalFat: entry.totalFat,
+    notes: entry.notes,
+    createdAt: entry.createdAt,
+    photoUri: entry.photoUri,
+    photos: entry.photos,
+    dishes: entry.dishes.map((d) => ({
+      id: d.id,
+      name: d.name,
+      cuisine: d.cuisine,
+      portionScale: d.portionScale,
+      ingredients: d.ingredients.map((i) => ({
+        id: i.id,
+        name: i.name,
+        amountG: i.amountG,
+        calories: i.calories,
+        protein: i.protein,
+        carbs: i.carbs,
+        fat: i.fat,
+        fiber: i.fiber,
+        sugar: i.sugar,
+      })),
+    })),
   };
 }
 
@@ -138,12 +185,18 @@ function loadEntry(entryId: string): EntryDetail | null {
 // ---------------------------------------------------------------------------
 
 export default function EntryDetailScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'EntryDetail'>>();
   const { deleteEntry, loadTodayEntries } = useFoodLogStore();
   const [entry, setEntry] = useState<EntryDetail | null>(null);
   const [alreadyFaved, setAlreadyFaved] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [photoViewerVisible, setPhotoViewerVisible] = useState(false);
+  const [ingredientSearchVisible, setIngredientSearchVisible] = useState(false);
+  const [ingredientSearchDishId, setIngredientSearchDishId] = useState('');
+  const [geminiAvailable, setGeminiAvailable] = useState(false);
+
+  const editSession = useEditSession();
 
   const reload = useCallback(() => {
     const loaded = loadEntry(route.params.entryId);
@@ -157,72 +210,120 @@ export default function EntryDetailScreen() {
     reload();
   }, [reload]);
 
+  // Check Gemini Nano availability
+  useEffect(() => {
+    geminiNanoService.isAvailable().then(setGeminiAvailable).catch(() => setGeminiAvailable(false));
+  }, []);
+
+  // -- Enter edit mode --
+  const handleStartEditing = useCallback(() => {
+    if (!entry) return;
+    editSession.initSession(toSnapshot(entry));
+    setEditing(true);
+  }, [entry, editSession]);
+
+  // -- Save --
   const handleSave = useCallback(() => {
     if (!entry) return;
     recalculateEntryTotals(entry.id);
     loadTodayEntries();
+    editSession.clearSession();
     reload();
     setEditing(false);
-  }, [entry, reload, loadTodayEntries]);
+  }, [entry, reload, loadTodayEntries, editSession]);
 
-  const handleRemoveIngredient = useCallback((ingId: string) => {
+  // -- Cancel --
+  const handleCancel = useCallback(() => {
+    editSession.reset();
+    editSession.clearSession();
+    reload();
+    setEditing(false);
+  }, [editSession, reload]);
+
+  // -- Weight change via command --
+  const handleWeightChange = useCallback((ingId: string, oldAmountG: number, newAmountG: number) => {
+    if (!entry) return;
+    editSession.executeCommand(
+      new ChangeWeightCommand(ingId, entry.id, oldAmountG, newAmountG),
+    );
+    reload();
+  }, [entry, editSession, reload]);
+
+  // -- Remove ingredient via command --
+  const handleRemoveIngredient = useCallback((ing: DetailIngredient, dishId: string) => {
+    if (!entry) return;
     Alert.alert('Remove Ingredient', 'Remove this ingredient?', [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove',
         style: 'destructive',
         onPress: () => {
-          removeIngredientDb(ingId);
-          if (entry) {
-            recalculateEntryTotals(entry.id);
-            reload();
-          }
+          const savedData: IngredientUpdate = {
+            entryId: entry.id,
+            dishId,
+            name: ing.name,
+            amountG: ing.amountG,
+            calories: ing.calories,
+            protein: ing.protein,
+            carbs: ing.carbs,
+            fat: ing.fat,
+            fiber: ing.fiber,
+          };
+          editSession.executeCommand(
+            new RemoveIngredientCommand(ing.id, savedData),
+          );
+          reload();
         },
       },
     ]);
-  }, [entry, reload]);
+  }, [entry, editSession, reload]);
 
-  const handleWeightChange = useCallback((ingId: string, text: string) => {
-    const grams = parseFloat(text);
-    if (!isNaN(grams) && grams > 0) {
-      updateIngredientWeight(ingId, grams);
-      if (entry) {
-        recalculateEntryTotals(entry.id);
-        reload();
-      }
-    }
-  }, [entry, reload]);
+  // -- Add ingredient via search sheet --
+  const handleOpenIngredientSearch = useCallback((dishId: string) => {
+    setIngredientSearchDishId(dishId);
+    setIngredientSearchVisible(true);
+  }, []);
 
-  const handleNameChange = useCallback((ingId: string, newName: string) => {
-    if (newName.trim()) {
-      updateIngredientName(ingId, newName.trim());
-      reload();
-    }
-  }, [reload]);
-
-  const handleDishNameChange = useCallback((dishId: string, newName: string) => {
-    if (newName.trim()) {
-      updateDishNameDb(dishId, newName.trim());
-      reload();
-    }
-  }, [reload]);
-
-  const handleAddIngredient = useCallback((dishId: string) => {
-    if (!entry) return;
-    addIngredientDb({
-      entryId: entry.id,
-      dishId,
-      name: 'New ingredient',
-      amountG: 100,
-      calories: 0,
-      protein: 0,
-      carbs: 0,
-      fat: 0,
-      fiber: 0,
-    });
-    recalculateEntryTotals(entry.id);
+  const handleAddIngredient = useCallback((data: IngredientUpdate) => {
+    editSession.executeCommand(new AddIngredientCommand(data));
     reload();
-  }, [entry, reload]);
+  }, [editSession, reload]);
+
+  // -- Rename ingredient via command --
+  const handleNameChange = useCallback((ingId: string, oldName: string, newName: string) => {
+    if (newName.trim() && newName.trim() !== oldName) {
+      editSession.executeCommand(
+        new RenameIngredientCommand(ingId, oldName, newName.trim()),
+      );
+      reload();
+    }
+  }, [editSession, reload]);
+
+  // -- Rename dish via command --
+  const handleDishNameChange = useCallback((dishId: string, oldName: string, newName: string) => {
+    if (newName.trim() && newName.trim() !== oldName) {
+      editSession.executeCommand(
+        new RenameDishCommand(dishId, oldName, newName.trim()),
+      );
+      reload();
+    }
+  }, [editSession, reload]);
+
+  // -- Undo/Redo handlers --
+  const handleUndo = useCallback(() => {
+    editSession.undo();
+    reload();
+  }, [editSession, reload]);
+
+  const handleRedo = useCallback(() => {
+    editSession.redo();
+    reload();
+  }, [editSession, reload]);
+
+  const handleReset = useCallback(() => {
+    editSession.reset();
+    reload();
+  }, [editSession, reload]);
 
   if (!entry) {
     return (
@@ -234,13 +335,22 @@ export default function EntryDetailScreen() {
 
   const time = new Date(entry.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const mealLabel = entry.mealType.charAt(0).toUpperCase() + entry.mealType.slice(1);
+  const hasPhotos = entry.photos.length > 0;
 
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Photo */}
+        {/* Photo -- tappable to open PhotoViewer */}
         {entry.photoUri && (
-          <Image source={{ uri: entry.photoUri }} style={styles.photo} resizeMode="cover" />
+          <Pressable onPress={() => setPhotoViewerVisible(true)}>
+            <Image source={{ uri: entry.photoUri }} style={styles.photo} resizeMode="cover" />
+            {entry.photos.length > 1 && (
+              <View style={styles.photoCountBadge}>
+                <Ionicons name="images-outline" size={14} color="#FFF" />
+                <Text style={styles.photoCountText}>{entry.photos.length}</Text>
+              </View>
+            )}
+          </Pressable>
         )}
 
         {/* Header */}
@@ -252,21 +362,28 @@ export default function EntryDetailScreen() {
             <Text style={styles.timeText}>{time}</Text>
           </View>
 
-          {/* Edit / Save toggle */}
+          {/* Edit / Save + Cancel */}
           {entry.dishes.length > 0 && (
-            <Pressable
-              style={editing ? styles.saveBtn : styles.editBtn}
-              onPress={editing ? handleSave : () => setEditing(true)}
-            >
-              <Ionicons
-                name={editing ? 'checkmark' : 'pencil'}
-                size={16}
-                color={editing ? '#FFF' : '#3B82F6'}
-              />
-              <Text style={editing ? styles.saveBtnText : styles.editBtnText}>
-                {editing ? 'Save' : 'Edit'}
-              </Text>
-            </Pressable>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              {editing && (
+                <Pressable style={styles.cancelBtn} onPress={handleCancel}>
+                  <Text style={styles.cancelBtnText}>Cancel</Text>
+                </Pressable>
+              )}
+              <Pressable
+                style={editing ? styles.saveBtn : styles.editBtn}
+                onPress={editing ? handleSave : handleStartEditing}
+              >
+                <Ionicons
+                  name={editing ? 'checkmark' : 'pencil'}
+                  size={16}
+                  color={editing ? '#FFF' : '#3B82F6'}
+                />
+                <Text style={editing ? styles.saveBtnText : styles.editBtnText}>
+                  {editing ? 'Save' : 'Edit'}
+                </Text>
+              </Pressable>
+            </View>
           )}
         </View>
 
@@ -342,7 +459,7 @@ export default function EntryDetailScreen() {
               {editing ? (
                 <EditableText
                   value={dish.name}
-                  onSubmit={(v) => handleDishNameChange(dish.id, v)}
+                  onSubmit={(v) => handleDishNameChange(dish.id, dish.name, v)}
                   style={styles.dishName}
                 />
               ) : (
@@ -365,18 +482,20 @@ export default function EntryDetailScreen() {
                     <View style={styles.ingLeft}>
                       <EditableText
                         value={ing.name}
-                        onSubmit={(v) => handleNameChange(ing.id, v)}
+                        onSubmit={(v) => handleNameChange(ing.id, ing.name, v)}
                         style={styles.ingName}
                       />
                       <Text style={styles.ingCal}>{Math.round(ing.calories)} kcal</Text>
                     </View>
-                    <EditableWeight
-                      value={ing.amountG}
-                      onSubmit={(v) => handleWeightChange(ing.id, v)}
+                    <ServingSizeSelector
+                      ingredientId={ing.id}
+                      ingredientName={ing.name}
+                      currentAmountG={ing.amountG}
+                      onWeightChange={(grams) => handleWeightChange(ing.id, ing.amountG, grams)}
                     />
                     <Pressable
                       style={styles.removeBtn}
-                      onPress={() => handleRemoveIngredient(ing.id)}
+                      onPress={() => handleRemoveIngredient(ing, dish.id)}
                     >
                       <Ionicons name="close-circle" size={20} color="#EF4444" />
                     </Pressable>
@@ -403,7 +522,7 @@ export default function EntryDetailScreen() {
             {editing && (
               <Pressable
                 style={styles.addIngBtn}
-                onPress={() => handleAddIngredient(dish.id)}
+                onPress={() => handleOpenIngredientSearch(dish.id)}
               >
                 <Ionicons name="add-circle-outline" size={18} color="#16A34A" />
                 <Text style={styles.addIngText}>Add Ingredient</Text>
@@ -415,6 +534,17 @@ export default function EntryDetailScreen() {
             )}
           </View>
         ))}
+
+        {/* Re-scan with Gemini Nano button */}
+        {editing && hasPhotos && geminiAvailable && (
+          <Pressable
+            style={styles.rescanBtn}
+            onPress={() => navigation.navigate('ReidentifyMerge', { entryId: entry.id })}
+          >
+            <Ionicons name="sparkles-outline" size={18} color="#7C3AED" />
+            <Text style={styles.rescanBtnText}>Re-scan with Gemini Nano</Text>
+          </Pressable>
+        )}
 
         {entry.dishes.length === 0 && entry.notes && (
           <View style={styles.notesCard}>
@@ -444,8 +574,57 @@ export default function EntryDetailScreen() {
           </Pressable>
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: editing ? 80 : 40 }} />
       </ScrollView>
+
+      {/* Undo/Redo/Reset bar -- floating at bottom in edit mode */}
+      {editing && (
+        <View style={styles.undoRedoBar}>
+          <Pressable
+            style={[styles.undoRedoBtn, !editSession.canUndo && styles.undoRedoBtnDisabled]}
+            onPress={handleUndo}
+            disabled={!editSession.canUndo}
+          >
+            <Ionicons name="arrow-undo" size={18} color={editSession.canUndo ? '#3B82F6' : '#D1D5DB'} />
+            <Text style={[styles.undoRedoText, !editSession.canUndo && styles.undoRedoTextDisabled]}>Undo</Text>
+          </Pressable>
+
+          <Pressable
+            style={[styles.undoRedoBtn, !editSession.canRedo && styles.undoRedoBtnDisabled]}
+            onPress={handleRedo}
+            disabled={!editSession.canRedo}
+          >
+            <Ionicons name="arrow-redo" size={18} color={editSession.canRedo ? '#3B82F6' : '#D1D5DB'} />
+            <Text style={[styles.undoRedoText, !editSession.canRedo && styles.undoRedoTextDisabled]}>Redo</Text>
+          </Pressable>
+
+          <Pressable
+            style={[styles.undoRedoBtn, !editSession.canUndo && styles.undoRedoBtnDisabled]}
+            onPress={handleReset}
+            disabled={!editSession.canUndo}
+          >
+            <Ionicons name="refresh" size={18} color={editSession.canUndo ? '#EF4444' : '#D1D5DB'} />
+            <Text style={[styles.undoRedoText, !editSession.canUndo && styles.undoRedoTextDisabled, editSession.canUndo && { color: '#EF4444' }]}>Reset</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* PhotoViewer modal */}
+      <PhotoViewer
+        photos={entry.photos}
+        initialIndex={0}
+        visible={photoViewerVisible}
+        onClose={() => setPhotoViewerVisible(false)}
+      />
+
+      {/* Ingredient search bottom sheet */}
+      <IngredientSearchSheet
+        visible={ingredientSearchVisible}
+        entryId={entry.id}
+        dishId={ingredientSearchDishId}
+        onAdd={handleAddIngredient}
+        onClose={() => setIngredientSearchVisible(false)}
+      />
     </View>
   );
 }
@@ -477,31 +656,6 @@ function EditableText({
   );
 }
 
-function EditableWeight({
-  value,
-  onSubmit,
-}: {
-  value: number;
-  onSubmit: (text: string) => void;
-}) {
-  const [text, setText] = useState(String(Math.round(value)));
-  return (
-    <View style={styles.editWeightChip}>
-      <TextInput
-        style={styles.editWeightInput}
-        value={text}
-        onChangeText={setText}
-        onBlur={() => onSubmit(text)}
-        onSubmitEditing={() => onSubmit(text)}
-        keyboardType="numeric"
-        returnKeyType="done"
-        selectTextOnFocus
-      />
-      <Text style={styles.editWeightUnit}>g</Text>
-    </View>
-  );
-}
-
 function MacroPill({ value, label, color }: { value: number; label: string; color: string }) {
   return (
     <View style={styles.macroPill}>
@@ -521,6 +675,12 @@ const styles = StyleSheet.create({
   loadingText: { marginTop: 100, textAlign: 'center', color: '#6B7280', fontSize: 16 },
 
   photo: { width: '100%', height: 240 },
+  photoCountBadge: {
+    position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4,
+    backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4,
+  },
+  photoCountText: { fontSize: 12, fontWeight: '600', color: '#FFF' },
+
   header: {
     flexDirection: 'row', alignItems: 'center',
     paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFF',
@@ -532,7 +692,7 @@ const styles = StyleSheet.create({
   mealBadgeText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
   timeText: { fontSize: 14, color: '#6B7280' },
 
-  // Edit/Save buttons
+  // Edit/Save/Cancel buttons
   editBtn: {
     flexDirection: 'row', alignItems: 'center', gap: 4,
     backgroundColor: '#EFF6FF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
@@ -544,6 +704,11 @@ const styles = StyleSheet.create({
     backgroundColor: '#16A34A', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
   },
   saveBtnText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
+  cancelBtn: {
+    borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+    backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB',
+  },
+  cancelBtnText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
 
   totalsCard: {
     backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
@@ -620,22 +785,36 @@ const styles = StyleSheet.create({
     backgroundColor: '#F3F4F6', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4,
     borderWidth: 1, borderColor: '#E5E7EB',
   },
-  editWeightChip: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 6, paddingVertical: 2,
-    borderWidth: 1, borderColor: '#FDE68A',
-  },
-  editWeightInput: {
-    fontSize: 13, fontWeight: '700', color: '#92400E', minWidth: 40, textAlign: 'center',
-    paddingVertical: 2,
-  },
-  editWeightUnit: { fontSize: 12, color: '#92400E', marginLeft: 2 },
   removeBtn: { marginLeft: 8, padding: 4 },
   addIngBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
     paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#F3F4F6',
   },
   addIngText: { fontSize: 13, fontWeight: '600', color: '#16A34A' },
+
+  // Re-scan button
+  rescanBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    marginHorizontal: 16, marginTop: 12, paddingVertical: 14, borderRadius: 12,
+    backgroundColor: '#F5F3FF', borderWidth: 1, borderColor: '#DDD6FE',
+  },
+  rescanBtnText: { fontSize: 15, fontWeight: '600', color: '#7C3AED' },
+
+  // Undo/Redo bar
+  undoRedoBar: {
+    position: 'absolute', bottom: 20, left: 16, right: 16,
+    flexDirection: 'row', justifyContent: 'space-around',
+    backgroundColor: '#FFF', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 8,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1,
+    shadowRadius: 12, elevation: 8,
+  },
+  undoRedoBtn: {
+    flexDirection: 'row', alignItems: 'center', gap: 4,
+    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8,
+  },
+  undoRedoBtnDisabled: { opacity: 0.4 },
+  undoRedoText: { fontSize: 13, fontWeight: '600', color: '#3B82F6' },
+  undoRedoTextDisabled: { color: '#D1D5DB' },
 
   notesCard: {
     backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
