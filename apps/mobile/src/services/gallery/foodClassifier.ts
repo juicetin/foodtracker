@@ -6,10 +6,13 @@
  */
 
 import { geminiNanoService } from '../vlm/geminiNanoService';
+import { scanFood } from '../vlm/vlmPipeline';
+import { useFoodLogStore } from '../../store/useFoodLogStore';
 import { getPendingScanItems, markScanItemDone } from './galleryScanService';
 import { groupIntoMeals } from './mealGrouper';
 import { importPhoto } from './photoImporter';
 import type { ClassifiedPhoto, ScanQueueItem } from './types';
+import type { MealType } from '../detection/types';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -55,6 +58,7 @@ interface DrainResult {
   classified: number;
   foodPhotos: number;
   mealGroups: number;
+  entriesCreated: number;
 }
 
 /**
@@ -70,7 +74,7 @@ export async function drainScanQueue(options?: DrainOptions): Promise<DrainResul
 
   const pending = await getPendingScanItems(batchSize);
   if (pending.length === 0) {
-    return { classified: 0, foodPhotos: 0, mealGroups: 0 };
+    return { classified: 0, foodPhotos: 0, mealGroups: 0, entriesCreated: 0 };
   }
 
   const foodPhotos: ClassifiedPhoto[] = [];
@@ -119,10 +123,29 @@ export async function drainScanQueue(options?: DrainOptions): Promise<DrainResul
     }
   }
 
+  // Identify and log each meal group as a diary entry
+  let entriesCreated = 0;
+  for (const group of mealGroups) {
+    const representativeUri = group.photos[0].uri;
+    try {
+      const scanResult = await scanFood(representativeUri);
+      const mealType = deriveMealTypeFromTimestamp(group.firstTimestamp);
+      await useFoodLogStore.getState().logScanResult(scanResult, mealType);
+      entriesCreated++;
+    } catch {
+      // Non-fatal -- photo classified but entry creation failed
+    }
+    // Pace between identify calls
+    if (entriesCreated < mealGroups.length) {
+      await delay(CLASSIFY_DELAY_MS);
+    }
+  }
+
   return {
     classified,
     foodPhotos: foodPhotos.length,
     mealGroups: mealGroups.length,
+    entriesCreated,
   };
 }
 
@@ -147,6 +170,14 @@ async function classifyWithRetry(item: ScanQueueItem): Promise<boolean> {
   }
 
   return false;
+}
+
+function deriveMealTypeFromTimestamp(timestampMs: number): MealType {
+  const hour = new Date(timestampMs).getHours();
+  if (hour >= 6 && hour < 11) return 'breakfast';
+  if (hour >= 11 && hour < 14) return 'lunch';
+  if (hour >= 14 && hour < 17) return 'snack';
+  return 'dinner'; // 17-23 and 0-5 (midnight-6am = evening per Phase 03.1 pattern)
 }
 
 function delay(ms: number): Promise<void> {

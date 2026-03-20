@@ -429,7 +429,32 @@ export function DetectionScreen() {
           <Pressable
             style={styles.scaleWeightBtn}
             onPress={() =>
-              (navigation as any).navigate('ScaleInput', { photoUri: photoUri ?? undefined })
+              (navigation as any).navigate('ScaleInput', {
+                photoUri: photoUri ?? undefined,
+                onResult: (scaleWeight: number) => {
+                  // Proportionally adjust all ingredients across all dishes
+                  const allDishes = useDetectionStore.getState().dishes;
+                  const currentTotal = allDishes.reduce(
+                    (sum, d) =>
+                      sum +
+                      (d.ingredients?.reduce((s, i) => s + (i.amount_g ?? 0), 0) ?? 0),
+                    0,
+                  );
+                  if (currentTotal > 0) {
+                    const ratio = scaleWeight / currentTotal;
+                    for (const dish of allDishes) {
+                      if (!dish.ingredients) continue;
+                      for (const ing of dish.ingredients) {
+                        if (!ing.userModified) {
+                          useDetectionStore.getState().updateIngredient(dish.id, ing.id, {
+                            amount_g: Math.round((ing.amount_g ?? 0) * ratio * 10) / 10,
+                          });
+                        }
+                      }
+                    }
+                  }
+                },
+              })
             }
           >
             <Text style={styles.scaleWeightBtnText}>{'\u2696\uFE0F'} Scale</Text>

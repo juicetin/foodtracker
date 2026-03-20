@@ -148,6 +148,9 @@ export default function ScaleInputScreen() {
         // Non-critical
       }
     }
+    // Return net weight to caller via callback
+    route.params?.onResult?.(netWeight);
+
     // Navigate back with result
     if (navigation.canGoBack()) {
       navigation.goBack();

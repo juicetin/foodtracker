@@ -93,6 +93,14 @@ export default function GalleryScanScreen() {
               <Text style={styles.rowLabel}>Meals grouped</Text>
               <Text style={styles.rowValue}>{lastScanResult.mealGroups}</Text>
             </View>
+            {lastScanResult.entriesCreated > 0 && (
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Diary entries created</Text>
+                <Text style={[styles.rowValue, { color: '#16A34A', fontWeight: '700' }]}>
+                  {lastScanResult.entriesCreated}
+                </Text>
+              </View>
+            )}
           </>
         ) : (
           <Text style={styles.noScans}>No scans yet</Text>

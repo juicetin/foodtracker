@@ -6,13 +6,12 @@ export type RootStackParamList = {
   FoodSearch: undefined;
   BarcodeScan: undefined;
   Recipes: undefined;
-  VlmDownload: undefined;
   GeminiNanoTest: undefined;
   QuickAdd: undefined;
   ReidentifyMerge: { entryId: string };
   SyncSettings: undefined;
   GalleryScan: undefined;
-  ScaleInput: { photoUri?: string };
+  ScaleInput: { photoUri?: string; onResult?: (netWeight: number) => void };
   WeightTrend: undefined;
 };
 

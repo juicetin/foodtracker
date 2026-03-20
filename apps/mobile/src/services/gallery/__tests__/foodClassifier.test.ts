@@ -16,6 +16,20 @@ jest.mock('../../vlm/geminiNanoService', () => ({
   },
 }));
 
+const mockScanFood = jest.fn();
+jest.mock('../../vlm/vlmPipeline', () => ({
+  scanFood: (...args: unknown[]) => mockScanFood(...args),
+}));
+
+const mockLogScanResult = jest.fn();
+jest.mock('../../../store/useFoodLogStore', () => ({
+  useFoodLogStore: {
+    getState: () => ({
+      logScanResult: mockLogScanResult,
+    }),
+  },
+}));
+
 const mockGetPendingScanItems = jest.fn();
 const mockMarkScanItemDone = jest.fn();
 const mockSetLastScanTimestamp = jest.fn();
@@ -144,6 +158,49 @@ describe('drainScanQueue', () => {
     mockGetPendingScanItems.mockResolvedValue([]);
 
     const result = await drainScanQueue();
-    expect(result).toEqual({ classified: 0, foodPhotos: 0, mealGroups: 0 });
+    expect(result).toEqual({ classified: 0, foodPhotos: 0, mealGroups: 0, entriesCreated: 0 });
+  });
+
+  it('creates diary entries via logScanResult for each meal group', async () => {
+    const items: ScanQueueItem[] = [
+      makeScanItem({ id: 1, assetId: 'food-1', uri: 'file:///food1.jpg', creationTime: 1700001000000 }),
+      makeScanItem({ id: 2, assetId: 'food-2', uri: 'file:///food2.jpg', creationTime: 1700005000000 }),
+    ];
+
+    mockGetPendingScanItems.mockResolvedValue(items);
+    mockIdentify
+      .mockResolvedValueOnce({ dishes: [{ name: 'Rice', cuisine: 'Asian', ingredients: [] }] })
+      .mockResolvedValueOnce({ dishes: [{ name: 'Soup', cuisine: null, ingredients: [] }] });
+
+    const mealGroup1 = {
+      id: 'meal-1',
+      photos: [{ id: 1, assetId: 'food-1', uri: 'file:///food1.jpg', creationTime: 1700001000000, isFood: true }],
+      firstTimestamp: 1700001000000,
+      lastTimestamp: 1700001000000,
+    };
+    const mealGroup2 = {
+      id: 'meal-2',
+      photos: [{ id: 2, assetId: 'food-2', uri: 'file:///food2.jpg', creationTime: 1700005000000, isFood: true }],
+      firstTimestamp: 1700005000000,
+      lastTimestamp: 1700005000000,
+    };
+    mockGroupIntoMeals.mockReturnValue([mealGroup1, mealGroup2]);
+
+    mockImportPhoto.mockResolvedValue('file:///imported.jpg');
+    mockMarkScanItemDone.mockResolvedValue(undefined);
+
+    const mockScanResult = {
+      photoUri: 'file:///food1.jpg',
+      dishes: [{ id: 'd1', name: 'Rice', cuisine: 'Asian', photoUri: 'file:///food1.jpg', ingredients: [], portionScale: 1.0 }],
+      isMock: false,
+    };
+    mockScanFood.mockResolvedValue(mockScanResult);
+    mockLogScanResult.mockResolvedValue(undefined);
+
+    const result = await drainScanQueue();
+
+    expect(result.entriesCreated).toBe(2);
+    expect(mockScanFood).toHaveBeenCalledTimes(2);
+    expect(mockLogScanResult).toHaveBeenCalledTimes(2);
   });
 });

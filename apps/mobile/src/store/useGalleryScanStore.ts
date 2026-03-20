@@ -22,6 +22,7 @@ interface ScanResult {
   classified: number;
   foodPhotos: number;
   mealGroups: number;
+  entriesCreated: number;
 }
 
 interface GalleryScanState {
