@@ -231,7 +231,7 @@ Plans:
 ### Phase 3.1: Daily Diary View + Macro Dashboard (INSERTED — replaces old Phase 3)
 **Goal**: Users see a daily food diary with chronological entries, photo thumbnails, and an always-visible macro summary — the core screen they live in every day
 **Depends on**: Phase 2.6, Phase 7, Phase 3.6
-**Requirements**: UI-01, UI-05
+**Requirements**: UI-01
 **Success Criteria** (what must be TRUE):
   1. User views a daily food diary with entries grouped by time period (morning/afternoon/evening) showing per-period and daily macro totals (Cal/P/F/C)
   2. Each entry card shows photo thumbnail (our differentiator), food name(s) from VLM identification, Cal and P/F/C values, and time logged
