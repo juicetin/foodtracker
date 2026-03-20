@@ -10,6 +10,7 @@ export type RootStackParamList = {
   GeminiNanoTest: undefined;
   QuickAdd: undefined;
   ReidentifyMerge: { entryId: string };
+  SyncSettings: undefined;
 };
 
 export type MainTabParamList = {

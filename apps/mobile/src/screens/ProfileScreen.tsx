@@ -33,6 +33,7 @@ import { performIncrementalBackup, performFullBackup, listBackups } from '../ser
 import { getJournalCount } from '../services/backup/changeJournal';
 import { registerAutoBackup } from '../services/backup/backupScheduler';
 import type { BackupMetadata } from '../services/backup/types';
+import { useSyncStore } from '../store/useSyncStore';
 
 export default function ProfileScreen() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -166,6 +167,9 @@ export default function ProfileScreen() {
 
       {/* Backups */}
       <BackupCard />
+
+      {/* Google Drive Sync */}
+      <SyncCard />
 
       {/* AI Models */}
       <View style={styles.card}>
@@ -358,6 +362,60 @@ function BackupCard() {
     </View>
   );
 }
+
+function SyncCard() {
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { signedIn, userEmail, lastSyncAt, syncStatus } = useSyncStore();
+
+  function statusColor(): string {
+    switch (syncStatus) {
+      case 'syncing': return '#F59E0B';
+      case 'error': return '#EF4444';
+      case 'conflict': return '#F59E0B';
+      default: return '#16A34A';
+    }
+  }
+
+  return (
+    <Pressable style={styles.card} onPress={() => rootNavigation.navigate('SyncSettings')}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>Google Drive Sync</Text>
+        <Text style={styles.rowChevron}>&#x2192;</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Account</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          <View style={[syncStyles.dot, { backgroundColor: signedIn ? '#16A34A' : '#D1D5DB' }]} />
+          <Text style={styles.rowValue}>{signedIn ? (userEmail ?? 'Connected') : 'Not connected'}</Text>
+        </View>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Last synced</Text>
+        <Text style={styles.rowValue}>{lastSyncAt ? relativeTime(lastSyncAt) : 'Never'}</Text>
+      </View>
+
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Status</Text>
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
+          {syncStatus === 'syncing' ? (
+            <ActivityIndicator size="small" color="#F59E0B" />
+          ) : (
+            <View style={[syncStyles.dot, { backgroundColor: statusColor() }]} />
+          )}
+          <Text style={styles.rowValue}>
+            {syncStatus === 'idle' ? 'Up to date' : syncStatus === 'syncing' ? 'Syncing...' : syncStatus === 'error' ? 'Error' : 'Conflicts'}
+          </Text>
+        </View>
+      </View>
+    </Pressable>
+  );
+}
+
+const syncStyles = StyleSheet.create({
+  dot: { width: 8, height: 8, borderRadius: 4 },
+});
 
 const UX_MODE_OPTIONS: { mode: UxMode; label: string; desc: string }[] = [
   { mode: 'zero-effort', label: 'Zero-effort', desc: 'Auto-log, review later' },

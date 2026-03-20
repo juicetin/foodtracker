@@ -4,6 +4,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import MainTabNavigator from './MainTabNavigator';
 import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen, BarcodeScanScreen, RecipeScreen, QuickAddScreen, ReidentifyMergeScreen } from '../screens';
+import SyncSettingsScreen from '../screens/SyncSettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -84,6 +85,15 @@ export default function RootNavigator() {
           options={{
             headerShown: true,
             headerTitle: 'Meal Detail',
+            animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="SyncSettings"
+          component={SyncSettingsScreen}
+          options={{
+            headerShown: true,
+            headerTitle: 'Google Drive Sync',
             animation: 'slide_from_right',
           }}
         />
