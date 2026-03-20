@@ -378,19 +378,20 @@ Plans:
 - [ ] 05-04-PLAN.md -- UI screens (ScaleInput, WeightTrend, ProfileScreen settings), navigation wiring, human verification
 
 ### Phase 6: Sync + Distribution
-**Goal**: Users can back up data to the cloud and receive ML models through platform-optimized delivery channels
-**Depends on**: Phase 1, Phase 5
+**Goal**: FTP backup as alternative sync backend alongside Google Drive, and Play for On-Device AI model delivery on Android. iOS features (iCloud, ODR) deferred until Apple has comparable on-device AI.
+**Depends on**: Phase 3.7, Phase 5
 **Requirements**: DAT-04, DAT-05, DAT-06, MDL-01, MDL-02
 **Success Criteria** (what must be TRUE):
-  1. User can opt into Google Drive backup/sync via app data folder, with data accessible cross-platform (iOS and Android)
-  2. User on iOS can opt into iCloud backup/sync as an alternative to Google Drive
-  3. Sync conflicts between devices are resolved via last-write-wins with timestamps, and full edit history is retained locally
-  4. Android app delivers ML models via Play for On-Device AI with device targeting by RAM and chipset; iOS app delivers optional models via On-Demand Resources or Background Assets API
-**Plans**: TBD
+  1. User can back up to FTP server alongside Google Drive (both run independently via Promise.allSettled)
+  2. FTP credentials stored securely via expo-secure-store (not AsyncStorage)
+  3. Android app includes Play for On-Device AI configuration with device targeting; packManager resolves AI pack path before R2 fallback
+  4. DAT-04 (Drive sync) and DAT-06 (LWW conflicts) already complete from Phase 3.7
+  5. DAT-05 (iCloud) and MDL-02 (iOS ODR) deferred per user decision
+**Plans:** 2 plans
 
 Plans:
-- [ ] 06-01: TBD
-- [ ] 06-02: TBD
+- [ ] 06-01-PLAN.md -- FTP backup client: native module (Apache Commons Net), ftpClient/ftpSync services, syncScheduler multi-backend dispatch, SyncSettingsScreen FTP card
+- [ ] 06-02-PLAN.md -- Play for On-Device AI: withAiPack config plugin, ai-pack-delivery native bridge module, packManager AI pack resolution
 
 ## Progress
 
