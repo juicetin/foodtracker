@@ -26,9 +26,11 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { getKnowledgeGraphService, type DishResult, type MacroResult } from '../services/knowledge-graph';
 import { searchProducts, type OFFProduct } from '../services/openfoodfacts/openFoodFactsService';
+import { searchRecipes, logRecipeAsEntry } from '../services/recipes/recipeService';
 import { deduplicateResults } from '../services/search/searchDedup';
 import { getRecentHistory, searchHistory, type HistoryItem } from '../services/search/historyService';
 import { useFoodLogStore } from '../store/useFoodLogStore';
+import { usePreferencesStore } from '../store/usePreferencesStore';
 import { autoDetectMealType } from '../services/detection/types';
 import type { RootStackParamList } from '../types';
 
@@ -38,14 +40,16 @@ interface SearchResult {
   name: string;
   brand?: string | null;
   calorieHint?: number;
-  source: 'kg' | 'off' | 'history';
+  source: 'kg' | 'off' | 'history' | 'recipe';
   kgDish?: DishResult;
   offProduct?: OFFProduct;
+  recipeId?: string;
 }
 
 export default function FoodSearchScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { addEntry, loadTodayEntries } = useFoodLogStore();
+  const uxMode = usePreferencesStore((s) => s.uxMode);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -87,6 +91,18 @@ export default function FoodSearchScreen() {
           name: h.name,
           calorieHint: h.avgCalories,
           source: 'history',
+        });
+      }
+
+      // Search recipes (local, fast)
+      const recipeMatches = searchRecipes(trimmed, 5);
+      for (const r of recipeMatches) {
+        unified.push({
+          id: `recipe-${r.id}`,
+          name: r.name,
+          calorieHint: Math.round(r.totalCalories / (r.servings || 1)),
+          source: 'recipe',
+          recipeId: r.id,
         });
       }
 
@@ -145,6 +161,32 @@ export default function FoodSearchScreen() {
     if (result.source === 'history') {
       setQuery(result.name);
       doSearch(result.name);
+      return;
+    }
+
+    // If recipe item, log it directly
+    if (result.source === 'recipe' && result.recipeId) {
+      if (uxMode === 'zero-effort') {
+        logRecipeAsEntry(result.recipeId, autoDetectMealType());
+        await loadTodayEntries();
+        Alert.alert('Logged', `${result.name} added to diary.`);
+      } else {
+        Alert.alert(
+          'Log Recipe',
+          `${result.name}\n${result.calorieHint ?? 0} Cal per serving`,
+          [
+            { text: 'Cancel', style: 'cancel' },
+            {
+              text: 'Log',
+              onPress: async () => {
+                logRecipeAsEntry(result.recipeId!, autoDetectMealType());
+                await loadTodayEntries();
+                Alert.alert('Logged', `${result.name} added to diary.`);
+              },
+            },
+          ],
+        );
+      }
       return;
     }
 
@@ -397,10 +439,14 @@ export default function FoodSearchScreen() {
                     styles.sourceBadge,
                     item.source === 'off' ? styles.sourceBadgeOff
                       : item.source === 'history' ? styles.sourceBadgeHistory
+                      : item.source === 'recipe' ? styles.sourceBadgeRecipe
                       : styles.sourceBadgeKg
                   ]}>
-                    <Text style={styles.sourceBadgeText}>
-                      {item.source === 'off' ? 'OFF' : item.source === 'history' ? 'History' : 'KG'}
+                    <Text style={[
+                      styles.sourceBadgeText,
+                      item.source === 'recipe' && { color: '#7C3AED' },
+                    ]}>
+                      {item.source === 'off' ? 'OFF' : item.source === 'history' ? 'History' : item.source === 'recipe' ? 'Recipe' : 'KG'}
                     </Text>
                   </View>
                 </View>
@@ -486,6 +532,7 @@ const styles = StyleSheet.create({
   sourceBadgeKg: { backgroundColor: '#DCFCE7' },
   sourceBadgeOff: { backgroundColor: '#DBEAFE' },
   sourceBadgeHistory: { backgroundColor: '#F3E8FF' },
+  sourceBadgeRecipe: { backgroundColor: '#F5F3FF' },
   sourceBadgeText: { fontSize: 10, fontWeight: '700', color: '#374151' },
   countBadge: {
     backgroundColor: '#F3F4F6', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,

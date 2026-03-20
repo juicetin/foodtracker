@@ -17,7 +17,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList } from '../types';
+import type { RootStackParamList, UxMode } from '../types';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -36,7 +36,7 @@ import type { BackupMetadata } from '../services/backup/types';
 
 export default function ProfileScreen() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { nutritionGoals, setNutritionGoals, region, units, setRegion, setUnits } = usePreferencesStore();
+  const { nutritionGoals, setNutritionGoals, region, units, setRegion, setUnits, uxMode, setUxMode } = usePreferencesStore();
 
   const [editingGoals, setEditingGoals] = useState(false);
   const [calGoal, setCalGoal] = useState(String(nutritionGoals.calories));
@@ -141,6 +141,15 @@ export default function ProfileScreen() {
           <Text style={styles.rowLabel}>Units</Text>
           <Text style={styles.rowValue}>{units === 'metric' ? 'Metric' : 'Imperial'}</Text>
         </View>
+      </View>
+
+      {/* Logging Mode */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Logging Mode</Text>
+        <Text style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 12 }}>
+          How recipes are logged to your diary
+        </Text>
+        <UxModeSelector current={uxMode} onSelect={setUxMode} />
       </View>
 
       {/* Recipes */}
@@ -350,6 +359,37 @@ function BackupCard() {
   );
 }
 
+const UX_MODE_OPTIONS: { mode: UxMode; label: string; desc: string }[] = [
+  { mode: 'zero-effort', label: 'Zero-effort', desc: 'Auto-log, review later' },
+  { mode: 'confirm-only', label: 'Confirm', desc: 'Review before logging' },
+  { mode: 'guided-edit', label: 'Guided', desc: 'Step-by-step editing' },
+];
+
+function UxModeSelector({ current, onSelect }: { current: UxMode; onSelect: (m: UxMode) => void }) {
+  return (
+    <View style={styles.uxModeContainer}>
+      {UX_MODE_OPTIONS.map(({ mode, label, desc }) => {
+        const selected = current === mode;
+        return (
+          <Pressable
+            key={mode}
+            style={[styles.uxModeOption, selected && styles.uxModeOptionSelected]}
+            onPress={() => onSelect(mode)}
+          >
+            <View style={[styles.uxModeRadio, selected && styles.uxModeRadioSelected]}>
+              {selected && <View style={styles.uxModeRadioDot} />}
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.uxModeLabel, selected && styles.uxModeLabelSelected]}>{label}</Text>
+              <Text style={styles.uxModeDesc}>{desc}</Text>
+            </View>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 function GoalRow({ label, unit, value, editing, onChange, color }: {
   label: string; unit: string; value: string; editing: boolean;
   onChange: (v: string) => void; color: string;
@@ -424,4 +464,27 @@ const styles = StyleSheet.create({
     paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
   },
   exportBtnText: { fontSize: 15, fontWeight: '500', color: '#16A34A' },
+
+  // UX Mode selector
+  uxModeContainer: { gap: 8 },
+  uxModeOption: {
+    flexDirection: 'row', alignItems: 'center', gap: 12,
+    paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12,
+    borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FAFAFA',
+  },
+  uxModeOptionSelected: {
+    borderColor: '#7C3AED', backgroundColor: '#F5F3FF',
+  },
+  uxModeRadio: {
+    width: 20, height: 20, borderRadius: 10,
+    borderWidth: 2, borderColor: '#D1D5DB',
+    justifyContent: 'center', alignItems: 'center',
+  },
+  uxModeRadioSelected: { borderColor: '#7C3AED' },
+  uxModeRadioDot: {
+    width: 10, height: 10, borderRadius: 5, backgroundColor: '#7C3AED',
+  },
+  uxModeLabel: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  uxModeLabelSelected: { color: '#7C3AED' },
+  uxModeDesc: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
 });

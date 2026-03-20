@@ -9,6 +9,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   Alert,
+  Modal,
   View,
   Text,
   StyleSheet,
@@ -16,6 +17,8 @@ import {
   Image,
   Pressable,
   TextInput,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
@@ -23,6 +26,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { opsqlite } from '../../db/client';
 import type { RootStackParamList } from '../types';
 import { addFavourite, isFavourited } from '../services/favourites';
+import { saveEntryAsRecipe } from '../services/recipes/recipeService';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import {
   recalculateEntryTotals,
@@ -195,6 +199,9 @@ export default function EntryDetailScreen() {
   const [ingredientSearchVisible, setIngredientSearchVisible] = useState(false);
   const [ingredientSearchDishId, setIngredientSearchDishId] = useState('');
   const [geminiAvailable, setGeminiAvailable] = useState(false);
+  const [recipeModalVisible, setRecipeModalVisible] = useState(false);
+  const [recipeName, setRecipeName] = useState('');
+  const [recipeServings, setRecipeServings] = useState('1');
 
   const editSession = useEditSession();
 
@@ -426,29 +433,45 @@ export default function EntryDetailScreen() {
           );
         })()}
 
-        {/* Save to favourites */}
-        {!editing && entry.dishes.length > 0 && !alreadyFaved && (
-          <Pressable
-            style={styles.favBtn}
-            onPress={() => {
-              const name = entry.dishes.map((d) => d.name).join(', ');
-              addFavourite({
-                name,
-                totalCalories: entry.totalCalories,
-                totalProtein: entry.totalProtein,
-                totalCarbs: entry.totalCarbs,
-                totalFat: entry.totalFat,
-              });
-              setAlreadyFaved(true);
-              Alert.alert('Saved', `"${name}" added to favourites.`);
-            }}
-          >
-            <Text style={styles.favBtnText}>Save to Favourites</Text>
-          </Pressable>
-        )}
-        {!editing && alreadyFaved && (
-          <View style={styles.favedBadge}>
-            <Text style={styles.favedBadgeText}>In your favourites</Text>
+        {/* Save to favourites + Save as Recipe row */}
+        {!editing && entry.dishes.length > 0 && (
+          <View style={styles.actionRow}>
+            {!alreadyFaved ? (
+              <Pressable
+                style={[styles.favBtn, { flex: 1 }]}
+                onPress={() => {
+                  const name = entry.dishes.map((d) => d.name).join(', ');
+                  addFavourite({
+                    name,
+                    totalCalories: entry.totalCalories,
+                    totalProtein: entry.totalProtein,
+                    totalCarbs: entry.totalCarbs,
+                    totalFat: entry.totalFat,
+                  });
+                  setAlreadyFaved(true);
+                  Alert.alert('Saved', `"${name}" added to favourites.`);
+                }}
+              >
+                <Ionicons name="heart-outline" size={16} color="#92400E" />
+                <Text style={styles.favBtnText}>Favourites</Text>
+              </Pressable>
+            ) : (
+              <View style={[styles.favedBadge, { flex: 1 }]}>
+                <Text style={styles.favedBadgeText}>In your favourites</Text>
+              </View>
+            )}
+            <Pressable
+              style={styles.recipeBtn}
+              onPress={() => {
+                const suggested = entry.dishes.map((d) => d.name).join(' + ');
+                setRecipeName(suggested);
+                setRecipeServings('1');
+                setRecipeModalVisible(true);
+              }}
+            >
+              <Ionicons name="book-outline" size={16} color="#7C3AED" />
+              <Text style={styles.recipeBtnText}>Save as Recipe</Text>
+            </Pressable>
           </View>
         )}
 
@@ -625,6 +648,51 @@ export default function EntryDetailScreen() {
         onAdd={handleAddIngredient}
         onClose={() => setIngredientSearchVisible(false)}
       />
+
+      {/* Save as Recipe modal */}
+      <Modal visible={recipeModalVisible} transparent animationType="fade" onRequestClose={() => setRecipeModalVisible(false)}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.recipeModalOverlay}>
+          <Pressable style={styles.recipeModalBackdrop} onPress={() => setRecipeModalVisible(false)} />
+          <View style={styles.recipeModalSheet}>
+            <Text style={styles.recipeModalTitle}>Save as Recipe</Text>
+            <Text style={styles.recipeModalHint}>Name your recipe and set servings</Text>
+            <TextInput
+              style={styles.recipeModalInput}
+              value={recipeName}
+              onChangeText={setRecipeName}
+              placeholder="Recipe name"
+              placeholderTextColor="#9CA3AF"
+              autoFocus
+              selectTextOnFocus
+            />
+            <TextInput
+              style={styles.recipeModalInput}
+              value={recipeServings}
+              onChangeText={setRecipeServings}
+              placeholder="Servings"
+              placeholderTextColor="#9CA3AF"
+              keyboardType="numeric"
+            />
+            <View style={styles.recipeModalActions}>
+              <Pressable style={styles.recipeModalCancel} onPress={() => setRecipeModalVisible(false)}>
+                <Text style={styles.recipeModalCancelText}>Cancel</Text>
+              </Pressable>
+              <Pressable
+                style={styles.recipeModalSave}
+                onPress={() => {
+                  const name = recipeName.trim();
+                  if (!name) { Alert.alert('Error', 'Please enter a recipe name.'); return; }
+                  saveEntryAsRecipe(entry.id, name, parseInt(recipeServings) || 1);
+                  setRecipeModalVisible(false);
+                  Alert.alert('Saved', `"${name}" saved as a recipe.`);
+                }}
+              >
+                <Text style={styles.recipeModalSaveText}>Save</Text>
+              </Pressable>
+            </View>
+          </View>
+        </KeyboardAvoidingView>
+      </Modal>
     </View>
   );
 }
@@ -740,16 +808,46 @@ const styles = StyleSheet.create({
   microLabel: { fontSize: 14, color: '#6B7280' },
   microValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
 
-  favBtn: {
-    backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12, marginHorizontal: 16,
-    marginTop: 12, alignItems: 'center', borderWidth: 1, borderColor: '#FDE68A',
+  actionRow: {
+    flexDirection: 'row', gap: 8, marginHorizontal: 16, marginTop: 12,
   },
-  favBtnText: { fontSize: 15, fontWeight: '600', color: '#92400E' },
+  favBtn: {
+    backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12,
+    alignItems: 'center', borderWidth: 1, borderColor: '#FDE68A',
+    flexDirection: 'row', justifyContent: 'center', gap: 6,
+  },
+  favBtnText: { fontSize: 14, fontWeight: '600', color: '#92400E' },
   favedBadge: {
-    backgroundColor: '#F0FDF4', borderRadius: 12, paddingVertical: 10, marginHorizontal: 16,
-    marginTop: 12, alignItems: 'center', borderWidth: 1, borderColor: '#BBF7D0',
+    backgroundColor: '#F0FDF4', borderRadius: 12, paddingVertical: 10,
+    alignItems: 'center', borderWidth: 1, borderColor: '#BBF7D0',
   },
   favedBadgeText: { fontSize: 14, fontWeight: '500', color: '#16A34A' },
+  recipeBtn: {
+    flex: 1, backgroundColor: '#F5F3FF', borderRadius: 12, paddingVertical: 12,
+    alignItems: 'center', borderWidth: 1, borderColor: '#DDD6FE',
+    flexDirection: 'row', justifyContent: 'center', gap: 6,
+  },
+  recipeBtnText: { fontSize: 14, fontWeight: '600', color: '#7C3AED' },
+
+  // Recipe modal
+  recipeModalOverlay: { flex: 1, justifyContent: 'flex-end' },
+  recipeModalBackdrop: { flex: 1 },
+  recipeModalSheet: {
+    backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    padding: 24, paddingBottom: 40,
+    shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 10,
+  },
+  recipeModalTitle: { fontSize: 18, fontWeight: '700', color: '#111827', textAlign: 'center', marginBottom: 4 },
+  recipeModalHint: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginBottom: 16 },
+  recipeModalInput: {
+    backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 15, color: '#111827', marginBottom: 12,
+  },
+  recipeModalActions: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  recipeModalCancel: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center' },
+  recipeModalCancelText: { fontSize: 16, fontWeight: '600', color: '#6B7280' },
+  recipeModalSave: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: '#7C3AED', alignItems: 'center' },
+  recipeModalSaveText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
 
   dishCard: {
     backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16,

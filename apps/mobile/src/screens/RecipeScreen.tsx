@@ -2,8 +2,8 @@
  * RecipeScreen — create, import, and manage recipes.
  *
  * Two modes:
- * - List: shows saved recipes with one-tap logging
- * - Builder: create/edit a recipe (manually or from URL import)
+ * - List: shows saved recipes with photo, per-serving macros, search, one-tap re-log
+ * - Builder: create/edit a recipe (manually or from URL import) with versioning
  */
 
 import React, { useCallback, useState } from 'react';
@@ -11,6 +11,7 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
+  Image,
   KeyboardAvoidingView,
   Modal,
   Platform,
@@ -33,12 +34,17 @@ import {
   updateRecipeName,
   deleteRecipe,
   logRecipeAsEntry,
+  searchRecipes,
+  updateRecipeWithVersioning,
   type RecipeSummary,
   type RecipeDetail,
+  type RecipeIngredientInput,
 } from '../services/recipes/recipeService';
 import { parseRecipeFromHtml } from '../services/recipes/recipeUrlParser';
 import { autoDetectMealType } from '../services/detection/types';
 import { useFoodLogStore } from '../store/useFoodLogStore';
+import { usePreferencesStore } from '../store/usePreferencesStore';
+import type { UxMode } from '../types';
 
 // ---------------------------------------------------------------------------
 // Component
@@ -47,17 +53,22 @@ import { useFoodLogStore } from '../store/useFoodLogStore';
 export default function RecipeScreen() {
   const navigation = useNavigation();
   const { loadTodayEntries } = useFoodLogStore();
+  const uxMode = usePreferencesStore((s) => s.uxMode);
 
   const [recipes, setRecipes] = useState<RecipeSummary[]>([]);
   const [activeRecipe, setActiveRecipe] = useState<RecipeDetail | null>(null);
   const [importModalVisible, setImportModalVisible] = useState(false);
   const [importUrl, setImportUrl] = useState('');
   const [importing, setImporting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // New ingredient form
   const [newIngName, setNewIngName] = useState('');
   const [newIngQty, setNewIngQty] = useState('');
   const [newIngCal, setNewIngCal] = useState('');
+
+  // Builder servings
+  const [builderServings, setBuilderServings] = useState('1');
 
   const refreshList = useCallback(() => {
     setRecipes(loadRecipes());
@@ -72,28 +83,65 @@ export default function RecipeScreen() {
 
   useFocusEffect(useCallback(() => { refreshList(); }, [refreshList]));
 
+  // Handle search filtering
+  function getDisplayedRecipes(): RecipeSummary[] {
+    const trimmed = searchQuery.trim();
+    if (trimmed.length >= 2) {
+      return searchRecipes(trimmed, 20);
+    }
+    return recipes;
+  }
+
   // ---------------------------------------------------------------------------
   // Handlers
   // ---------------------------------------------------------------------------
 
   function handleCreateRecipe() {
-    // Android doesn't have Alert.prompt, use default name
     createRecipeWithPrompt();
   }
 
   function createRecipeWithPrompt() {
-    // Android doesn't have Alert.prompt, use a simple default name
     const id = createRecipe({ name: 'New Recipe' });
     const recipe = loadRecipe(id);
     setActiveRecipe(recipe);
+    if (recipe) setBuilderServings(String(recipe.servings || 1));
     refreshList();
   }
 
   function handleLogRecipe(recipe: RecipeSummary) {
-    logRecipeAsEntry(recipe.id, autoDetectMealType());
-    loadTodayEntries();
-    refreshList();
-    Alert.alert('Logged', `${recipe.name} added to diary.`);
+    if (uxMode === 'zero-effort') {
+      logRecipeAsEntry(recipe.id, autoDetectMealType());
+      loadTodayEntries();
+      refreshList();
+      Alert.alert('Logged', `${recipe.name} added to diary.`);
+    } else if (uxMode === 'confirm-only') {
+      const servings = recipe.servings || 1;
+      const calPerServing = Math.round(recipe.totalCalories / servings);
+      const pPerServing = Math.round(recipe.totalProtein / servings);
+      const cPerServing = Math.round(recipe.totalCarbs / servings);
+      const fPerServing = Math.round(recipe.totalFat / servings);
+      Alert.alert(
+        'Log Recipe',
+        `${recipe.name}\n${calPerServing} Cal · P${pPerServing} C${cPerServing} F${fPerServing} per serving\n\nLog 1 serving?`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Log',
+            onPress: () => {
+              logRecipeAsEntry(recipe.id, autoDetectMealType());
+              loadTodayEntries();
+              refreshList();
+              Alert.alert('Logged', `${recipe.name} added to diary.`);
+            },
+          },
+        ],
+      );
+    } else {
+      // guided-edit: open builder
+      const full = loadRecipe(recipe.id);
+      setActiveRecipe(full);
+      if (full) setBuilderServings(String(full.servings || 1));
+    }
   }
 
   function handleDeleteRecipe(id: string) {
@@ -141,6 +189,48 @@ export default function RecipeScreen() {
     refreshList();
   }
 
+  function handleSaveWithVersioning() {
+    if (!activeRecipe) return;
+
+    const ingredients: RecipeIngredientInput[] = activeRecipe.ingredients.map((ing) => ({
+      recipeId: activeRecipe.id,
+      name: ing.name,
+      quantity: ing.quantity,
+      unit: ing.unit,
+      calories: ing.calories,
+      protein: ing.protein,
+      carbs: ing.carbs,
+      fat: ing.fat,
+    }));
+
+    Alert.alert(
+      'Save Changes',
+      'How would you like to save?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Update All',
+          onPress: () => {
+            updateRecipeWithVersioning(activeRecipe.id, ingredients, 'update-all');
+            refreshActiveRecipe();
+            refreshList();
+            Alert.alert('Updated', 'Recipe and linked diary entries updated.');
+          },
+        },
+        {
+          text: 'Save as New',
+          onPress: () => {
+            const newId = updateRecipeWithVersioning(activeRecipe.id, ingredients, 'save-as-new');
+            const newRecipe = loadRecipe(newId);
+            setActiveRecipe(newRecipe);
+            refreshList();
+            Alert.alert('Saved', 'New recipe created from your edits.');
+          },
+        },
+      ],
+    );
+  }
+
   async function handleImportUrl() {
     const url = importUrl.trim();
     if (!url) return;
@@ -175,7 +265,7 @@ export default function RecipeScreen() {
         addRecipeIngredient({
           recipeId: id,
           name: ingText,
-          quantity: 0, // Raw ingredient text, no parsed quantity yet
+          quantity: 0,
           unit: 'serving',
           calories: 0,
           protein: 0,
@@ -184,15 +274,9 @@ export default function RecipeScreen() {
         });
       }
 
-      // If nutrition is provided, update totals
-      if (parsed.nutrition) {
-        // We'll estimate per-ingredient later, for now just set totals
-        const recipe = loadRecipe(id);
-        setActiveRecipe(recipe);
-      } else {
-        const recipe = loadRecipe(id);
-        setActiveRecipe(recipe);
-      }
+      const recipe = loadRecipe(id);
+      setActiveRecipe(recipe);
+      if (recipe) setBuilderServings(String(recipe.servings || 1));
 
       refreshList();
       setImportModalVisible(false);
@@ -210,6 +294,12 @@ export default function RecipeScreen() {
   // ---------------------------------------------------------------------------
 
   if (activeRecipe) {
+    const servings = parseInt(builderServings) || 1;
+    const calPerServing = Math.round(activeRecipe.totalCalories / servings);
+    const pPerServing = Math.round(activeRecipe.totalProtein / servings);
+    const cPerServing = Math.round(activeRecipe.totalCarbs / servings);
+    const fPerServing = Math.round(activeRecipe.totalFat / servings);
+
     return (
       <View style={styles.container}>
         <View style={styles.builderHeader}>
@@ -236,12 +326,29 @@ export default function RecipeScreen() {
         </View>
 
         <ScrollView contentContainerStyle={styles.builderContent}>
-          {/* Totals */}
+          {/* Totals -- total and per-serving */}
           <View style={styles.totalsRow}>
             <Text style={styles.totalsBig}>{Math.round(activeRecipe.totalCalories)} kcal</Text>
             <Text style={styles.totalsSub}>
               P: {Math.round(activeRecipe.totalProtein)}g  C: {Math.round(activeRecipe.totalCarbs)}g  F: {Math.round(activeRecipe.totalFat)}g
             </Text>
+            {servings > 1 && (
+              <Text style={styles.perServingSub}>
+                Per serving: {calPerServing} Cal · P{pPerServing} C{cPerServing} F{fPerServing}
+              </Text>
+            )}
+          </View>
+
+          {/* Servings input */}
+          <View style={styles.servingsRow}>
+            <Text style={styles.servingsLabel}>Servings:</Text>
+            <TextInput
+              style={styles.servingsInput}
+              value={builderServings}
+              onChangeText={setBuilderServings}
+              keyboardType="numeric"
+              selectTextOnFocus
+            />
           </View>
 
           {/* Ingredients */}
@@ -293,12 +400,18 @@ export default function RecipeScreen() {
             </View>
           </View>
 
+          {/* Save with versioning */}
+          <Pressable style={styles.versionBtn} onPress={handleSaveWithVersioning}>
+            <Ionicons name="save-outline" size={18} color="#7C3AED" />
+            <Text style={styles.versionBtnText}>Save Changes</Text>
+          </Pressable>
+
           {/* Log recipe */}
           <Pressable
             style={styles.logBtn}
             onPress={() => {
               handleLogRecipe(activeRecipe);
-              setActiveRecipe(null);
+              if (uxMode !== 'guided-edit') setActiveRecipe(null);
             }}
           >
             <Ionicons name="add-circle" size={20} color="#FFF" />
@@ -313,6 +426,8 @@ export default function RecipeScreen() {
   // List view
   // ---------------------------------------------------------------------------
 
+  const displayedRecipes = getDisplayedRecipes();
+
   return (
     <View style={styles.container}>
       <View style={styles.listHeader}>
@@ -321,6 +436,21 @@ export default function RecipeScreen() {
         </Pressable>
         <Text style={styles.listTitle}>Recipes</Text>
         <View style={{ width: 24 }} />
+      </View>
+
+      {/* Search bar */}
+      <View style={styles.searchRow}>
+        <View style={styles.searchInputContainer}>
+          <Ionicons name="search" size={18} color="#9CA3AF" style={{ marginLeft: 12 }} />
+          <TextInput
+            style={styles.searchInput}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search recipes..."
+            placeholderTextColor="#9CA3AF"
+            returnKeyType="search"
+          />
+        </View>
       </View>
 
       {/* Action buttons */}
@@ -336,29 +466,48 @@ export default function RecipeScreen() {
       </View>
 
       <FlatList
-        data={recipes}
+        data={displayedRecipes}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.listContent}
-        renderItem={({ item }) => (
-          <Pressable style={styles.recipeCard} onPress={() => {
-            const full = loadRecipe(item.id);
-            setActiveRecipe(full);
-          }}>
-            <View style={styles.recipeInfo}>
-              <Text style={styles.recipeName}>{item.name}</Text>
-              <Text style={styles.recipeMeta}>
-                {Math.round(item.totalCalories)} kcal
-                {item.timesUsed > 0 ? ` · Used ${item.timesUsed}×` : ''}
-              </Text>
-            </View>
-            <Pressable
-              style={styles.recipeLogBtn}
-              onPress={() => handleLogRecipe(item)}
-            >
-              <Ionicons name="add-circle" size={28} color="#16A34A" />
+        renderItem={({ item }) => {
+          const servings = item.servings || 1;
+          const calPerServing = Math.round(item.totalCalories / servings);
+          const pPerServing = Math.round(item.totalProtein / servings);
+          const cPerServing = Math.round(item.totalCarbs / servings);
+          const fPerServing = Math.round(item.totalFat / servings);
+
+          return (
+            <Pressable style={styles.recipeCard} onPress={() => handleLogRecipe(item)}>
+              {/* Photo thumbnail */}
+              {item.photoUri ? (
+                <Image source={{ uri: item.photoUri }} style={styles.recipeThumb} />
+              ) : (
+                <View style={styles.recipeThumbPlaceholder}>
+                  <Ionicons name="restaurant-outline" size={20} color="#D1D5DB" />
+                </View>
+              )}
+              <View style={styles.recipeInfo}>
+                <Text style={styles.recipeName} numberOfLines={1}>{item.name}</Text>
+                <Text style={styles.recipeMacros}>
+                  {calPerServing} Cal · P{pPerServing} C{cPerServing} F{fPerServing} /serving
+                </Text>
+                <Text style={styles.recipeUsage}>
+                  {item.timesUsed > 0 ? `Used ${item.timesUsed} time${item.timesUsed !== 1 ? 's' : ''}` : 'Never used'}
+                </Text>
+              </View>
+              <Pressable
+                style={styles.recipeEditBtn}
+                onPress={() => {
+                  const full = loadRecipe(item.id);
+                  setActiveRecipe(full);
+                  if (full) setBuilderServings(String(full.servings || 1));
+                }}
+              >
+                <Ionicons name="create-outline" size={20} color="#6B7280" />
+              </Pressable>
             </Pressable>
-          </Pressable>
-        )}
+          );
+        }}
         ListEmptyComponent={
           <View style={styles.emptyState}>
             <Ionicons name="restaurant-outline" size={48} color="#D1D5DB" />
@@ -420,6 +569,17 @@ const styles = StyleSheet.create({
   },
   listTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
 
+  // Search
+  searchRow: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: '#FFF' },
+  searchInputContainer: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#F3F4F6', borderRadius: 12,
+  },
+  searchInput: {
+    flex: 1, paddingHorizontal: 10, paddingVertical: 10,
+    fontSize: 15, color: '#111827',
+  },
+
   // Actions
   actionsRow: {
     flexDirection: 'row', gap: 12, paddingHorizontal: 16, paddingVertical: 12,
@@ -435,13 +595,21 @@ const styles = StyleSheet.create({
   listContent: { paddingBottom: 40 },
   recipeCard: {
     flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF',
-    marginHorizontal: 16, marginBottom: 8, borderRadius: 12, padding: 14,
+    marginHorizontal: 16, marginBottom: 8, borderRadius: 12, padding: 12,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
+  },
+  recipeThumb: {
+    width: 44, height: 44, borderRadius: 10, marginRight: 12,
+  },
+  recipeThumbPlaceholder: {
+    width: 44, height: 44, borderRadius: 10, marginRight: 12,
+    backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center',
   },
   recipeInfo: { flex: 1 },
   recipeName: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  recipeMeta: { fontSize: 13, color: '#6B7280', marginTop: 2 },
-  recipeLogBtn: { padding: 4 },
+  recipeMacros: { fontSize: 12, color: '#374151', marginTop: 2 },
+  recipeUsage: { fontSize: 11, color: '#9CA3AF', marginTop: 1 },
+  recipeEditBtn: { padding: 8 },
 
   emptyState: { alignItems: 'center', paddingVertical: 60 },
   emptyTitle: { fontSize: 18, fontWeight: '600', color: '#9CA3AF', marginTop: 12 },
@@ -460,12 +628,24 @@ const styles = StyleSheet.create({
   builderContent: { padding: 16, paddingBottom: 40 },
 
   totalsRow: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 12,
     alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3,
   },
   totalsBig: { fontSize: 24, fontWeight: '800', color: '#111827' },
   totalsSub: { fontSize: 13, color: '#6B7280', marginTop: 4 },
+  perServingSub: { fontSize: 12, color: '#7C3AED', marginTop: 4, fontWeight: '600' },
+
+  servingsRow: {
+    flexDirection: 'row', alignItems: 'center', gap: 8,
+    marginBottom: 16, paddingHorizontal: 4,
+  },
+  servingsLabel: { fontSize: 15, fontWeight: '500', color: '#374151' },
+  servingsInput: {
+    backgroundColor: '#FFF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+    fontSize: 15, fontWeight: '700', color: '#111827', minWidth: 50, textAlign: 'center',
+    borderWidth: 1, borderColor: '#E5E7EB',
+  },
 
   sectionLabel: { fontSize: 15, fontWeight: '700', color: '#374151', marginBottom: 8 },
 
@@ -479,7 +659,7 @@ const styles = StyleSheet.create({
   ingRemove: { padding: 4, marginLeft: 8 },
 
   addIngForm: {
-    backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginTop: 8, marginBottom: 20,
+    backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginTop: 8, marginBottom: 12,
     borderWidth: 1, borderColor: '#E5E7EB',
   },
   addIngInput: {
@@ -491,6 +671,13 @@ const styles = StyleSheet.create({
     backgroundColor: '#16A34A', borderRadius: 8, width: 40, height: 40,
     justifyContent: 'center', alignItems: 'center',
   },
+
+  versionBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+    backgroundColor: '#F5F3FF', borderRadius: 14, paddingVertical: 14, marginBottom: 12,
+    borderWidth: 1, borderColor: '#DDD6FE',
+  },
+  versionBtnText: { color: '#7C3AED', fontSize: 15, fontWeight: '600' },
 
   logBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
