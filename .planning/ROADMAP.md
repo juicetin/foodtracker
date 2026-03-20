@@ -352,13 +352,13 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User can manually trigger a gallery scan and see newly discovered food photos queued for resources
   2. App performs periodic background scanning that surfaces new food photos without user intervention, operating within platform constraints (iOS 30-second BGTask, Android WorkManager) using chunked processing blocks
-  3. Multiple photos of the same meal (taken within 5-minute window with GPS proximity) are grouped into a single meal event instead of creating duplicates
+  3. Multiple photos of the same meal (taken within 1-hour window with GPS proximity ~150m) are grouped into a single meal event instead of creating duplicates
   4. Each discovered photo displays EXIF-derived context (timestamp as meal time, location as meal venue)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 04-01: TBD
-- [ ] 04-02: TBD
+- [ ] 04-01-PLAN.md -- Schema extension, type contracts, gallery scan services (discovery, classification, meal grouping, photo import) with unit tests
+- [ ] 04-02-PLAN.md -- Background scheduler, foreground drain, Zustand store, GalleryScanScreen UI, permissions, human verification
 
 ### Phase 5: Scale OCR + Notifications + Health Data
 **Goal**: Users get precise portion weights via kitchen scale OCR, daily macro summaries via push notifications, and weight trend tracking via health platform integration
