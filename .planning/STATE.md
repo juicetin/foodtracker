@@ -4,12 +4,12 @@ milestone: v1.0
 milestone_name: milestone
 status: unknown
 stopped_at: Completed 03.3-02-PLAN.md (Phase 03.3 complete)
-last_updated: "2026-03-20T14:53:26.817Z"
+last_updated: "2026-03-20T15:12:47.809Z"
 progress:
   total_phases: 20
   completed_phases: 15
-  total_plans: 48
-  completed_plans: 48
+  total_plans: 50
+  completed_plans: 49
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 03.3 — meal-editing-portion-adjustment
+**Current focus:** Phase 03.4 — recipe-management
 
 ## Current Position
 
-Phase: 03.3 (meal-editing-portion-adjustment) — COMPLETE
-Plan: 2 of 2 (all plans complete)
+Phase: 03.4 (recipe-management) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -105,6 +105,7 @@ Plan: 2 of 2 (all plans complete)
 | Phase 03.2 P02 | 11min | 2 tasks | 2 files |
 | Phase 03.3 P01 | 6min | 2 tasks | 8 files |
 | Phase 03.3 P02 | 8min | 2 tasks | 7 files |
+| Phase 03.4 P01 | 5min | 2 tasks | 8 files |
 
 ## Accumulated Context
 
@@ -262,6 +263,9 @@ Recent decisions affecting current work:
 - [Phase 03.3]: Merge columns use local useState arrays (not SQLite); only Save+Confirm writes to DB
 - [Phase 03.3]: Self-contained undo/redo command stack in ReidentifyMergeScreen separate from editSessionManager
 - [Phase 03.3]: Horizontal-only drag with activeOffsetX[-10,10] to avoid vertical scroll conflicts
+- [Phase 03.4]: Recipe-entry linkage via source_recipe_id column; update-all skips user-modified entries
+- [Phase 03.4]: UxMode default is 'confirm-only' (safest for food tracking accuracy)
+- [Phase 03.4]: recipe_name optional on VlmDish -- only Gemini Nano populates it
 
 ### Roadmap Evolution
 
@@ -287,6 +291,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-21T14:45:00Z
-Stopped at: Completed 03.3-02-PLAN.md (Phase 03.3 complete)
+Last session: 2026-03-20T15:18:36Z
+Stopped at: Completed 03.4-01-PLAN.md
 Resume file: None
