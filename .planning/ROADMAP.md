@@ -21,7 +21,10 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
 - [ ] **Phase 02.7: Gemini Nano System-Managed VLM Integration** - Tier 0 Gemini Nano via ML Kit GenAI Prompt API, quality spike + human gate, pipeline integration
-- [ ] **Phase 3: Nutrition Resolution + Diary** - Ingredient-to-nutrient lookup, portion estimation, diary UI, manual search, meal editing, recipes
+- [ ] **Phase 3.1: Daily Diary View + Macro Dashboard** - Chronological entry list, photo thumbnails, always-visible macro summary, entry expand/detail
+- [ ] **Phase 3.2: Food Search + Manual Add + Quick Add** - KG+OFF search, personal history ranking, quick cal/macro entry, persistent search bar
+- [ ] **Phase 3.3: Meal Editing + Portion Adjustment** - Post-logging ingredient editing, serving size selector, portion adjustment, re-run VLM
+- [ ] **Phase 3.4: Recipe Management** - Save meal as recipe, recipe list/search, 1-tap re-log, edit recipe ingredients
 - [x] **Phase 3.5: OFF Cache + Attribution** - SQLite cache for OFF API responses, stale-while-revalidate, offline fallback, adaptive rate limiting, ODbL attribution (completed 2026-03-19)
 - [ ] **Phase 3.6: Incremental Backup System** - updateHook change journal, JSON changeset export, VACUUM INTO full backup, compaction, includes OFF cache + all user data
 - [ ] **Phase 3.7: Google Drive Sync** - react-native-cloud-storage, Google OAuth, upload/download backups, auto-sync on background, restore on fresh install
@@ -225,22 +228,73 @@ Plans:
 - [x] 07-02-PLAN.md -- VLM pipeline rewrite: primary identification with retry, text fallback with box-size assignment, store displayLabel update
 - [x] 07-03-PLAN.md -- Shimmer UX + DetectionScreen rewrite: ShimmerPlaceholder component, bbox/list shimmer, VLM-primary flow, text fallback UI
 
-### Phase 3: Nutrition Resolution + Diary
-**Goal**: Users can view detected food as actionable nutrition data in a daily diary, with full manual editing and recipe management
-**Depends on**: Phase 2.5, Phase 2.6
-**Requirements**: UI-01, UI-02, UI-03, UI-04, UI-05, UI-06, UI-07, UI-08
+### Phase 3.1: Daily Diary View + Macro Dashboard (INSERTED — replaces old Phase 3)
+**Goal**: Users see a daily food diary with chronological entries, photo thumbnails, and an always-visible macro summary — the core screen they live in every day
+**Depends on**: Phase 2.6, Phase 7, Phase 3.6
+**Requirements**: UI-01, UI-05
 **Success Criteria** (what must be TRUE):
-  1. User views a daily food diary organized by meal (breakfast/lunch/dinner/snacks) showing per-meal and daily macro totals
-  2. User can search the bundled USDA database and manually add a food item in under 7 taps
-  3. User can edit any logged meal (change ingredients, adjust portions, modify quantities) after initial logging
-  4. User can save a corrected meal as a recipe, reuse it in one tap, and create nested recipes (recipes containing other recipes) with expand/collapse and edit-in-context-or-globally prompts
-  5. User can view the linked photo(s) for any logged meal and switch between UX modes (zero-effort, confirm-only, guided-edit)
+  1. User views a daily food diary with entries grouped by time period (morning/afternoon/evening) showing per-period and daily macro totals (Cal/P/F/C)
+  2. Each entry card shows photo thumbnail (our differentiator), food name(s) from VLM identification, Cal and P/F/C values, and time logged
+  3. Always-visible daily macro summary header pinned to top of diary (consumed values, with Consumed/Remaining toggle)
+  4. User can tap an entry to expand detail view, navigate to edit, or delete
+  5. Date navigation (previous/next day) and week overview bar showing which days have entries
+  6. Entries logged via DetectionScreen appear immediately in the diary with correct time and photo association
 **Plans**: TBD
 
 Plans:
-- [ ] 03-01: TBD
-- [ ] 03-02: TBD
-- [ ] 03-03: TBD
+- [ ] 03.1-01: TBD
+- [ ] 03.1-02: TBD
+
+### Phase 3.2: Food Search + Manual Add + Quick Add (INSERTED)
+**Goal**: Users can add food without using the camera — via text search across KG + OFF, personal food history, or raw calorie/macro entry as an escape hatch
+**Depends on**: Phase 3.1
+**Requirements**: UI-02, UI-06
+**Success Criteria** (what must be TRUE):
+  1. Persistent search bar visible on diary view — adding food is always 1 tap away
+  2. Search queries KG dishes + OFF cache simultaneously, returning results with name, Cal, P/F/C, and serving description
+  3. "From History" results appear first, ranked by personal logging frequency (foods user has eaten before)
+  4. Quick Add screen allows entering just Cal + P/F/C values directly (escape hatch when AI fails or DB doesn't have the food)
+  5. User can add a food item from search results to the diary in under 5 taps (search → select → confirm serving → logged)
+  6. Barcode scanner icon visible in search bar (stub — wired in v1.1)
+**Plans**: TBD
+
+Plans:
+- [ ] 03.2-01: TBD
+- [ ] 03.2-02: TBD
+
+### Phase 3.3: Meal Editing + Portion Adjustment (INSERTED)
+**Goal**: Users can correct any logged meal after the fact — change ingredients, swap items, adjust portions, or re-run VLM identification
+**Depends on**: Phase 3.1
+**Requirements**: UI-03, UI-07
+**Success Criteria** (what must be TRUE):
+  1. User can tap any diary entry to open a full edit view showing all ingredients with individual nutrition values
+  2. Each ingredient has a serving size selector with options from KG (grams, cups, portions, "1 serving") and free-form gram input
+  3. User can add, remove, or replace individual ingredients within a logged meal
+  4. Editing an ingredient's portion recalculates the entry's total nutrition in real-time
+  5. User can trigger VLM re-identification on a meal's photo(s) to get updated food names
+  6. All edits are persisted to SQLite and reflected immediately in the diary view and daily macro summary
+**Plans**: TBD
+
+Plans:
+- [ ] 03.3-01: TBD
+- [ ] 03.3-02: TBD
+
+### Phase 3.4: Recipe Management (INSERTED)
+**Goal**: Users can save any logged meal as a reusable recipe and re-log it in 1-2 taps, building a personal recipe library over time
+**Depends on**: Phase 3.3
+**Requirements**: UI-04, UI-08
+**Success Criteria** (what must be TRUE):
+  1. User can save any logged meal as a named recipe with one tap ("Save as Recipe" action on entry detail)
+  2. Recipe list screen shows all saved recipes with name, photo, Cal/P/F/C per serving, and times used
+  3. User can re-log a saved recipe to the diary in 1-2 taps (recipe list → confirm → logged)
+  4. User can edit recipe ingredients and portions (changes apply to the recipe template, not past entries)
+  5. Recipe search integrated into the food search flow (Phase 3.2) — recipes appear alongside KG/OFF results
+  6. Existing custom_recipes and recipeIngredients tables are used (no new schema required)
+**Plans**: TBD
+
+Plans:
+- [ ] 03.4-01: TBD
+- [ ] 03.4-02: TBD
 
 ### Phase 3.5: OFF Cache + Attribution (INSERTED)
 **Goal**: OFF API responses cached locally in SQLite for offline use, with adaptive rate limiting and proper ODbL attribution
@@ -334,7 +388,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3 -> 3.5 -> 3.6 -> 3.7 -> 4 -> 5 -> 6
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -346,11 +400,14 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
 | 2.5. Food Knowledge Graph | 6/6 | Complete | 2026-03-14 |
 | 2.6. On-Device VLM Integration | 6/6 | Complete | 2026-03-14 |
-| 02.7. Gemini Nano VLM Integration | 0/2 | Planned | - |
-| 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete   | 2026-03-15 |
-| 3. Nutrition Resolution + Diary | 0/3 | Not started | - |
-| 3.5. OFF Cache + Attribution | 0/2 | Planned | - |
-| 3.6. Incremental Backup System | 0/2 | Planned | - |
+| 02.7. Gemini Nano VLM Integration | 2/2 | Complete | 2026-03-16 |
+| 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete | 2026-03-15 |
+| 3.5. OFF Cache + Attribution | 2/2 | Complete | 2026-03-19 |
+| 3.6. Incremental Backup System | 2/2 | Complete | 2026-03-19 |
+| 3.1. Daily Diary View + Macro Dashboard | 0/? | Not started | - |
+| 3.2. Food Search + Manual Add + Quick Add | 0/? | Not started | - |
+| 3.3. Meal Editing + Portion Adjustment | 0/? | Not started | - |
+| 3.4. Recipe Management | 0/? | Not started | - |
 | 3.7. Google Drive Sync | 0/? | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |

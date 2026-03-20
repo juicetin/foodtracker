@@ -11,7 +11,7 @@
 | Milestone | Theme | Closes On |
 |-----------|-------|-----------|
 | v1.0 | Local-First Reset | Foundation + on-device ML pipeline (in progress) |
-| v1.1 | Launch Differentiators | MFP paywall, logging friction, 77% Day-3 abandonment |
+| v1.1 | Launch Differentiators | MFP paywall, logging friction, 77% Day-3 abandonment, goals + weight tracking |
 | v2.0 | Home-Cooking Revolution | #1 tracking abandonment cause (80% quit over manual entry tedium) |
 | v3.0 | Inclusive & Mindful Tracking | Accessibility gaps (75% Android apps lack alt text), ED safety (73% say MFP contributed) |
 | v4.0 | Adaptive Intelligence | MacroFactor's only moat (adaptive TDEE), health platform integration |
@@ -30,6 +30,7 @@
 - 77% of users abandon food apps within 3 days (onboarding friction)
 - "Adding meals takes longer than preparing them" (MFP user quote)
 - No competitor offers free voice logging + free barcode + 2-tap quick-add
+- Macro summary without goals feels hollow — users need targets to make tracking actionable (MacroFactor analysis)
 
 ### Requirements
 
@@ -69,10 +70,23 @@
 
 *Competitor gap: MFP's widget is broken after redesign. Most competitors don't have functional widgets.*
 
+#### Goals + Weight Tracking (deferred from v1.0)
+
+- [ ] **GOAL-01**: User can set calorie and macro targets via Mifflin-St Jeor TDEE formula (age, weight, height, activity level, goal)
+- [ ] **GOAL-02**: Daily macro summary shows consumed vs target with progress bars (not just raw consumed values)
+- [ ] **GOAL-03**: Consumed/Remaining toggle on macro summary header (inspired by MacroFactor)
+- [ ] **GOAL-04**: User can log daily weight (manual entry) with exponentially-smoothed trend line (EMA)
+- [ ] **GOAL-05**: Weight trend visualization shows both raw data points and smoothed trend, with clear visual distinction
+- [ ] **GOAL-06**: Basic weekly overview showing 7-day macro adherence grid (consumed vs target per day)
+
+*Competitor gap: MacroFactor's weight trend smoothing is table stakes for serious trackers. Without goals, the macro dashboard shows raw numbers with no context — "you ate 2100 cal" vs "you ate 2100 of 2400 cal". Static TDEE formula is sufficient for v1.1; adaptive TDEE deferred to v4.0.*
+*Source: MacroFactor competitive analysis (.planning/research/macrofactor-analysis.md)*
+
 ### Phases (v1.1)
 
 - Phase 7: Barcode Scanning & OFF Database Integration
 - Phase 8: Voice Logging Pipeline
+- Phase 8.1: Goals + Weight Tracking (static TDEE, weight EMA, target progress bars)
 - Phase 9: Quick-Add, Widgets & Onboarding Polish
 
 ---
