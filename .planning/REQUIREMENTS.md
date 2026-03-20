@@ -21,9 +21,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DAT-01**: All user data (food entries, recipes, preferences, history) is stored locally via op-sqlite with no backend dependency
 - [x] **DAT-02**: User has access to a bundled USDA FDC nutrition database (~50-80MB) delivered as fast-follow asset pack, available before first food log
 - [x] **DAT-03**: User can download optional regional nutrition databases (AFCD, CoFID, CIQUAL) for non-US food coverage
-- [ ] **DAT-04**: User can opt into Google Drive backup/sync via app data folder (cross-platform)
+- [x] **DAT-04**: User can opt into Google Drive backup/sync via app data folder (cross-platform)
 - [ ] **DAT-05**: User on iOS can opt into iCloud backup/sync
-- [ ] **DAT-06**: Sync conflicts are resolved via last-write-wins with timestamps, with full edit history retained locally
+- [x] **DAT-06**: Sync conflicts are resolved via last-write-wins with timestamps, with full edit history retained locally
 
 ### Gallery Scanning
 
@@ -128,9 +128,9 @@ Deferred to future release. Tracked but not in current roadmap.
 | DAT-01 | Phase 1 | Complete |
 | DAT-02 | Phase 1 | Complete |
 | DAT-03 | Phase 1 | Complete |
-| DAT-04 | Phase 6 | Pending |
+| DAT-04 | Phase 6 | Complete |
 | DAT-05 | Phase 6 | Pending |
-| DAT-06 | Phase 6 | Pending |
+| DAT-06 | Phase 6 | Complete |
 | GAL-01 | Phase 4 | Pending |
 | GAL-02 | Phase 4 | Pending |
 | GAL-03 | Phase 4 | Pending |
