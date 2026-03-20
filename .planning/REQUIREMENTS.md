@@ -57,8 +57,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Model Delivery
 
-- [ ] **MDL-01**: Android app delivers ML models via Play for On-Device AI with device targeting by RAM and chipset
-- [ ] **MDL-02**: iOS app delivers optional models via On-Demand Resources or Background Assets API
+- [x] **MDL-01**: Android app delivers ML models via Play for On-Device AI with device targeting by RAM and chipset
+- [x] **MDL-02**: iOS app delivers optional models via On-Demand Resources or Background Assets API
 
 ### Backup & Sync
 
@@ -149,8 +149,8 @@ Deferred to future release. Tracked but not in current roadmap.
 | SCL-03 | Phase 5 | Complete |
 | NTF-01 | Phase 5 | Complete |
 | NTF-02 | Phase 5 | Complete |
-| MDL-01 | Phase 6 | Pending |
-| MDL-02 | Phase 6 | Pending |
+| MDL-01 | Phase 6 | Complete |
+| MDL-02 | Phase 6 | Complete |
 
 | ML-01 | Phase 2.2 | Complete |
 | ML-02 | Phase 2.3 | Complete |
