@@ -9,3 +9,4 @@ export { default as FoodSearchScreen } from './FoodSearchScreen';
 export { default as BarcodeScanScreen } from './BarcodeScanScreen';
 export { default as RecipeScreen } from './RecipeScreen';
 export { default as QuickAddScreen } from './QuickAddScreen';
+export { default as ReidentifyMergeScreen } from './ReidentifyMergeScreen';
