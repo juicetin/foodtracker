@@ -367,14 +367,15 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. When a kitchen scale is visible in a food photo, the app reads the displayed weight via 7-segment OCR and user can manage container tare weights (save, auto-subtract, and the app learns frequently used containers over time)
   2. User receives a configurable end-of-day push notification summarizing daily macros, which can also serve as a trigger to bring the app to foreground for gallery processing
-  3. User can import weight data from Apple Health / Google Fit and view a smoothed weight trend
-  4. On supported devices (Pixel 8+, Galaxy S24+) Gemini Nano provides opportunistic inference enhancement via AICore
-**Plans**: TBD
+  3. User can import weight data from Google Health Connect and view a smoothed weight trend
+  4. Detected dishes show inferred hidden ingredients from knowledge graph lookup
+**Plans:** 4 plans
 
 Plans:
-- [ ] 05-01: TBD
-- [ ] 05-02: TBD
-- [ ] 05-03: TBD
+- [ ] 05-01-PLAN.md -- Hidden ingredients KG enrichment service + daily macro notification service
+- [ ] 05-02-PLAN.md -- Scale OCR service (Gemini Nano spike + ML Kit fallback) + container tare weight management
+- [ ] 05-03-PLAN.md -- Google Health Connect weight import + EMA-smoothed weight trend service + weight store
+- [ ] 05-04-PLAN.md -- UI screens (ScaleInput, WeightTrend, ProfileScreen settings), navigation wiring, human verification
 
 ### Phase 6: Sync + Distribution
 **Goal**: Users can back up data to the cloud and receive ML models through platform-optimized delivery channels
@@ -416,5 +417,5 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 3.4. Recipe Management | 0/2 | Not started | - |
 | 3.7. Google Drive Sync | 2/3 | Gap closure | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
-| 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
+| 5. Scale OCR + Notifications + Health Data | 0/4 | Not started | - |
 | 6. Sync + Distribution | 0/2 | Not started | - |
