@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 06-01-PLAN.md (FTP backup client)
-last_updated: "2026-03-20T18:17:26.238Z"
+stopped_at: Completed 07.1-02-PLAN.md
+last_updated: "2026-03-20T23:04:50.750Z"
 progress:
-  total_phases: 20
+  total_phases: 21
   completed_phases: 20
-  total_plans: 61
-  completed_plans: 61
+  total_plans: 63
+  completed_plans: 62
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 06 — sync-distribution
+**Current focus:** Phase 07.1 — integration-wiring-cleanup
 
 ## Current Position
 
-Phase: 06 (sync-distribution) — EXECUTING
+Phase: 07.1 (integration-wiring-cleanup) — EXECUTING
 Plan: 2 of 2
 
 ## Performance Metrics
@@ -118,6 +118,7 @@ Plan: 2 of 2
 | Phase 05 P04 | 6min | 2 tasks | 7 files |
 | Phase 06 P02 | 6min | 2 tasks | 13 files |
 | Phase 06 P01 | 7min | 2 tasks | 14 files |
+| Phase 07.1 P02 | 2min | 1 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -306,6 +307,7 @@ Recent decisions affecting current work:
 - [Phase 06]: require() not import for ai-pack-delivery in packManager -- prevents iOS build breakage
 - [Phase 06]: AI pack resolution returns early from downloadPack, skipping entire R2 flow when AI pack completed
 - [Phase 06]: FTP password in expo-secure-store only; Promise.allSettled for independent Drive+FTP dispatch
+- [Phase 07.1]: Pre-existing TS errors in useDetectionStore.test.ts and useWeightStore.ts left untouched -- out of scope for dead code removal
 
 ### Roadmap Evolution
 
@@ -331,6 +333,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T18:13:44.399Z
-Stopped at: Completed 06-01-PLAN.md (FTP backup client)
+Last session: 2026-03-20T23:04:50.746Z
+Stopped at: Completed 07.1-02-PLAN.md
 Resume file: None
