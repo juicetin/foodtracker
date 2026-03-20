@@ -37,11 +37,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 - [x] **UI-01**: User can view a daily food diary organized by meal (breakfast/lunch/dinner/snacks) with per-meal and daily macro totals
 - [x] **UI-02**: User can search and manually add foods from the bundled USDA database in under 7 taps
-- [ ] **UI-03**: User can edit any logged meal's ingredients, portions, and quantities after logging
+- [x] **UI-03**: User can edit any logged meal's ingredients, portions, and quantities after logging
 - [ ] **UI-04**: User can save a corrected meal as a recipe and reuse it in one tap
 - [x] **UI-05**: User can create nested recipes (recipes containing other recipes) with expandable detail view
 - [x] **UI-06**: When editing a nested recipe, user is prompted whether to modify it only in the parent context or update the original recipe as well
-- [ ] **UI-07**: User can view linked photo(s) for any logged meal
+- [x] **UI-07**: User can view linked photo(s) for any logged meal
 - [ ] **UI-08**: User can choose UX mode: zero-effort (auto-log, daily review), confirm-only (review before logging), or guided-edit (step-by-step correction)
 
 ### Scale & Weight
@@ -138,11 +138,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | GAL-05 | Phase 4 | Pending |
 | UI-01 | Phase 3 | Complete |
 | UI-02 | Phase 3 | Complete |
-| UI-03 | Phase 3 | Pending |
+| UI-03 | Phase 3 | Complete |
 | UI-04 | Phase 3 | Pending |
 | UI-05 | Phase 3 | Complete |
 | UI-06 | Phase 3 | Complete |
-| UI-07 | Phase 3 | Pending |
+| UI-07 | Phase 3 | Complete |
 | UI-08 | Phase 3 | Pending |
 | SCL-01 | Phase 5 | Pending |
 | SCL-02 | Phase 5 | Pending |
