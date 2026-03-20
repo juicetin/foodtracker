@@ -256,11 +256,11 @@ Plans:
   4. Quick Add screen allows entering just Cal + P/F/C values directly (escape hatch when AI fails or DB doesn't have the food)
   5. User can add a food item from search results to the diary in under 5 taps (search → select → confirm serving → logged)
   6. Barcode scanner icon visible in search bar (stub — wired in v1.1)
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03.2-01: TBD
-- [ ] 03.2-02: TBD
+- [ ] 03.2-01-PLAN.md -- History service, macro validation, QuickAdd screen, SearchBar component, navigation wiring
+- [ ] 03.2-02-PLAN.md -- DiaryScreen search bar integration, FoodSearchScreen history+QuickAdd enhancement, human verification
 
 ### Phase 3.3: Meal Editing + Portion Adjustment (INSERTED)
 **Goal**: Users can correct any logged meal after the fact — change ingredients, swap items, adjust portions, or re-run VLM identification
@@ -405,7 +405,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 3.5. OFF Cache + Attribution | 2/2 | Complete | 2026-03-19 |
 | 3.6. Incremental Backup System | 2/2 | Complete | 2026-03-19 |
 | 3.1. Daily Diary View + Macro Dashboard | 0/? | Not started | - |
-| 3.2. Food Search + Manual Add + Quick Add | 0/? | Not started | - |
+| 3.2. Food Search + Manual Add + Quick Add | 0/2 | Not started | - |
 | 3.3. Meal Editing + Portion Adjustment | 0/? | Not started | - |
 | 3.4. Recipe Management | 0/? | Not started | - |
 | 3.7. Google Drive Sync | 0/? | Not started | - |
