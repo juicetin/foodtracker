@@ -400,7 +400,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
 | 2.5. Food Knowledge Graph | 6/6 | Complete | 2026-03-14 |
 | 2.6. On-Device VLM Integration | 6/6 | Complete | 2026-03-14 |
-| 02.7. Gemini Nano VLM Integration | 2/2 | Complete   | 2026-03-20 |
+| 02.7. Gemini Nano VLM Integration | 2/2 | Complete    | 2026-03-20 |
 | 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete | 2026-03-15 |
 | 3.5. OFF Cache + Attribution | 2/2 | Complete | 2026-03-19 |
 | 3.6. Incremental Backup System | 2/2 | Complete | 2026-03-19 |
