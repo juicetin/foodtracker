@@ -10,7 +10,7 @@
 import { CloudStorage, CloudStorageScope } from 'react-native-cloud-storage';
 import { File } from 'expo-file-system';
 import { ensureDriveAccess } from './driveAuth';
-import type { SyncManifest } from './types';
+import type { SyncManifest, RemoteBackupEntry } from './types';
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -83,16 +83,36 @@ export async function downloadBackup(
 // ---------------------------------------------------------------------------
 
 /**
- * Download and parse the sync manifest from Drive appdata.
+ * List remote backups derived from the sync manifest.
+ * Returns an array of RemoteBackupEntry (full + incremental).
  */
-export async function listRemoteBackups(): Promise<SyncManifest | null> {
+export async function listRemoteBackups(): Promise<RemoteBackupEntry[]> {
   await ensureDriveAccess();
   try {
     const json = await CloudStorage.readFile(MANIFEST_PATH, SCOPE);
-    return JSON.parse(json) as SyncManifest;
+    const manifest = JSON.parse(json) as SyncManifest;
+    const entries: RemoteBackupEntry[] = [];
+    if (manifest.lastFullBackupId) {
+      entries.push({
+        id: manifest.lastFullBackupId,
+        type: 'full',
+        filename: manifest.lastFullBackupId,
+        uploadedAt: manifest.lastSyncedAt,
+        sizeBytes: null,
+      });
+    }
+    for (const incId of manifest.incrementalIds) {
+      entries.push({
+        id: incId,
+        type: 'incremental',
+        filename: incId,
+        uploadedAt: manifest.lastSyncedAt,
+        sizeBytes: null,
+      });
+    }
+    return entries;
   } catch {
-    // No manifest exists yet
-    return null;
+    return [];
   }
 }
 
@@ -111,10 +131,16 @@ export async function uploadSyncManifest(
 }
 
 /**
- * Download the sync manifest (alias for listRemoteBackups).
+ * Download and parse the sync manifest from Drive appdata.
  */
 export async function downloadSyncManifest(): Promise<SyncManifest | null> {
-  return listRemoteBackups();
+  await ensureDriveAccess();
+  try {
+    const json = await CloudStorage.readFile(MANIFEST_PATH, SCOPE);
+    return JSON.parse(json) as SyncManifest;
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------------------

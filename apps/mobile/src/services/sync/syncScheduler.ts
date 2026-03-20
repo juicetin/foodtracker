@@ -86,16 +86,3 @@ export async function triggerManualSync(): Promise<void> {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Background task integration
-// ---------------------------------------------------------------------------
-
-/**
- * Register the sync task to run after local backup.
- * Called from backupScheduler.ts task callback.
- */
-export async function registerSyncTask(): Promise<void> {
-  // This is a no-op -- actual integration is done by modifying
-  // backupScheduler.ts to call triggerManualSync() after local backup.
-  // Kept for API compatibility with plan exports.
-}

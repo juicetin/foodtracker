@@ -9,7 +9,7 @@ import {
   listRemoteBackups,
   uploadSyncManifest,
 } from '../driveSync';
-import type { SyncManifest } from '../types';
+import type { SyncManifest, RemoteBackupEntry } from '../types';
 
 // ---------------------------------------------------------------------------
 // Mocks
@@ -115,7 +115,7 @@ describe('downloadBackup', () => {
 // ---------------------------------------------------------------------------
 
 describe('listRemoteBackups', () => {
-  it('reads and parses sync-manifest.json from Drive', async () => {
+  it('returns RemoteBackupEntry[] derived from manifest', async () => {
     const manifest: SyncManifest = {
       deviceId: 'dev1',
       lastSyncedAt: '2026-03-20T10:00:00Z',
@@ -132,7 +132,19 @@ describe('listRemoteBackups', () => {
       expect.stringContaining('sync-manifest.json'),
       'app_data',
     );
-    expect(result).toEqual(manifest);
+    expect(result).toEqual<RemoteBackupEntry[]>([
+      { id: 'full-1', type: 'full', filename: 'full-1', uploadedAt: '2026-03-20T10:00:00Z', sizeBytes: null },
+      { id: 'inc-1', type: 'incremental', filename: 'inc-1', uploadedAt: '2026-03-20T10:00:00Z', sizeBytes: null },
+      { id: 'inc-2', type: 'incremental', filename: 'inc-2', uploadedAt: '2026-03-20T10:00:00Z', sizeBytes: null },
+    ]);
+  });
+
+  it('returns empty array when no manifest exists', async () => {
+    mockReadFile.mockRejectedValue(new Error('File not found'));
+
+    const result = await listRemoteBackups();
+
+    expect(result).toEqual([]);
   });
 });
 
