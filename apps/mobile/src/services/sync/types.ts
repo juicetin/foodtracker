@@ -40,3 +40,7 @@ export interface SyncResolution {
 }
 
 export type SyncStatus = 'idle' | 'syncing' | 'error' | 'conflict';
+
+export type FtpSyncStatus = 'idle' | 'syncing' | 'error';
+
+export type { FtpCredentials } from './ftpClient';

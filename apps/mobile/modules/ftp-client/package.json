@@ -1,0 +1,10 @@
+{
+  "name": "ftp-client",
+  "version": "1.0.0",
+  "description": "Expo native module for FTP upload/download via Apache Commons Net",
+  "main": "src/ftpClientModule",
+  "files": ["src", "android", "ios", "expo-module.config.json"],
+  "peerDependencies": {
+    "expo": "*"
+  }
+}
