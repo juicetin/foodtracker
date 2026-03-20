@@ -20,7 +20,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [x] **Phase 2.4: Global Cuisine Training Expansion** - Merge datasets, retrain to 700+ classes, deploy
 - [x] **Phase 2.5: Food Knowledge Graph** - Recipe-based nutrition decomposition, dish taxonomy, multilingual aliases, SymSpell fuzzy search, KG-to-detection bridge
 - [ ] **Phase 2.6: On-Device VLM Integration** - SmolVLM via llama.rn, progressive YOLO->VLM refinement, text+image fusion, KG-grounded nutrition
-- [ ] **Phase 02.7: Gemini Nano System-Managed VLM Integration** - Tier 0 Gemini Nano via ML Kit GenAI Prompt API, quality spike + human gate, pipeline integration
+- [x] **Phase 02.7: Gemini Nano System-Managed VLM Integration** - Tier 0 Gemini Nano via ML Kit GenAI Prompt API, quality spike + human gate, pipeline integration (completed 2026-03-20)
 - [ ] **Phase 3.1: Daily Diary View + Macro Dashboard** - Chronological entry list, photo thumbnails, always-visible macro summary, entry expand/detail
 - [ ] **Phase 3.2: Food Search + Manual Add + Quick Add** - KG+OFF search, personal history ranking, quick cal/macro entry, persistent search bar
 - [ ] **Phase 3.3: Meal Editing + Portion Adjustment** - Post-logging ingredient editing, serving size selector, portion adjustment, re-run VLM
@@ -88,7 +88,7 @@ Plans:
   4. GeminiNanoService produces VlmFoodResult (same shape as vlmService) from Prompt API JSON output
   5. runVlmIdentification() checks Gemini Nano availability first; falls back to SmolVLM if unavailable or fails; Pixel 7 Pro experience unchanged
   6. No model download required on Pixel 9 Pro / Galaxy S25+ — AICore provides the model system-managed
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans complete
 
 Plans:
 - [ ] 02.7-01-PLAN.md -- Wave 1 spike: GeminiNano native module (Kotlin + TS bindings), GeminiNanoTestScreen, navigation wiring, unit tests, human checkpoint on Pixel 9 Pro
@@ -400,7 +400,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 2.4. Global Cuisine Training Expansion | 3/3 | Complete | 2026-03-14 |
 | 2.5. Food Knowledge Graph | 6/6 | Complete | 2026-03-14 |
 | 2.6. On-Device VLM Integration | 6/6 | Complete | 2026-03-14 |
-| 02.7. Gemini Nano VLM Integration | 1/2 | In Progress|  |
+| 02.7. Gemini Nano VLM Integration | 2/2 | Complete   | 2026-03-20 |
 | 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete | 2026-03-15 |
 | 3.5. OFF Cache + Attribution | 2/2 | Complete | 2026-03-19 |
 | 3.6. Incremental Backup System | 2/2 | Complete | 2026-03-19 |
