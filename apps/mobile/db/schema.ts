@@ -185,13 +185,18 @@ export const installedPacks = sqliteTable('installed_packs', {
   lastChecked: text('last_checked'),
 });
 
-// ── Scan Queue (new) ──
+// ── Scan Queue (new — extended in Phase 04 with EXIF + classification columns) ──
 
 export const scanQueue = sqliteTable('scan_queue', {
   id: integer('id').primaryKey({ autoIncrement: true }),
-  assetId: text('asset_id'),
+  assetId: text('asset_id').unique(),
   uri: text('uri').notNull(),
   status: text('status').notNull().default('pending'), // 'pending' | 'processing' | 'done' | 'error'
+  creationTime: integer('creation_time'), // EXIF epoch ms
+  latitude: real('latitude'),
+  longitude: real('longitude'),
+  isFood: integer('is_food', { mode: 'boolean' }),
+  mealGroupId: text('meal_group_id'),
   createdAt: text('created_at').default(sql`(datetime('now'))`),
   processedAt: text('processed_at'),
 });

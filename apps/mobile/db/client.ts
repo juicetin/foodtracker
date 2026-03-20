@@ -169,6 +169,27 @@ opsqlite.execute(`CREATE TABLE IF NOT EXISTS correction_history (
   corrected_at TEXT DEFAULT (datetime('now'))
 )`);
 
+// ── Scan Queue (Phase 04 gallery scanning) ──
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS scan_queue (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  asset_id TEXT UNIQUE,
+  uri TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  creation_time INTEGER,
+  latitude REAL,
+  longitude REAL,
+  is_food INTEGER,
+  meal_group_id TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  processed_at TEXT
+)`);
+// Add new columns if table existed from prior phase (idempotent)
+try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN creation_time INTEGER'); } catch {}
+try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN latitude REAL'); } catch {}
+try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN longitude REAL'); } catch {}
+try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN is_food INTEGER'); } catch {}
+try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN meal_group_id TEXT'); } catch {}
+
 opsqlite.execute(`CREATE TABLE IF NOT EXISTS _change_journal (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   table_name TEXT NOT NULL,
