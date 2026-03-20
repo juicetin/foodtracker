@@ -12,6 +12,8 @@ export type RootStackParamList = {
   ReidentifyMerge: { entryId: string };
   SyncSettings: undefined;
   GalleryScan: undefined;
+  ScaleInput: { photoUri?: string };
+  WeightTrend: undefined;
 };
 
 export type MainTabParamList = {

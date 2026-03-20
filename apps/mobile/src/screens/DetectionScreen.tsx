@@ -425,13 +425,23 @@ export function DetectionScreen() {
             </Text>
           </View>
         </View>
-        <Pressable
-          style={[styles.logBtn, dishes.length === 0 && styles.logBtnDisabled]}
-          onPress={handleLogMeal}
-          disabled={dishes.length === 0}
-        >
-          <Text style={styles.logBtnText}>Log Meal</Text>
-        </Pressable>
+        <View style={styles.footerButtons}>
+          <Pressable
+            style={styles.scaleWeightBtn}
+            onPress={() =>
+              (navigation as any).navigate('ScaleInput', { photoUri: photoUri ?? undefined })
+            }
+          >
+            <Text style={styles.scaleWeightBtnText}>{'\u2696\uFE0F'} Scale</Text>
+          </Pressable>
+          <Pressable
+            style={[styles.logBtn, styles.logBtnFlex, dishes.length === 0 && styles.logBtnDisabled]}
+            onPress={handleLogMeal}
+            disabled={dishes.length === 0}
+          >
+            <Text style={styles.logBtnText}>Log Meal</Text>
+          </Pressable>
+        </View>
       </View>
 
       {/* Debug modal -- shows raw Gemini Nano JSON for inspection */}
@@ -591,9 +601,18 @@ const styles = StyleSheet.create({
   footerMacro: { fontSize: 13 },
   footerMacroNum: { fontWeight: '700', fontSize: 14 },
   footerMacroLabel: { color: '#9CA3AF', fontSize: 12 },
+  footerButtons: {
+    flexDirection: 'row', gap: 10,
+  },
+  scaleWeightBtn: {
+    backgroundColor: '#F3F4F6', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 16,
+    alignItems: 'center', justifyContent: 'center',
+  },
+  scaleWeightBtnText: { fontSize: 15, fontWeight: '600', color: '#374151' },
   logBtn: {
     backgroundColor: '#16A34A', borderRadius: 14, paddingVertical: 16, alignItems: 'center',
   },
+  logBtnFlex: { flex: 1 },
   logBtnDisabled: { backgroundColor: '#D1D5DB' },
   logBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
 });

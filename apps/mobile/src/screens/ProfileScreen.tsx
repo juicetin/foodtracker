@@ -5,6 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
+  Switch,
   View,
   Text,
   StyleSheet,
@@ -34,6 +35,22 @@ import { getJournalCount } from '../services/backup/changeJournal';
 import { registerAutoBackup } from '../services/backup/backupScheduler';
 import type { BackupMetadata } from '../services/backup/types';
 import { useSyncStore } from '../store/useSyncStore';
+import {
+  requestNotificationPermission,
+  scheduleDailyNotification,
+  cancelDailyNotification,
+  buildMacroSummaryBody,
+} from '../services/notifications/notificationService';
+import {
+  getContainers,
+  deleteContainer,
+  type Container,
+} from '../services/scale/containerService';
+import {
+  isHealthConnectAvailable,
+  initHealthConnect,
+  requestWeightPermission,
+} from '../services/health/healthConnectService';
 
 export default function ProfileScreen() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
@@ -179,6 +196,15 @@ export default function ProfileScreen() {
           <Text style={styles.rowChevron}>→</Text>
         </Pressable>
       </View>
+
+      {/* Notifications */}
+      <NotificationsCard />
+
+      {/* Container Weights */}
+      <ContainerWeightsCard />
+
+      {/* Health & Weight */}
+      <HealthWeightCard />
 
       {/* AI Models */}
       <View style={styles.card}>
@@ -425,6 +451,236 @@ function SyncCard() {
 const syncStyles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4 },
 });
+
+function NotificationsCard() {
+  const {
+    notificationsEnabled,
+    notificationHour,
+    notificationMinute,
+    setNotificationsEnabled,
+    setNotificationTime,
+    nutritionGoals,
+  } = usePreferencesStore();
+
+  const [hourStr, setHourStr] = useState(String(notificationHour));
+  const [minuteStr, setMinuteStr] = useState(String(notificationMinute).padStart(2, '0'));
+
+  async function handleToggle(enabled: boolean) {
+    if (enabled) {
+      const granted = await requestNotificationPermission();
+      if (!granted) {
+        Alert.alert('Permission Denied', 'Notification permission is required.');
+        return;
+      }
+      const body = buildMacroSummaryBody(nutritionGoals);
+      await scheduleDailyNotification(notificationHour, notificationMinute, body);
+    } else {
+      await cancelDailyNotification();
+    }
+    setNotificationsEnabled(enabled);
+  }
+
+  async function handleTimeChange() {
+    const h = parseInt(hourStr, 10);
+    const m = parseInt(minuteStr, 10);
+    if (isNaN(h) || h < 0 || h > 23 || isNaN(m) || m < 0 || m > 59) {
+      Alert.alert('Invalid Time', 'Hour must be 0-23, minute 0-59.');
+      return;
+    }
+    setNotificationTime(h, m);
+    if (notificationsEnabled) {
+      const body = buildMacroSummaryBody(nutritionGoals);
+      await scheduleDailyNotification(h, m, body);
+    }
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Notifications</Text>
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Daily Summary</Text>
+        <Switch
+          value={notificationsEnabled}
+          onValueChange={handleToggle}
+          trackColor={{ true: '#16A34A', false: '#D1D5DB' }}
+          thumbColor="#FFFFFF"
+        />
+      </View>
+      {notificationsEnabled && (
+        <View style={[styles.row, { gap: 8 }]}>
+          <Text style={styles.rowLabel}>Time</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+            <TextInput
+              style={notifStyles.timeInput}
+              value={hourStr}
+              onChangeText={setHourStr}
+              onBlur={handleTimeChange}
+              keyboardType="number-pad"
+              maxLength={2}
+            />
+            <Text style={{ fontSize: 16, fontWeight: '700', color: '#374151' }}>:</Text>
+            <TextInput
+              style={notifStyles.timeInput}
+              value={minuteStr}
+              onChangeText={setMinuteStr}
+              onBlur={handleTimeChange}
+              keyboardType="number-pad"
+              maxLength={2}
+            />
+          </View>
+        </View>
+      )}
+    </View>
+  );
+}
+
+const notifStyles = StyleSheet.create({
+  timeInput: {
+    backgroundColor: '#F3F4F6',
+    borderRadius: 8,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    fontSize: 16,
+    fontWeight: '600',
+    color: '#111827',
+    width: 44,
+    textAlign: 'center',
+  },
+});
+
+function ContainerWeightsCard() {
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const [containers, setContainers] = useState<Container[]>([]);
+
+  useEffect(() => {
+    loadContainers();
+  }, []);
+
+  async function loadContainers() {
+    try {
+      const list = await getContainers();
+      setContainers(list);
+    } catch {
+      // Non-critical
+    }
+  }
+
+  async function handleDelete(id: number, name: string) {
+    Alert.alert('Delete Container', `Delete "${name}"?`, [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Delete',
+        style: 'destructive',
+        onPress: async () => {
+          try {
+            await deleteContainer(id);
+            await loadContainers();
+          } catch {
+            Alert.alert('Error', 'Failed to delete container.');
+          }
+        },
+      },
+    ]);
+  }
+
+  return (
+    <View style={styles.card}>
+      <View style={styles.cardHeader}>
+        <Text style={styles.cardTitle}>Container Weights</Text>
+        <Pressable onPress={() => rootNavigation.navigate('ScaleInput', {})}>
+          <Text style={styles.editBtn}>Manage</Text>
+        </Pressable>
+      </View>
+      {containers.length === 0 ? (
+        <Text style={{ fontSize: 13, color: '#9CA3AF', paddingVertical: 8 }}>
+          No containers saved. Add containers from the Scale Input screen.
+        </Text>
+      ) : (
+        containers.map((c) => (
+          <Pressable
+            key={c.id}
+            style={styles.row}
+            onLongPress={() => handleDelete(c.id, c.name)}
+          >
+            <Text style={styles.rowLabel}>{c.name}</Text>
+            <Text style={styles.rowValue}>
+              {c.weightGrams}g {c.timesUsed > 0 ? `(used ${c.timesUsed}x)` : ''}
+            </Text>
+          </Pressable>
+        ))
+      )}
+    </View>
+  );
+}
+
+function HealthWeightCard() {
+  const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const {
+    healthConnectEnabled,
+    setHealthConnectEnabled,
+  } = usePreferencesStore();
+  const [hcAvailable, setHcAvailable] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    checkAvailability();
+  }, []);
+
+  async function checkAvailability() {
+    const available = await isHealthConnectAvailable();
+    setHcAvailable(available);
+  }
+
+  async function handleToggle(enabled: boolean) {
+    if (enabled) {
+      try {
+        await initHealthConnect();
+        const granted = await requestWeightPermission();
+        if (!granted) {
+          Alert.alert('Permission Denied', 'Health Connect weight read permission is required.');
+          return;
+        }
+      } catch {
+        Alert.alert('Error', 'Failed to initialize Health Connect.');
+        return;
+      }
+    }
+    setHealthConnectEnabled(enabled);
+  }
+
+  return (
+    <View style={styles.card}>
+      <Text style={styles.cardTitle}>Health & Weight</Text>
+
+      <View style={styles.row}>
+        <Text style={styles.rowLabel}>Health Connect</Text>
+        {hcAvailable === false ? (
+          <Text style={{ fontSize: 13, color: '#EF4444' }}>Not available</Text>
+        ) : (
+          <Switch
+            value={healthConnectEnabled}
+            onValueChange={handleToggle}
+            trackColor={{ true: '#16A34A', false: '#D1D5DB' }}
+            thumbColor="#FFFFFF"
+          />
+        )}
+      </View>
+
+      {hcAvailable === false && (
+        <Text style={{ fontSize: 12, color: '#9CA3AF', paddingBottom: 8 }}>
+          Install Google Health Connect from the Play Store (required for Android &lt; 14).
+        </Text>
+      )}
+
+      <Pressable
+        style={styles.row}
+        onPress={() => rootNavigation.navigate('WeightTrend')}
+      >
+        <Text style={styles.rowLabel}>View Weight Trend</Text>
+        <Text style={styles.rowChevron}>{'\u2192'}</Text>
+      </Pressable>
+    </View>
+  );
+}
 
 const UX_MODE_OPTIONS: { mode: UxMode; label: string; desc: string }[] = [
   { mode: 'zero-effort', label: 'Zero-effort', desc: 'Auto-log, review later' },

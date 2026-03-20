@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import MainTabNavigator from './MainTabNavigator';
-import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen, BarcodeScanScreen, RecipeScreen, QuickAddScreen, ReidentifyMergeScreen, GalleryScanScreen } from '../screens';
+import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen, BarcodeScanScreen, RecipeScreen, QuickAddScreen, ReidentifyMergeScreen, GalleryScanScreen, ScaleInputScreen, WeightTrendScreen } from '../screens';
 import SyncSettingsScreen from '../screens/SyncSettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -113,6 +113,23 @@ export default function RootNavigator() {
             headerShown: true,
             headerTitle: 'Gallery Scan',
             animation: 'slide_from_right',
+          }}
+        />
+        <Stack.Screen
+          name="ScaleInput"
+          component={ScaleInputScreen}
+          options={{
+            animation: 'slide_from_bottom',
+            presentation: 'fullScreenModal',
+            headerShown: false,
+          }}
+        />
+        <Stack.Screen
+          name="WeightTrend"
+          component={WeightTrendScreen}
+          options={{
+            animation: 'slide_from_right',
+            headerShown: false,
           }}
         />
       </Stack.Navigator>
