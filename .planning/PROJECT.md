@@ -34,6 +34,9 @@ Accurate, effortless food tracking from photos you already take — no manual en
 - ✓ Knowledge graph with SQLite schema, USDA/RecipeNLG seeding, mobile export — Phase 1 (01-02)
 - ✓ Dataset acquisition with auto-labeling (Florence-2) and merged datasets — Phase 1 (01-01)
 - ✓ VLM benchmark (PaliGemma 2 3B) + portion estimation module — Phase 1 (01-04)
+- ✓ Gallery scan pipeline wired to diary entry creation — Phase 7.1
+- ✓ Scale weight return wired to detection screen with proportional redistribution — Phase 7.1
+- ✓ Orphaned YOLO/SmolVLM code removed (VLM-only pivot cleanup) — Phase 7.1
 
 ### Active
 
@@ -123,4 +126,4 @@ Accurate, effortless food tracking from photos you already take — no manual en
 | ADK removed as requirement | No cloud agent framework needed in local-first architecture | ✓ Decided |
 
 ---
-*Last updated: 2026-03-12 after local-first architecture pivot (ADR-005)*
+*Last updated: 2026-03-21 after Phase 7.1 gap closure (integration wiring + dead code cleanup)*
