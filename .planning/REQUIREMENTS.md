@@ -12,7 +12,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **DET-01**: User can photograph food and get on-device identification of food items with bounding boxes via YOLO (CoreML/LiteRT)
 - [x] **DET-02**: User's device automatically selects the appropriate VLM tier (SmolVLM-256M / Moondream 0.5B / Gemma 3n E2B) based on device capability, downloaded post-install
 - [x] **DET-03**: User on a supported device (Pixel 8+, Galaxy S24+, etc.) gets opportunistic Gemini Nano inference for food identification via AICore
-- [ ] **DET-04**: User sees inferred hidden ingredients from dish identification via knowledge graph lookup (e.g., "carbonara" -> egg, pancetta, parmesan)
+- [x] **DET-04**: User sees inferred hidden ingredients from dish identification via knowledge graph lookup (e.g., "carbonara" -> egg, pancetta, parmesan)
 - [x] **DET-05**: User sees confidence indicators (green/yellow/red) on detection results and can manually correct when confidence is low
 - [x] **DET-06**: User sees portion estimates based on visual cues (plate size, reference objects, density tables) from the on-device portion estimator
 
@@ -52,7 +52,7 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Notifications & Tracking
 
-- [ ] **NTF-01**: User receives a configurable end-of-day push notification summarizing daily macro totals
+- [x] **NTF-01**: User receives a configurable end-of-day push notification summarizing daily macro totals
 - [ ] **NTF-02**: User can import weight data from Apple Health / Google Fit and view smoothed weight trend
 
 ### Model Delivery
@@ -122,7 +122,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | DET-01 | Phase 2 | Complete |
 | DET-02 | Phase 5 | Complete |
 | DET-03 | Phase 5 | Complete |
-| DET-04 | Phase 5 | Pending |
+| DET-04 | Phase 5 | Complete |
 | DET-05 | Phase 2 | Complete |
 | DET-06 | Phase 2 | Complete |
 | DAT-01 | Phase 1 | Complete |
@@ -147,7 +147,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SCL-01 | Phase 5 | Complete |
 | SCL-02 | Phase 5 | Complete |
 | SCL-03 | Phase 5 | Complete |
-| NTF-01 | Phase 5 | Pending |
+| NTF-01 | Phase 5 | Complete |
 | NTF-02 | Phase 5 | Pending |
 | MDL-01 | Phase 6 | Pending |
 | MDL-02 | Phase 6 | Pending |
