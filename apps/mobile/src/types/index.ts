@@ -8,6 +8,7 @@ export type RootStackParamList = {
   Recipes: undefined;
   VlmDownload: undefined;
   GeminiNanoTest: undefined;
+  QuickAdd: undefined;
 };
 
 export type MainTabParamList = {
