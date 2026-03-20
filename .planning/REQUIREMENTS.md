@@ -53,7 +53,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### Notifications & Tracking
 
 - [x] **NTF-01**: User receives a configurable end-of-day push notification summarizing daily macro totals
-- [ ] **NTF-02**: User can import weight data from Apple Health / Google Fit and view smoothed weight trend
+- [x] **NTF-02**: User can import weight data from Apple Health / Google Fit and view smoothed weight trend
 
 ### Model Delivery
 
@@ -148,7 +148,7 @@ Deferred to future release. Tracked but not in current roadmap.
 | SCL-02 | Phase 5 | Complete |
 | SCL-03 | Phase 5 | Complete |
 | NTF-01 | Phase 5 | Complete |
-| NTF-02 | Phase 5 | Pending |
+| NTF-02 | Phase 5 | Complete |
 | MDL-01 | Phase 6 | Pending |
 | MDL-02 | Phase 6 | Pending |
 

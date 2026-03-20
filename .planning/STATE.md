@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-01-PLAN.md (hidden ingredients + daily notifications)
-last_updated: "2026-03-20T17:33:46.826Z"
+stopped_at: Completed 05-03-PLAN.md (Health Connect weight import + EMA trend)
+last_updated: "2026-03-20T17:37:00.000Z"
 progress:
   total_phases: 20
   completed_phases: 18
   total_plans: 59
-  completed_plans: 57
+  completed_plans: 58
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 05 (scale-ocr-notifications-health-data) — EXECUTING
-Plan: 2 of 4 (Plan 01 complete)
+Plan: 4 of 4 (Plans 01-03 complete)
 
 ## Performance Metrics
 
@@ -114,6 +114,7 @@ Plan: 2 of 4 (Plan 01 complete)
 | Phase 04 P02 | 5min | 3 tasks | 10 files |
 | Phase 05 P01 | 5min | 2 tasks | 12 files |
 | Phase 05 P02 | 4min | 2 tasks | 5 files |
+| Phase 05 P03 | 10min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -288,6 +289,9 @@ Recent decisions affecting current work:
 - [Phase 05]: getRecipeIngredients made public on KnowledgeGraphService for hidden ingredients service access
 - [Phase 05]: KG enrichment runs after VLM identification in vlmPipeline.scanFood() for both live and mock paths
 - [Phase 05]: expo-notifications DailyTriggerInput for reliable daily scheduling with cancel-before-reschedule pattern
+- [Phase 05]: INSERT OR REPLACE on date UNIQUE for HC sync dedup -- SQL handles conflicts, no app-level dedup needed
+- [Phase 05]: ensureTable() lazy guard in useWeightStore -- CREATE TABLE IF NOT EXISTS on first action, not at module load
+- [Phase 05]: EMA alpha=0.15 with 0.2kg stability threshold for trend direction (compare last smoothed vs 7 entries ago)
 - [Phase 05]: Notification defaults: 9 PM, disabled -- enabled during onboarding (not in Plan 01)
 - [Phase 05]: Gemini Nano primary for scale OCR; ML Kit Text Recognition v2 stubbed (requires native dep, deferred)
 - [Phase 05]: opsqlite raw SQL for containerService (consistent with historyService/backupService pattern)
@@ -318,5 +322,5 @@ None yet.
 ## Session Continuity
 
 Last session: 2026-03-20T17:31:46Z
-Stopped at: Completed 05-01-PLAN.md (hidden ingredients + daily notifications)
+Stopped at: Completed 05-03-PLAN.md (Health Connect weight import + EMA trend)
 Resume file: None
