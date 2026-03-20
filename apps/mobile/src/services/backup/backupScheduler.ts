@@ -20,6 +20,15 @@ TaskManager.defineTask(BACKUP_TASK_NAME, async () => {
       // Check if compaction is needed (every 7 incrementals)
       await compactBackups();
     }
+
+    // Attempt Drive sync after local backup (failure does not affect local backup)
+    try {
+      const { triggerManualSync } = await import('../sync/syncScheduler');
+      await triggerManualSync();
+    } catch {
+      // Drive sync failure is non-fatal -- local backup succeeded
+    }
+
     return BackgroundTask.BackgroundTaskResult.Success;
   } catch {
     return BackgroundTask.BackgroundTaskResult.Failed;
