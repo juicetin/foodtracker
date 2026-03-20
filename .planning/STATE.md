@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 06-02-PLAN.md (Play for On-Device AI delivery + packManager integration)
-last_updated: "2026-03-20T18:13:32.058Z"
+stopped_at: Completed 06-01-PLAN.md (FTP backup client)
+last_updated: "2026-03-20T18:13:44.403Z"
 progress:
   total_phases: 20
   completed_phases: 20
@@ -117,6 +117,7 @@ Plan: 2 of 2
 | Phase 05 P03 | 10min | 2 tasks | 12 files |
 | Phase 05 P04 | 6min | 2 tasks | 7 files |
 | Phase 06 P02 | 6min | 2 tasks | 13 files |
+| Phase 06 P01 | 7min | 2 tasks | 14 files |
 
 ## Accumulated Context
 
@@ -304,6 +305,7 @@ Recent decisions affecting current work:
 - [Phase 06]: Singleton AiPackManager via lazy init in getManager() -- avoids context unavailability at Expo module construction
 - [Phase 06]: require() not import for ai-pack-delivery in packManager -- prevents iOS build breakage
 - [Phase 06]: AI pack resolution returns early from downloadPack, skipping entire R2 flow when AI pack completed
+- [Phase 06]: FTP password in expo-secure-store only; Promise.allSettled for independent Drive+FTP dispatch
 
 ### Roadmap Evolution
 
@@ -329,6 +331,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T18:11:50Z
-Stopped at: Completed 06-02-PLAN.md (Play for On-Device AI delivery + packManager integration)
+Last session: 2026-03-20T18:13:44.399Z
+Stopped at: Completed 06-01-PLAN.md (FTP backup client)
 Resume file: None
