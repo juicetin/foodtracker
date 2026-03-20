@@ -1,11 +1,8 @@
 /**
  * VLM (Vision-Language Model) module barrel exports.
  *
- * Public API for on-device food identification using SmolVLM via llama.rn.
+ * Public API for on-device food identification via Gemini Nano.
  */
-
-// Service
-export { vlmService } from './vlmService';
 
 // Prompt builder
 export { buildFoodPrompt } from './vlmPrompts';

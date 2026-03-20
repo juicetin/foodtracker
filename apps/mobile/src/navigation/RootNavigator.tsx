@@ -3,7 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
 import MainTabNavigator from './MainTabNavigator';
-import { DetectionScreen, VlmDownloadScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen, BarcodeScanScreen, RecipeScreen, QuickAddScreen, ReidentifyMergeScreen, GalleryScanScreen, ScaleInputScreen, WeightTrendScreen } from '../screens';
+import { DetectionScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen, BarcodeScanScreen, RecipeScreen, QuickAddScreen, ReidentifyMergeScreen, GalleryScanScreen, ScaleInputScreen, WeightTrendScreen } from '../screens';
 import SyncSettingsScreen from '../screens/SyncSettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
@@ -23,15 +23,6 @@ export default function RootNavigator() {
           options={{
             animation: 'slide_from_bottom',
             presentation: 'fullScreenModal',
-          }}
-        />
-        <Stack.Screen
-          name="VlmDownload"
-          component={VlmDownloadScreen}
-          options={{
-            headerShown: true,
-            headerTitle: 'VLM Model',
-            animation: 'slide_from_right',
           }}
         />
         <Stack.Screen
