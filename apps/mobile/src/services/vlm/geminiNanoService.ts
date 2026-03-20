@@ -30,7 +30,8 @@ export const SPIKE_PROMPT =
  */
 export const SPIKE_NUTRITION_PROMPT =
   'Identify all food in this image. Return only valid JSON — no extra text:\n' +
-  '{"dishes":[{"name":string,"cuisine":string,"ingredients":[{"name":string,"amount_g":number}]}]}\n' +
+  '{"dishes":[{"name":string,"cuisine":string,"recipe_name":string,"ingredients":[{"name":string,"amount_g":number}]}]}\n' +
+  'recipe_name: a concise human-friendly name for the dish as a recipe (e.g. "Chicken Stir Fry with Vegetables"). ' +
   'Estimate amount_g using surrounding objects (plates, cutlery, cups, hands) as size references; ' +
   'fall back to a typical restaurant serving size if no reference objects are visible. ' +
   'Be specific with ingredient names (e.g. "basmati rice" not "rice").';

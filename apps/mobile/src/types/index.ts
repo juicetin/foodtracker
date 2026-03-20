@@ -161,6 +161,9 @@ export interface ScanResult {
   isMock: boolean;
 }
 
+// UX modes for recipe/food logging workflow
+export type UxMode = 'zero-effort' | 'confirm-only' | 'guided-edit';
+
 // User preferences
 export interface UserPreferences {
   region: 'AU' | 'US' | 'CA' | 'UK' | 'FR' | 'global';
@@ -172,4 +175,5 @@ export interface UserPreferences {
     fat: number;
   };
   darkMode: boolean;
+  uxMode: UxMode;
 }

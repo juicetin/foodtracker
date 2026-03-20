@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserPreferences } from '../types';
+import { UserPreferences, UxMode } from '../types';
 import { detectLocale } from '../services/packs/localeDetector';
 import { type TimePeriodBoundary, DEFAULT_BOUNDARIES } from '../services/diary/timePeriods';
 
@@ -29,6 +29,7 @@ interface PreferencesState extends UserPreferences {
   setDarkMode: (darkMode: boolean) => void;
   setDiaryDisplayMode: (mode: 'consumed' | 'remaining') => void;
   setTimePeriodBoundaries: (b: TimePeriodBoundary) => void;
+  setUxMode: (mode: UxMode) => void;
   initRegionFromLocale: () => void;
 }
 
@@ -45,6 +46,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         fat: 65,
       },
       darkMode: false,
+      uxMode: 'confirm-only' as UxMode,
       regionAutoDetected: false,
       diaryDisplayMode: 'consumed',
       timePeriodBoundaries: DEFAULT_BOUNDARIES,
@@ -56,6 +58,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       setDarkMode: (darkMode) => set({ darkMode }),
       setDiaryDisplayMode: (mode) => set({ diaryDisplayMode: mode }),
       setTimePeriodBoundaries: (b) => set({ timePeriodBoundaries: b }),
+      setUxMode: (uxMode) => set({ uxMode }),
       initRegionFromLocale: () => {
         // Only auto-detect once — user manual override takes precedence
         if (get().regionAutoDetected) return;

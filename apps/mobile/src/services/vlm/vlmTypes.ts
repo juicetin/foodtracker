@@ -67,6 +67,8 @@ export interface VlmIngredient {
 export interface VlmDish {
   name: string;
   cuisine: string | null;
+  /** Concise human-friendly recipe name suggested by VLM (e.g. "Chicken Stir Fry"). Optional -- only Gemini Nano populates this. */
+  recipe_name?: string;
   ingredients: VlmIngredient[];
 }
 
