@@ -337,7 +337,12 @@ Plans:
   3. Manual full backup upload available from Profile screen
   4. Fresh app install can discover and restore from Google Drive backup
   5. Restore applies full backup + incremental diffs in order to reconstruct complete database
-**Plans**: TBD
+**Requirements**: DAT-04, DAT-06
+**Plans:** 2 plans
+
+Plans:
+- [ ] 03.7-01-PLAN.md -- Service layer: install deps, Expo config plugin, sync types, driveAuth, driveSync, conflictResolver, useSyncStore + tests
+- [ ] 03.7-02-PLAN.md -- Scheduler + UI: syncScheduler Drive upload, restoreService, SyncSettingsScreen, ProfileScreen sync card, human verification
 
 ### Phase 4: Gallery Scanning + Deduplication
 **Goal**: Users no longer need to manually trigger photo analysis -- the app discovers food photos from the gallery automatically
@@ -408,7 +413,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 3.2. Food Search + Manual Add + Quick Add | 2/2 | Complete | 2026-03-20 |
 | 3.3. Meal Editing + Portion Adjustment | 2/2 | Complete | 2026-03-21 |
 | 3.4. Recipe Management | 0/2 | Not started | - |
-| 3.7. Google Drive Sync | 0/? | Not started | - |
+| 3.7. Google Drive Sync | 0/2 | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
 | 6. Sync + Distribution | 0/2 | Not started | - |
