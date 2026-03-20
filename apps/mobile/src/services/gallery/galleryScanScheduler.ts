@@ -58,7 +58,7 @@ export async function unregisterGalleryScan(): Promise<void> {
  */
 export async function triggerForegroundDrain(
   onProgress?: (done: number, total: number) => void,
-): Promise<{ classified: number; foodPhotos: number; mealGroups: number }> {
+): Promise<{ classified: number; foodPhotos: number; mealGroups: number; entriesCreated: number }> {
   // Request media library permission if not yet granted
   const { status } = await MediaLibrary.requestPermissionsAsync();
   if (status !== 'granted') {
