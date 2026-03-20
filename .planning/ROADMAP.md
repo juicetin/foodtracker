@@ -290,11 +290,11 @@ Plans:
   4. User can edit recipe ingredients and portions (changes apply to the recipe template, not past entries)
   5. Recipe search integrated into the food search flow (Phase 3.2) — recipes appear alongside KG/OFF results
   6. Existing custom_recipes and recipeIngredients tables are used (no new schema required)
-**Plans**: TBD
+**Plans:** 2 plans
 
 Plans:
-- [ ] 03.4-01: TBD
-- [ ] 03.4-02: TBD
+- [ ] 03.4-01-PLAN.md -- Service layer: schema migrations (servings, source_recipe_id), saveEntryAsRecipe, searchRecipes, updateRecipeWithVersioning, Gemini Nano recipe_name prompt, UX mode preference
+- [ ] 03.4-02-PLAN.md -- UI wiring: Save as Recipe on EntryDetail, enhanced RecipeScreen (photo/macros/search/versioning), recipe search integration, UX mode selector, human verification
 
 ### Phase 3.5: OFF Cache + Attribution (INSERTED)
 **Goal**: OFF API responses cached locally in SQLite for offline use, with adaptive rate limiting and proper ODbL attribution
@@ -404,10 +404,10 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 7. Remove YOLO+EfficientNet -- VLM-only | 3/3 | Complete | 2026-03-15 |
 | 3.5. OFF Cache + Attribution | 2/2 | Complete | 2026-03-19 |
 | 3.6. Incremental Backup System | 2/2 | Complete | 2026-03-19 |
-| 3.1. Daily Diary View + Macro Dashboard | 0/? | Not started | - |
-| 3.2. Food Search + Manual Add + Quick Add | 0/2 | Not started | - |
-| 3.3. Meal Editing + Portion Adjustment | 0/2 | Not started | - |
-| 3.4. Recipe Management | 0/? | Not started | - |
+| 3.1. Daily Diary View + Macro Dashboard | 2/2 | Complete | 2026-03-20 |
+| 3.2. Food Search + Manual Add + Quick Add | 2/2 | Complete | 2026-03-20 |
+| 3.3. Meal Editing + Portion Adjustment | 2/2 | Complete | 2026-03-21 |
+| 3.4. Recipe Management | 0/2 | Not started | - |
 | 3.7. Google Drive Sync | 0/? | Not started | - |
 | 4. Gallery Scanning + Deduplication | 0/2 | Not started | - |
 | 5. Scale OCR + Notifications + Health Data | 0/3 | Not started | - |
