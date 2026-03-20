@@ -117,6 +117,50 @@ opsqlite.execute(`CREATE TABLE IF NOT EXISTS off_search_cache (
   cached_at TEXT DEFAULT (datetime('now'))
 )`);
 
+// ── Custom Recipes + Recipe Ingredients + Recipe Photos ──
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS custom_recipes (
+  id TEXT PRIMARY KEY NOT NULL,
+  name TEXT NOT NULL,
+  description TEXT,
+  source_entry_id TEXT REFERENCES food_entries(id) ON DELETE SET NULL,
+  total_calories REAL DEFAULT 0,
+  total_protein REAL DEFAULT 0,
+  total_carbs REAL DEFAULT 0,
+  total_fat REAL DEFAULT 0,
+  times_used INTEGER DEFAULT 0,
+  last_used_at TEXT,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+)`);
+
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS recipe_ingredients (
+  id TEXT PRIMARY KEY NOT NULL,
+  recipe_id TEXT NOT NULL REFERENCES custom_recipes(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  quantity REAL NOT NULL,
+  unit TEXT NOT NULL,
+  calories REAL NOT NULL,
+  protein REAL DEFAULT 0,
+  carbs REAL DEFAULT 0,
+  fat REAL DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+)`);
+
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS recipe_photos (
+  id TEXT PRIMARY KEY NOT NULL,
+  recipe_id TEXT NOT NULL REFERENCES custom_recipes(id) ON DELETE CASCADE,
+  local_path TEXT NOT NULL,
+  is_primary INTEGER DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now'))
+)`);
+
+// Add servings, photo_uri columns to custom_recipes (idempotent)
+try { opsqlite.execute('ALTER TABLE custom_recipes ADD COLUMN servings INTEGER DEFAULT 1'); } catch {}
+try { opsqlite.execute('ALTER TABLE custom_recipes ADD COLUMN photo_uri TEXT'); } catch {}
+
+// Add source_recipe_id to food_entries for recipe-entry linkage
+try { opsqlite.execute('ALTER TABLE food_entries ADD COLUMN source_recipe_id TEXT'); } catch {}
+
 opsqlite.execute(`CREATE TABLE IF NOT EXISTS correction_history (
   id TEXT PRIMARY KEY NOT NULL,
   original_class_name TEXT NOT NULL,

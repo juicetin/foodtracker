@@ -9,7 +9,7 @@ export const TRACKED_TABLES = new Set([
   'food_entries', 'ingredients', 'photos', 'scanned_dishes',
   'favourite_meals', 'correction_history',
   'off_product_cache', 'off_search_cache', 'installed_packs',
-  'custom_recipes', 'user_settings',
+  'custom_recipes', 'recipe_ingredients', 'recipe_photos', 'user_settings',
 ]);
 
 export const BACKUP_DIR = 'backups/';

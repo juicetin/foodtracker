@@ -38,6 +38,8 @@ export interface RecipeSummary {
   timesUsed: number;
   lastUsedAt: string | null;
   createdAt: string;
+  servings: number;
+  photoUri: string | null;
 }
 
 export interface RecipeIngredient {
@@ -106,6 +108,8 @@ function mapRecipeRow(r: Record<string, unknown>): RecipeSummary {
     timesUsed: (r.times_used as number) ?? 0,
     lastUsedAt: (r.last_used_at as string) ?? null,
     createdAt: r.created_at as string,
+    servings: (r.servings as number) ?? 1,
+    photoUri: (r.photo_uri as string) ?? null,
   };
 }
 
@@ -247,19 +251,20 @@ export function updateRecipeIngredient(
 // ---------------------------------------------------------------------------
 
 /** Log a recipe as a new food entry with the given meal type. */
-export function logRecipeAsEntry(recipeId: string, mealType: string): void {
+export function logRecipeAsEntry(recipeId: string, mealType: string, servingCount: number = 1): void {
   const recipe = loadRecipe(recipeId);
   if (!recipe) return;
 
   const entryId = generateId();
   const now = new Date().toISOString();
   const entryDate = new Date().toISOString().split('T')[0];
+  const scale = servingCount;
 
-  // Create food entry
+  // Create food entry with source_recipe_id linkage and scaled totals
   opsqlite.executeSync(
-    `INSERT INTO food_entries (id, meal_type, entry_date, total_calories, total_protein, total_carbs, total_fat, notes, created_at, updated_at, is_synced, is_deleted)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
-    [entryId, mealType, entryDate, recipe.totalCalories, recipe.totalProtein, recipe.totalCarbs, recipe.totalFat, `Recipe: ${recipe.name}`, now, now],
+    `INSERT INTO food_entries (id, meal_type, entry_date, total_calories, total_protein, total_carbs, total_fat, notes, source_recipe_id, created_at, updated_at, is_synced, is_deleted)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0)`,
+    [entryId, mealType, entryDate, recipe.totalCalories * scale, recipe.totalProtein * scale, recipe.totalCarbs * scale, recipe.totalFat * scale, `Recipe: ${recipe.name}`, recipeId, now, now],
   );
 
   // Create scanned dish
@@ -269,12 +274,12 @@ export function logRecipeAsEntry(recipeId: string, mealType: string): void {
     [dishId, entryId, recipe.name, now],
   );
 
-  // Copy ingredients
+  // Copy ingredients (scaled by servingCount)
   for (const ing of recipe.ingredients) {
     opsqlite.executeSync(
       `INSERT INTO ingredients (id, entry_id, dish_id, name, quantity, unit, amount_g, original_amount_g, calories, protein, carbs, fat, user_modified, created_at, updated_at)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
-      [generateId(), entryId, dishId, ing.name, ing.quantity, ing.unit, ing.quantity, ing.quantity, ing.calories, ing.protein, ing.carbs, ing.fat, now, now],
+      [generateId(), entryId, dishId, ing.name, ing.quantity * scale, ing.unit, ing.quantity * scale, ing.quantity * scale, ing.calories * scale, ing.protein * scale, ing.carbs * scale, ing.fat * scale, now, now],
     );
   }
 
@@ -283,4 +288,201 @@ export function logRecipeAsEntry(recipeId: string, mealType: string): void {
     `UPDATE custom_recipes SET times_used = times_used + 1, last_used_at = datetime('now') WHERE id = ?`,
     [recipeId],
   );
+}
+
+// ---------------------------------------------------------------------------
+// Save entry as recipe
+// ---------------------------------------------------------------------------
+
+/** Create a recipe from an existing food entry, copying all dishes and ingredients. */
+export function saveEntryAsRecipe(entryId: string, recipeName: string, servings: number = 1): string {
+  const recipeId = generateId();
+  const now = new Date().toISOString();
+
+  // Fetch dishes, ingredients, and photos from the entry
+  const dishes = opsqlite.executeSync(
+    'SELECT * FROM scanned_dishes WHERE entry_id = ?',
+    [entryId],
+  ).rows as Array<Record<string, unknown>>;
+
+  const ingredients = opsqlite.executeSync(
+    'SELECT * FROM ingredients WHERE entry_id = ?',
+    [entryId],
+  ).rows as Array<Record<string, unknown>>;
+
+  const photos = opsqlite.executeSync(
+    'SELECT * FROM photos WHERE entry_id = ?',
+    [entryId],
+  ).rows as Array<Record<string, unknown>>;
+
+  // Determine photo_uri from first photo
+  const photoUri = photos.length > 0
+    ? ((photos[0].local_path as string) || (photos[0].uri as string) || null)
+    : null;
+
+  // Create recipe
+  opsqlite.executeSync(
+    `INSERT INTO custom_recipes (id, name, source_entry_id, servings, photo_uri, created_at, updated_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    [recipeId, recipeName, entryId, servings, photoUri, now, now],
+  );
+
+  // Copy ingredients into recipe_ingredients
+  for (const ing of ingredients) {
+    opsqlite.executeSync(
+      `INSERT INTO recipe_ingredients (id, recipe_id, name, quantity, unit, calories, protein, carbs, fat, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        generateId(), recipeId,
+        ing.name as string,
+        (ing.quantity as number) ?? 0,
+        (ing.unit as string) ?? 'g',
+        (ing.calories as number) ?? 0,
+        (ing.protein as number) ?? 0,
+        (ing.carbs as number) ?? 0,
+        (ing.fat as number) ?? 0,
+        now,
+      ],
+    );
+  }
+
+  // Copy photos into recipe_photos
+  for (let i = 0; i < photos.length; i++) {
+    const photo = photos[i];
+    const localPath = (photo.local_path as string) || (photo.uri as string);
+    opsqlite.executeSync(
+      `INSERT INTO recipe_photos (id, recipe_id, local_path, is_primary, created_at)
+       VALUES (?, ?, ?, ?, ?)`,
+      [generateId(), recipeId, localPath, i === 0 ? 1 : 0, now],
+    );
+  }
+
+  recalculateRecipeTotals(recipeId);
+  return recipeId;
+}
+
+// ---------------------------------------------------------------------------
+// Search recipes
+// ---------------------------------------------------------------------------
+
+/** Search recipes by name, sorted by usage frequency. */
+export function searchRecipes(query: string, limit: number = 10): RecipeSummary[] {
+  if (!query || !query.trim()) return [];
+
+  const rows = opsqlite.executeSync(
+    `SELECT * FROM custom_recipes
+     WHERE name LIKE ? COLLATE NOCASE
+     ORDER BY times_used DESC, last_used_at DESC NULLS LAST
+     LIMIT ?`,
+    [`%${query.trim()}%`, limit],
+  ).rows as Array<Record<string, unknown>>;
+
+  return rows.map(mapRecipeRow);
+}
+
+// ---------------------------------------------------------------------------
+// Recipe versioning
+// ---------------------------------------------------------------------------
+
+/**
+ * Update a recipe with versioning support.
+ * - 'update-all': replaces ingredients in-place and cascades to linked food_entries
+ * - 'save-as-new': forks as a new recipe, original stays unchanged
+ * Returns the recipe ID (original for update-all, new for save-as-new).
+ */
+export function updateRecipeWithVersioning(
+  recipeId: string,
+  ingredients: RecipeIngredientInput[],
+  mode: 'update-all' | 'save-as-new',
+): string {
+  if (mode === 'save-as-new') {
+    // Load original recipe for name
+    const original = loadRecipe(recipeId);
+    const newName = original ? `${original.name} (edited)` : 'Recipe (edited)';
+    const newId = generateId();
+    const now = new Date().toISOString();
+
+    opsqlite.executeSync(
+      `INSERT INTO custom_recipes (id, name, created_at, updated_at)
+       VALUES (?, ?, ?, ?)`,
+      [newId, newName, now, now],
+    );
+
+    for (const ing of ingredients) {
+      opsqlite.executeSync(
+        `INSERT INTO recipe_ingredients (id, recipe_id, name, quantity, unit, calories, protein, carbs, fat, created_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [generateId(), newId, ing.name, ing.quantity, ing.unit, ing.calories, ing.protein, ing.carbs, ing.fat, now],
+      );
+    }
+
+    recalculateRecipeTotals(newId);
+    return newId;
+  }
+
+  // mode === 'update-all'
+  // 1. Replace recipe ingredients
+  opsqlite.executeSync('DELETE FROM recipe_ingredients WHERE recipe_id = ?', [recipeId]);
+  const now = new Date().toISOString();
+  for (const ing of ingredients) {
+    opsqlite.executeSync(
+      `INSERT INTO recipe_ingredients (id, recipe_id, name, quantity, unit, calories, protein, carbs, fat, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [generateId(), recipeId, ing.name, ing.quantity, ing.unit, ing.calories, ing.protein, ing.carbs, ing.fat, now],
+    );
+  }
+  recalculateRecipeTotals(recipeId);
+
+  // 2. Cascade to linked food_entries
+  const linkedEntries = opsqlite.executeSync(
+    'SELECT id FROM food_entries WHERE source_recipe_id = ?',
+    [recipeId],
+  ).rows as Array<Record<string, unknown>>;
+
+  for (const entry of linkedEntries) {
+    const entryId = entry.id as string;
+
+    // Only update entries where user has NOT manually modified any ingredient
+    const modCount = opsqlite.executeSync(
+      'SELECT COUNT(*) as cnt FROM ingredients WHERE entry_id = ? AND user_modified = 1',
+      [entryId],
+    ).rows as Array<Record<string, unknown>>;
+
+    if ((modCount[0]?.cnt as number) > 0) continue;
+
+    // Delete old entry ingredients
+    opsqlite.executeSync('DELETE FROM ingredients WHERE entry_id = ?', [entryId]);
+
+    // Get dish ID for this entry
+    const dishRows = opsqlite.executeSync(
+      'SELECT id FROM scanned_dishes WHERE entry_id = ? LIMIT 1',
+      [entryId],
+    ).rows as Array<Record<string, unknown>>;
+    const dishId = dishRows.length > 0 ? (dishRows[0].id as string) : null;
+
+    // Insert new ingredients
+    for (const ing of ingredients) {
+      opsqlite.executeSync(
+        `INSERT INTO ingredients (id, entry_id, dish_id, name, quantity, unit, amount_g, original_amount_g, calories, protein, carbs, fat, user_modified, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?, ?)`,
+        [generateId(), entryId, dishId, ing.name, ing.quantity, ing.unit, ing.quantity, ing.quantity, ing.calories, ing.protein, ing.carbs, ing.fat, now, now],
+      );
+    }
+
+    // Recalculate entry totals
+    const totals = opsqlite.executeSync(
+      `SELECT COALESCE(SUM(calories), 0) as calories, COALESCE(SUM(protein), 0) as protein,
+              COALESCE(SUM(carbs), 0) as carbs, COALESCE(SUM(fat), 0) as fat
+       FROM ingredients WHERE entry_id = ?`,
+      [entryId],
+    ).rows as Array<Record<string, unknown>>;
+
+    const t = totals[0] ?? { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    opsqlite.executeSync(
+      `UPDATE food_entries SET total_calories = ?, total_protein = ?, total_carbs = ?, total_fat = ?, updated_at = datetime('now') WHERE id = ?`,
+      [(t.calories as number) ?? 0, (t.protein as number) ?? 0, (t.carbs as number) ?? 0, (t.fat as number) ?? 0, entryId],
+    );
+  }
+
+  return recipeId;
 }
