@@ -27,11 +27,11 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Gallery Scanning
 
-- [ ] **GAL-01**: User can manually trigger a gallery scan to discover and process recent food photos
+- [x] **GAL-01**: User can manually trigger a gallery scan to discover and process recent food photos
 - [ ] **GAL-02**: App performs background/periodic scanning to surface newly discovered food photos without user intervention
-- [ ] **GAL-03**: App correctly groups multiple photos of the same meal (temporal clustering within 5-min window + GPS proximity) into a single meal event
-- [ ] **GAL-04**: Each discovered photo retains EXIF metadata (timestamp, location) displayed as meal context
-- [ ] **GAL-05**: Background scanning works within platform constraints (iOS 30-second BGTask limit, Android WorkManager) using chunked processing blocks
+- [x] **GAL-03**: App correctly groups multiple photos of the same meal (temporal clustering within 5-min window + GPS proximity) into a single meal event
+- [x] **GAL-04**: Each discovered photo retains EXIF metadata (timestamp, location) displayed as meal context
+- [x] **GAL-05**: Background scanning works within platform constraints (iOS 30-second BGTask limit, Android WorkManager) using chunked processing blocks
 
 ### UI & Diary
 
@@ -131,11 +131,11 @@ Deferred to future release. Tracked but not in current roadmap.
 | DAT-04 | Phase 6 | Complete |
 | DAT-05 | Phase 6 | Pending |
 | DAT-06 | Phase 6 | Complete |
-| GAL-01 | Phase 4 | Pending |
+| GAL-01 | Phase 4 | Complete |
 | GAL-02 | Phase 4 | Pending |
-| GAL-03 | Phase 4 | Pending |
-| GAL-04 | Phase 4 | Pending |
-| GAL-05 | Phase 4 | Pending |
+| GAL-03 | Phase 4 | Complete |
+| GAL-04 | Phase 4 | Complete |
+| GAL-05 | Phase 4 | Complete |
 | UI-01 | Phase 3 | Complete |
 | UI-02 | Phase 3 | Complete |
 | UI-03 | Phase 3 | Complete |

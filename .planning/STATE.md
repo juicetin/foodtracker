@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03.7-03-PLAN.md (gap closure)
-last_updated: "2026-03-20T16:32:57.635Z"
+stopped_at: Completed 04-01-PLAN.md (gallery scan service layer)
+last_updated: "2026-03-20T16:53:00Z"
 progress:
   total_phases: 20
   completed_phases: 17
-  total_plans: 53
-  completed_plans: 53
+  total_plans: 55
+  completed_plans: 54
 ---
 
 # Project State
@@ -19,12 +19,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 03.7 — google-drive-sync
+**Current focus:** Phase 04 — gallery-scanning-deduplication
 
 ## Current Position
 
-Phase: 03.7 (google-drive-sync) — COMPLETE
-Plan: 3 of 3 (DONE) (Plan 03 = gap closure)
+Phase: 04 (gallery-scanning-deduplication) — EXECUTING
+Plan: 2 of 2
 
 ## Performance Metrics
 
@@ -110,6 +110,7 @@ Plan: 3 of 3 (DONE) (Plan 03 = gap closure)
 | Phase 03.7 P01 | 5min | 2 tasks | 10 files |
 | Phase 03.7 P02 | 7min | 3 tasks | 10 files |
 | Phase 03.7 P03 | 3min | 2 tasks | 4 files |
+| Phase 04 P01 | 6min | 2 tasks | 12 files |
 
 ## Accumulated Context
 
@@ -274,6 +275,10 @@ Recent decisions affecting current work:
 - [Phase 03.7]: Dynamic import of syncScheduler in backupScheduler to keep Drive sync non-fatal to local backup
 - [Phase 03.7]: Restore uses temp DB + copy pattern (app restart required) since DB is module-level singleton
 - [Phase 03.7]: downloadSyncManifest() given own implementation (not aliasing listRemoteBackups) since they return different types
+- [Phase 04]: opsqlite raw SQL (not drizzle userDb) for gallery scan service -- consistent with historyService/backupService pattern
+- [Phase 04]: importPhoto takes explicit dimensions param rather than reading asset metadata -- avoids extra async call
+- [Phase 04]: INSERT OR IGNORE on asset_id UNIQUE for idempotent gallery photo discovery
+- [Phase 04]: 500ms pacing between Gemini Nano classify calls to avoid AICore BUSY
 
 ### Roadmap Evolution
 
@@ -299,6 +304,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T16:29:26.349Z
-Stopped at: Completed 03.7-03-PLAN.md (gap closure)
+Last session: 2026-03-20T16:53:00Z
+Stopped at: Completed 04-01-PLAN.md (gallery scan service layer)
 Resume file: None
