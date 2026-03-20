@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 07.1-02-PLAN.md
-last_updated: "2026-03-20T23:04:50.750Z"
+stopped_at: Completed 07.1-01-PLAN.md
+last_updated: "2026-03-20T23:10:29.557Z"
 progress:
   total_phases: 21
-  completed_phases: 20
+  completed_phases: 21
   total_plans: 63
-  completed_plans: 62
+  completed_plans: 63
 ---
 
 # Project State
@@ -119,6 +119,7 @@ Plan: 2 of 2
 | Phase 06 P02 | 6min | 2 tasks | 13 files |
 | Phase 06 P01 | 7min | 2 tasks | 14 files |
 | Phase 07.1 P02 | 2min | 1 tasks | 14 files |
+| Phase 07.1 P01 | 6min | 1 tasks | 9 files |
 
 ## Accumulated Context
 
@@ -308,6 +309,8 @@ Recent decisions affecting current work:
 - [Phase 06]: AI pack resolution returns early from downloadPack, skipping entire R2 flow when AI pack completed
 - [Phase 06]: FTP password in expo-secure-store only; Promise.allSettled for independent Drive+FTP dispatch
 - [Phase 07.1]: Pre-existing TS errors in useDetectionStore.test.ts and useWeightStore.ts left untouched -- out of scope for dead code removal
+- [Phase 07.1]: onResult callback pattern for ScaleInput->Detection data flow via navigation params
+- [Phase 07.1]: DET-05 DROPPED: Gemini Nano has no confidence scores; DET-06 DROPPED: Gemini Nano provides gram estimates directly
 
 ### Roadmap Evolution
 
@@ -333,6 +336,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T23:04:50.746Z
-Stopped at: Completed 07.1-02-PLAN.md
+Last session: 2026-03-20T23:10:29.553Z
+Stopped at: Completed 07.1-01-PLAN.md
 Resume file: None
