@@ -11,6 +11,7 @@ export type RootStackParamList = {
   QuickAdd: undefined;
   ReidentifyMerge: { entryId: string };
   SyncSettings: undefined;
+  GalleryScan: undefined;
 };
 
 export type MainTabParamList = {
