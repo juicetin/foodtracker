@@ -62,7 +62,11 @@
           "enableOpenCL": true
         }
       ],
-      "expo-background-task"
+      "expo-background-task",
+      ["@react-native-google-signin/google-signin", {
+        "scopes": ["https://www.googleapis.com/auth/drive.appdata"]
+      }],
+      "react-native-cloud-storage"
     ],
     "extra": {
       "eas": {
