@@ -3,6 +3,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserPreferences } from '../types';
 import { detectLocale } from '../services/packs/localeDetector';
+import { type TimePeriodBoundary, DEFAULT_BOUNDARIES } from '../services/diary/timePeriods';
 
 /** Map device locale to our region codes. */
 function localeToRegion(locale: string): UserPreferences['region'] {
@@ -19,11 +20,15 @@ function localeToRegion(locale: string): UserPreferences['region'] {
 
 interface PreferencesState extends UserPreferences {
   regionAutoDetected: boolean;
+  diaryDisplayMode: 'consumed' | 'remaining';
+  timePeriodBoundaries: TimePeriodBoundary;
   // Actions
   setRegion: (region: UserPreferences['region']) => void;
   setUnits: (units: UserPreferences['units']) => void;
   setNutritionGoals: (goals: UserPreferences['nutritionGoals']) => void;
   setDarkMode: (darkMode: boolean) => void;
+  setDiaryDisplayMode: (mode: 'consumed' | 'remaining') => void;
+  setTimePeriodBoundaries: (b: TimePeriodBoundary) => void;
   initRegionFromLocale: () => void;
 }
 
@@ -41,12 +46,16 @@ export const usePreferencesStore = create<PreferencesState>()(
       },
       darkMode: false,
       regionAutoDetected: false,
+      diaryDisplayMode: 'consumed',
+      timePeriodBoundaries: DEFAULT_BOUNDARIES,
 
       // Actions
       setRegion: (region) => set({ region }),
       setUnits: (units) => set({ units }),
       setNutritionGoals: (goals) => set({ nutritionGoals: goals }),
       setDarkMode: (darkMode) => set({ darkMode }),
+      setDiaryDisplayMode: (mode) => set({ diaryDisplayMode: mode }),
+      setTimePeriodBoundaries: (b) => set({ timePeriodBoundaries: b }),
       initRegionFromLocale: () => {
         // Only auto-detect once — user manual override takes precedence
         if (get().regionAutoDetected) return;
