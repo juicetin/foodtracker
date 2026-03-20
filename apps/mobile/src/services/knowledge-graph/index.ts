@@ -6,7 +6,7 @@
  */
 
 export { KnowledgeGraphService } from './knowledgeGraphService';
-export type { MacroResult, DishResult, RecipeResult } from './knowledgeGraphService';
+export type { MacroResult, DishResult, RecipeResult, IngredientResult } from './knowledgeGraphService';
 
 export {
   getKnowledgeGraphService,

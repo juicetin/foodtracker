@@ -153,6 +153,8 @@ export interface ScannedDish {
   ingredients: ScannedIngredient[];
   /** Multiplicative scale applied to all non-userModified ingredients (1.0 = Gemini estimate). */
   portionScale: number;
+  /** Names of ingredients inferred from KG (not VLM). Present when KG fills in missing ingredients. */
+  kgInferredIngredients?: string[];
 }
 
 /** Full result of a single food scan (photo + all dishes). */

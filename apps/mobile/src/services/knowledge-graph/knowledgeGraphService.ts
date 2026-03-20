@@ -63,7 +63,7 @@ export interface RecipeResult {
 }
 
 /** A recipe ingredient with USDA nutrition data. */
-interface IngredientResult {
+export interface IngredientResult {
   id: number;
   recipeId: number;
   usdaFdcId: number | null;
@@ -198,7 +198,7 @@ export class KnowledgeGraphService {
    * @param recipeId - The recipe ID to look up
    * @returns Array of ingredients with per-100g nutrition values
    */
-  private async getRecipeIngredients(
+  async getRecipeIngredients(
     recipeId: number
   ): Promise<IngredientResult[]> {
     const db = this.getDb();
