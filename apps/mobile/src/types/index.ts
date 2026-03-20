@@ -9,6 +9,7 @@ export type RootStackParamList = {
   VlmDownload: undefined;
   GeminiNanoTest: undefined;
   QuickAdd: undefined;
+  ReidentifyMerge: { entryId: string };
 };
 
 export type MainTabParamList = {
