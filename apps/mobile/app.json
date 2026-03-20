@@ -70,7 +70,10 @@
       ["@react-native-google-signin/google-signin", {
         "scopes": ["https://www.googleapis.com/auth/drive.appdata"]
       }],
-      "react-native-cloud-storage"
+      "react-native-cloud-storage",
+      ["./plugins/withAiPack", {
+        "packs": [{ "name": "ml-models", "deliveryType": "fast-follow" }]
+      }]
     ],
     "extra": {
       "eas": {

@@ -1,0 +1,10 @@
+{
+  "name": "ai-pack-delivery",
+  "version": "1.0.0",
+  "description": "Expo native module for Play for On-Device AI delivery APIs",
+  "main": "src/aiPackDeliveryModule",
+  "files": ["src", "android", "ios", "expo-module.config.json"],
+  "peerDependencies": {
+    "expo": "*"
+  }
+}

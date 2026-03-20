@@ -1,0 +1,10 @@
+// AI pack configuration for Play for On-Device AI model delivery.
+// Requires AGP 8.8+ for com.android.ai-pack plugin support.
+apply plugin: 'com.android.ai-pack'
+
+aiPack {
+    packName = "ml-models"
+    dynamicDelivery {
+        deliveryType = "fast-follow"
+    }
+}
