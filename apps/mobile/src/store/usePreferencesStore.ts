@@ -22,6 +22,12 @@ interface PreferencesState extends UserPreferences {
   regionAutoDetected: boolean;
   diaryDisplayMode: 'consumed' | 'remaining';
   timePeriodBoundaries: TimePeriodBoundary;
+  /** Whether daily macro notifications are enabled. */
+  notificationsEnabled: boolean;
+  /** Hour (0-23) for the daily notification. Default: 21 (9 PM). */
+  notificationHour: number;
+  /** Minute (0-59) for the daily notification. Default: 0. */
+  notificationMinute: number;
   // Actions
   setRegion: (region: UserPreferences['region']) => void;
   setUnits: (units: UserPreferences['units']) => void;
@@ -30,6 +36,8 @@ interface PreferencesState extends UserPreferences {
   setDiaryDisplayMode: (mode: 'consumed' | 'remaining') => void;
   setTimePeriodBoundaries: (b: TimePeriodBoundary) => void;
   setUxMode: (mode: UxMode) => void;
+  setNotificationsEnabled: (enabled: boolean) => void;
+  setNotificationTime: (hour: number, minute: number) => void;
   initRegionFromLocale: () => void;
 }
 
@@ -50,6 +58,9 @@ export const usePreferencesStore = create<PreferencesState>()(
       regionAutoDetected: false,
       diaryDisplayMode: 'consumed',
       timePeriodBoundaries: DEFAULT_BOUNDARIES,
+      notificationsEnabled: false,
+      notificationHour: 21,
+      notificationMinute: 0,
 
       // Actions
       setRegion: (region) => set({ region }),
@@ -59,6 +70,8 @@ export const usePreferencesStore = create<PreferencesState>()(
       setDiaryDisplayMode: (mode) => set({ diaryDisplayMode: mode }),
       setTimePeriodBoundaries: (b) => set({ timePeriodBoundaries: b }),
       setUxMode: (uxMode) => set({ uxMode }),
+      setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
+      setNotificationTime: (hour, minute) => set({ notificationHour: hour, notificationMinute: minute }),
       initRegionFromLocale: () => {
         // Only auto-detect once — user manual override takes precedence
         if (get().regionAutoDetected) return;
