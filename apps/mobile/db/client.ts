@@ -200,6 +200,16 @@ try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN longitude REAL'); } ca
 try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN is_food INTEGER'); } catch {}
 try { opsqlite.execute('ALTER TABLE scan_queue ADD COLUMN meal_group_id TEXT'); } catch {}
 
+// ── Container Weights (Phase 05 scale OCR tare management) ──
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS container_weights (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name TEXT NOT NULL,
+  weight_grams REAL NOT NULL,
+  times_used INTEGER DEFAULT 0,
+  last_used_at TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+)`);
+
 opsqlite.execute(`CREATE TABLE IF NOT EXISTS _change_journal (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   table_name TEXT NOT NULL,
