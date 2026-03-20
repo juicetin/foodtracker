@@ -3,9 +3,12 @@
  *
  * Users search by name, see matching dishes with nutrition info,
  * enter a portion weight, and log to today's diary.
+ *
+ * Shows history-first results when query is empty.
+ * Quick Add accessible from header and empty state.
  */
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -19,12 +22,15 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { getKnowledgeGraphService, type DishResult, type MacroResult } from '../services/knowledge-graph';
 import { searchProducts, type OFFProduct } from '../services/openfoodfacts/openFoodFactsService';
 import { deduplicateResults } from '../services/search/searchDedup';
+import { getRecentHistory, searchHistory, type HistoryItem } from '../services/search/historyService';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import { autoDetectMealType } from '../services/detection/types';
+import type { RootStackParamList } from '../types';
 
 /** Unified search result — either from KG or OFF. */
 interface SearchResult {
@@ -32,13 +38,13 @@ interface SearchResult {
   name: string;
   brand?: string | null;
   calorieHint?: number;
-  source: 'kg' | 'off';
+  source: 'kg' | 'off' | 'history';
   kgDish?: DishResult;
   offProduct?: OFFProduct;
 }
 
 export default function FoodSearchScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { addEntry, loadTodayEntries } = useFoodLogStore();
 
   const [query, setQuery] = useState('');
@@ -47,8 +53,21 @@ export default function FoodSearchScreen() {
   const [selectedResult, setSelectedResult] = useState<SearchResult | null>(null);
   const [portionG, setPortionG] = useState('100');
   const [nutrition, setNutrition] = useState<MacroResult | null>(null);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [historyLoaded, setHistoryLoaded] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Load history on mount
+  useEffect(() => {
+    try {
+      const items = getRecentHistory(20);
+      setHistory(items);
+    } catch {
+      // History DB might be empty
+    }
+    setHistoryLoaded(true);
+  }, []);
 
   const doSearch = useCallback(async (text: string) => {
     const trimmed = text.trim();
@@ -59,6 +78,17 @@ export default function FoodSearchScreen() {
     setLoading(true);
     try {
       const unified: SearchResult[] = [];
+
+      // Prepend matching history items
+      const historyMatches = searchHistory(trimmed, 5);
+      for (const h of historyMatches) {
+        unified.push({
+          id: `history-${h.name}`,
+          name: h.name,
+          calorieHint: h.avgCalories,
+          source: 'history',
+        });
+      }
 
       // Search KG first (local, fast)
       const kg = await getKnowledgeGraphService();
@@ -105,7 +135,19 @@ export default function FoodSearchScreen() {
     debounceRef.current = setTimeout(() => doSearch(text), 300);
   }
 
+  function handleHistoryItemPress(item: HistoryItem) {
+    setQuery(item.name);
+    doSearch(item.name);
+  }
+
   async function handleSelectResult(result: SearchResult) {
+    // If history item, trigger a search for full KG/OFF results
+    if (result.source === 'history') {
+      setQuery(result.name);
+      doSearch(result.name);
+      return;
+    }
+
     setSelectedResult(result);
 
     if (result.source === 'kg' && result.kgDish) {
@@ -188,8 +230,11 @@ export default function FoodSearchScreen() {
 
     Alert.alert(
       'Added',
-      `${displayName} (${Math.round(grams)}g) — ${Math.round(nutrition.calories)} kcal`,
-      [{ text: 'OK', onPress: () => { setSelectedResult(null); setQuery(''); setResults([]); } }],
+      `${displayName} (${Math.round(grams)}g) -- ${Math.round(nutrition.calories)} kcal`,
+      [
+        { text: 'Add Another', onPress: () => { setSelectedResult(null); setQuery(''); setResults([]); } },
+        { text: 'Done', onPress: () => navigation.goBack() },
+      ],
     );
   }
 
@@ -262,6 +307,9 @@ export default function FoodSearchScreen() {
     );
   }
 
+  // Show history when query is empty
+  const showHistory = query.trim().length < 2 && historyLoaded && history.length > 0;
+
   // ── Search view ──
   return (
     <SafeAreaView style={styles.container}>
@@ -274,53 +322,107 @@ export default function FoodSearchScreen() {
             <Ionicons name="close" size={22} color="#9CA3AF" />
           </Pressable>
           <Text style={styles.headerTitle}>Search Food</Text>
-          <View style={{ width: 36 }} />
+          <Pressable onPress={() => navigation.navigate('QuickAdd')} style={styles.headerQuickAdd}>
+            <Ionicons name="add-circle-outline" size={24} color="#16A34A" />
+          </Pressable>
         </View>
 
         <View style={styles.searchRow}>
-          <TextInput
-            style={styles.searchInput}
-            value={query}
-            onChangeText={handleQueryChange}
-            placeholder="Search foods..."
-            placeholderTextColor="#9CA3AF"
-            autoFocus
-            returnKeyType="search"
-          />
+          <View style={styles.searchInputContainer}>
+            <TextInput
+              style={styles.searchInput}
+              value={query}
+              onChangeText={handleQueryChange}
+              placeholder="Search foods..."
+              placeholderTextColor="#9CA3AF"
+              autoFocus
+              returnKeyType="search"
+            />
+            <Pressable style={styles.barcodeBtn} onPress={() => {}}>
+              <Ionicons name="barcode-outline" size={20} color="#9CA3AF" />
+            </Pressable>
+          </View>
         </View>
 
-        <FlatList
-          data={results}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="handled"
-          contentContainerStyle={styles.listContent}
-          renderItem={({ item }) => (
-            <Pressable style={styles.resultRow} onPress={() => handleSelectResult(item)}>
-              <View style={styles.resultLeft}>
-                <Text style={styles.resultName} numberOfLines={1}>{item.name}</Text>
-                {item.brand && <Text style={styles.resultBrand} numberOfLines={1}>{item.brand}</Text>}
-              </View>
-              <View style={styles.resultRight}>
-                {item.calorieHint != null && (
-                  <Text style={styles.resultCal}>
-                    {Math.round(item.calorieHint)} kcal
-                  </Text>
-                )}
-                <View style={[styles.sourceBadge, item.source === 'off' ? styles.sourceBadgeOff : styles.sourceBadgeKg]}>
-                  <Text style={styles.sourceBadgeText}>{item.source === 'off' ? 'OFF' : 'KG'}</Text>
+        {showHistory ? (
+          <FlatList
+            data={history}
+            keyExtractor={(item) => `history-${item.name}`}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.listContent}
+            ListHeaderComponent={
+              <Text style={styles.sectionHeader}>From History</Text>
+            }
+            renderItem={({ item }) => (
+              <Pressable style={styles.resultRow} onPress={() => handleHistoryItemPress(item)}>
+                <View style={styles.historyIconWrap}>
+                  <Ionicons name="time-outline" size={18} color="#9CA3AF" />
                 </View>
-              </View>
-            </Pressable>
-          )}
-          ListEmptyComponent={
-            query.trim().length >= 2 && !loading ? (
-              <View style={styles.emptyList}>
-                <Text style={styles.emptyText}>No foods found for "{query.trim()}"</Text>
-                <Text style={styles.emptySubtext}>Try a different name or use Quick Add for custom entries</Text>
-              </View>
-            ) : null
-          }
-        />
+                <View style={styles.resultLeft}>
+                  <Text style={styles.resultName} numberOfLines={1}>{item.name}</Text>
+                </View>
+                <View style={styles.resultRight}>
+                  <View style={styles.countBadge}>
+                    <Text style={styles.countBadgeText}>x{item.totalCount}</Text>
+                  </View>
+                  <Text style={styles.resultCal}>{item.avgCalories} kcal</Text>
+                </View>
+              </Pressable>
+            )}
+          />
+        ) : (
+          <FlatList
+            data={results}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="handled"
+            contentContainerStyle={styles.listContent}
+            renderItem={({ item }) => (
+              <Pressable style={styles.resultRow} onPress={() => handleSelectResult(item)}>
+                {item.source === 'history' && (
+                  <View style={styles.historyIconWrap}>
+                    <Ionicons name="time-outline" size={18} color="#9CA3AF" />
+                  </View>
+                )}
+                <View style={styles.resultLeft}>
+                  <Text style={styles.resultName} numberOfLines={1}>{item.name}</Text>
+                  {item.brand && <Text style={styles.resultBrand} numberOfLines={1}>{item.brand}</Text>}
+                </View>
+                <View style={styles.resultRight}>
+                  {item.calorieHint != null && (
+                    <Text style={styles.resultCal}>
+                      {Math.round(item.calorieHint)} kcal
+                    </Text>
+                  )}
+                  <View style={[
+                    styles.sourceBadge,
+                    item.source === 'off' ? styles.sourceBadgeOff
+                      : item.source === 'history' ? styles.sourceBadgeHistory
+                      : styles.sourceBadgeKg
+                  ]}>
+                    <Text style={styles.sourceBadgeText}>
+                      {item.source === 'off' ? 'OFF' : item.source === 'history' ? 'History' : 'KG'}
+                    </Text>
+                  </View>
+                </View>
+              </Pressable>
+            )}
+            ListEmptyComponent={
+              query.trim().length >= 2 && !loading ? (
+                <View style={styles.emptyList}>
+                  <Text style={styles.emptyText}>No foods found for "{query.trim()}"</Text>
+                  <Text style={styles.emptySubtext}>Try a different name or use Quick Add for custom entries</Text>
+                  <Pressable
+                    style={styles.quickAddLink}
+                    onPress={() => navigation.navigate('QuickAdd')}
+                  >
+                    <Ionicons name="add-circle-outline" size={18} color="#16A34A" />
+                    <Text style={styles.quickAddLinkText}>Quick Add</Text>
+                  </Pressable>
+                </View>
+              ) : null
+            }
+          />
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -347,12 +449,24 @@ const styles = StyleSheet.create({
   headerClose: { padding: 4, width: 36 },
   headerCloseText: { fontSize: 18, color: '#9CA3AF', fontWeight: '600' },
   headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  headerQuickAdd: { padding: 4, width: 36, alignItems: 'flex-end' },
 
   // Search
   searchRow: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF' },
+  searchInputContainer: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#F3F4F6', borderRadius: 12,
+  },
   searchInput: {
-    backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 12,
+    flex: 1, paddingHorizontal: 16, paddingVertical: 12,
     fontSize: 16, color: '#111827',
+  },
+  barcodeBtn: { paddingHorizontal: 12, paddingVertical: 10 },
+
+  // Section headers
+  sectionHeader: {
+    fontSize: 13, fontWeight: '700', color: '#6B7280', textTransform: 'uppercase',
+    letterSpacing: 0.5, paddingHorizontal: 16, paddingVertical: 8,
   },
 
   // Results
@@ -362,6 +476,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
     flexDirection: 'row', alignItems: 'center',
   },
+  historyIconWrap: { marginRight: 10 },
   resultLeft: { flex: 1, marginRight: 8 },
   resultRight: { alignItems: 'flex-end', gap: 4 },
   resultName: { fontSize: 15, fontWeight: '600', color: '#111827' },
@@ -370,10 +485,21 @@ const styles = StyleSheet.create({
   sourceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
   sourceBadgeKg: { backgroundColor: '#DCFCE7' },
   sourceBadgeOff: { backgroundColor: '#DBEAFE' },
+  sourceBadgeHistory: { backgroundColor: '#F3E8FF' },
   sourceBadgeText: { fontSize: 10, fontWeight: '700', color: '#374151' },
+  countBadge: {
+    backgroundColor: '#F3F4F6', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
+  },
+  countBadgeText: { fontSize: 11, fontWeight: '700', color: '#6B7280' },
   emptyList: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
   emptyText: { fontSize: 15, color: '#6B7280', textAlign: 'center', marginBottom: 4 },
   emptySubtext: { fontSize: 13, color: '#9CA3AF', textAlign: 'center' },
+  quickAddLink: {
+    flexDirection: 'row', alignItems: 'center', gap: 6,
+    marginTop: 16, paddingVertical: 10, paddingHorizontal: 16,
+    backgroundColor: '#F0FDF4', borderRadius: 10,
+  },
+  quickAddLinkText: { fontSize: 15, fontWeight: '600', color: '#16A34A' },
 
   // Detail
   detailContainer: { flex: 1, padding: 20 },

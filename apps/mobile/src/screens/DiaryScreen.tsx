@@ -34,7 +34,7 @@ import {
 } from '../services/diary/diaryQueries';
 import type { DiaryEntry } from '../services/diary/diaryQueries';
 import { TIME_PERIOD_ORDER } from '../services/diary/timePeriods';
-import { StickyMacroHeader, WeekOverviewBar, TimePeriodSection } from '../components/diary';
+import { StickyMacroHeader, WeekOverviewBar, TimePeriodSection, SearchBar } from '../components/diary';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -134,6 +134,9 @@ export default function DiaryScreen() {
         totals={dayTotals}
         goals={nutritionGoals}
       />
+
+      {/* Persistent search bar -- always visible below header */}
+      <SearchBar onSearchPress={() => nav.navigate('FoodSearch')} />
 
       {/* Swipe gesture wraps the scrollable content */}
       <GestureDetector gesture={swipeGesture}>
