@@ -6,10 +6,11 @@
  * and custom Drive folder option.
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
+  TextInput,
   StyleSheet,
   ScrollView,
   Pressable,
@@ -24,6 +25,13 @@ import { triggerManualSync } from '../services/sync/syncScheduler';
 import { performFullBackup } from '../services/backup/backupService';
 import { uploadFullBackup } from '../services/sync/driveSync';
 import { discoverRemoteBackups, restoreFromDrive } from '../services/sync/restoreService';
+import {
+  saveFtpCredentials,
+  loadFtpCredentials,
+  clearFtpCredentials,
+  testFtpConnection,
+} from '../services/sync/ftpClient';
+import type { FtpCredentials } from '../services/sync/ftpClient';
 import ConflictResolverModal from '../components/sync/ConflictResolverModal';
 import { Paths } from 'expo-file-system';
 
@@ -47,9 +55,15 @@ export default function SyncSettingsScreen() {
     pendingConflicts,
     wifiOnly,
     autoResolve,
+    ftpEnabled,
+    ftpHost,
+    lastFtpSyncAt,
+    ftpSyncStatus,
     setSignedIn,
     setWifiOnly,
     setAutoResolve,
+    setFtpEnabled,
+    setFtpHost,
     clearSync,
   } = useSyncStore();
 
@@ -58,6 +72,30 @@ export default function SyncSettingsScreen() {
   const [uploading, setUploading] = useState(false);
   const [conflictModalVisible, setConflictModalVisible] = useState(false);
   const [customFolder, setCustomFolder] = useState(false);
+
+  // FTP form state
+  const [ftpFormHost, setFtpFormHost] = useState('');
+  const [ftpFormPort, setFtpFormPort] = useState('21');
+  const [ftpFormUser, setFtpFormUser] = useState('');
+  const [ftpFormPass, setFtpFormPass] = useState('');
+  const [ftpFormPath, setFtpFormPath] = useState('/');
+  const [testingFtp, setTestingFtp] = useState(false);
+  const [savingFtp, setSavingFtp] = useState(false);
+
+  // Load FTP credentials on mount if FTP is enabled
+  useEffect(() => {
+    if (ftpEnabled) {
+      loadFtpCredentials().then((creds) => {
+        if (creds) {
+          setFtpFormHost(creds.host);
+          setFtpFormPort(String(creds.port));
+          setFtpFormUser(creds.username);
+          setFtpFormPass(creds.password);
+          setFtpFormPath(creds.remotePath);
+        }
+      });
+    }
+  }, [ftpEnabled]);
 
   // -----------------------------------------------------------------------
   // Google account
@@ -155,6 +193,80 @@ export default function SyncSettingsScreen() {
     } catch {
       Alert.alert('Error', 'Failed to check for remote backups.');
       setRestoring(false);
+    }
+  }
+
+  // -----------------------------------------------------------------------
+  // FTP actions
+  // -----------------------------------------------------------------------
+
+  async function handleFtpToggle(enabled: boolean) {
+    setFtpEnabled(enabled);
+    if (!enabled) {
+      await clearFtpCredentials();
+      setFtpHost(null);
+      setFtpFormHost('');
+      setFtpFormPort('21');
+      setFtpFormUser('');
+      setFtpFormPass('');
+      setFtpFormPath('/');
+    }
+  }
+
+  async function handleSaveFtp() {
+    const port = parseInt(ftpFormPort, 10);
+    if (!ftpFormHost || isNaN(port) || !ftpFormUser) {
+      Alert.alert('Missing Fields', 'Please fill in host, port, and username.');
+      return;
+    }
+    setSavingFtp(true);
+    try {
+      const creds: FtpCredentials = {
+        host: ftpFormHost,
+        port,
+        username: ftpFormUser,
+        password: ftpFormPass,
+        remotePath: ftpFormPath || '/',
+      };
+      await saveFtpCredentials(creds);
+      setFtpHost(ftpFormHost);
+      Alert.alert('Saved', 'FTP credentials saved securely.');
+    } catch {
+      Alert.alert('Error', 'Failed to save FTP credentials.');
+    } finally {
+      setSavingFtp(false);
+    }
+  }
+
+  async function handleTestFtp() {
+    setTestingFtp(true);
+    try {
+      // Save first so testFtpConnection reads the latest values
+      const port = parseInt(ftpFormPort, 10);
+      if (!ftpFormHost || isNaN(port) || !ftpFormUser) {
+        Alert.alert('Missing Fields', 'Please fill in host, port, and username.');
+        setTestingFtp(false);
+        return;
+      }
+      await saveFtpCredentials({
+        host: ftpFormHost,
+        port,
+        username: ftpFormUser,
+        password: ftpFormPass,
+        remotePath: ftpFormPath || '/',
+      });
+      setFtpHost(ftpFormHost);
+
+      const ok = await testFtpConnection();
+      if (ok) {
+        Alert.alert('Success', 'FTP connection successful!');
+      } else {
+        Alert.alert('Failed', 'Could not connect to FTP server. Check your credentials.');
+      }
+    } catch {
+      Alert.alert('Error', 'FTP connection test failed.');
+    } finally {
+      setTestingFtp(false);
     }
   }
 
@@ -347,6 +459,108 @@ export default function SyncSettingsScreen() {
         </View>
       </View>
 
+      {/* FTP Backup */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>FTP Backup</Text>
+        <View style={styles.toggleRow}>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.rowLabel}>Enable FTP backup</Text>
+            <Text style={styles.hint}>
+              Back up to your own FTP server or NAS
+            </Text>
+          </View>
+          <Switch
+            value={ftpEnabled}
+            onValueChange={handleFtpToggle}
+            trackColor={{ true: '#16A34A' }}
+          />
+        </View>
+
+        {ftpEnabled && (
+          <>
+            {/* FTP Status */}
+            <View style={styles.row}>
+              <Text style={styles.rowLabel}>Status</Text>
+              <Text style={styles.rowValue}>
+                {ftpSyncStatus === 'syncing'
+                  ? 'Syncing...'
+                  : ftpSyncStatus === 'error'
+                    ? 'Error'
+                    : ftpHost
+                      ? `Connected to ${ftpHost}`
+                      : 'Not configured'}
+              </Text>
+            </View>
+            {lastFtpSyncAt && (
+              <View style={styles.row}>
+                <Text style={styles.rowLabel}>Last FTP sync</Text>
+                <Text style={styles.rowValue}>{relativeTime(lastFtpSyncAt)}</Text>
+              </View>
+            )}
+
+            {/* Credential form */}
+            <TextInput
+              style={styles.input}
+              placeholder="Host (e.g. ftp.example.com)"
+              value={ftpFormHost}
+              onChangeText={setFtpFormHost}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Port (default 21)"
+              value={ftpFormPort}
+              onChangeText={setFtpFormPort}
+              keyboardType="number-pad"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Username"
+              value={ftpFormUser}
+              onChangeText={setFtpFormUser}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Password"
+              value={ftpFormPass}
+              onChangeText={setFtpFormPass}
+              secureTextEntry
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Remote path (default /)"
+              value={ftpFormPath}
+              onChangeText={setFtpFormPath}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+
+            {/* Actions */}
+            {testingFtp || savingFtp ? (
+              <ActivityIndicator size="small" color="#16A34A" style={{ paddingVertical: 16 }} />
+            ) : (
+              <>
+                <Pressable style={styles.actionBtn} onPress={handleTestFtp}>
+                  <Ionicons name="flash-outline" size={18} color="#F59E0B" />
+                  <Text style={[styles.actionBtnText, { color: '#F59E0B' }]}>
+                    Test Connection
+                  </Text>
+                </Pressable>
+                <Pressable style={styles.actionBtn} onPress={handleSaveFtp}>
+                  <Ionicons name="save-outline" size={18} color="#16A34A" />
+                  <Text style={styles.actionBtnText}>Save Credentials</Text>
+                </Pressable>
+              </>
+            )}
+          </>
+        )}
+      </View>
+
       <View style={{ height: 100 }} />
 
       <ConflictResolverModal
@@ -425,4 +639,16 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   conflictBadgeText: { fontSize: 13, fontWeight: '600', color: '#92400E' },
+
+  input: {
+    borderWidth: 1,
+    borderColor: '#E5E7EB',
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    fontSize: 15,
+    color: '#111827',
+    backgroundColor: '#F9FAFB',
+    marginTop: 8,
+  },
 });

@@ -11,9 +11,10 @@
  * to disk, avoiding OOM on large files (300MB+ VLM models).
  *
  * Phase 1: Both platforms download from R2 (no platform-native delivery).
- * Phase 6: Platform-native delivery (Play Asset Delivery / iOS ODR) as optimization.
+ * Phase 6: AI pack resolution added -- checks Play for On-Device AI before R2 fallback.
  */
 
+import { Platform } from 'react-native';
 import { Paths, File, Directory } from 'expo-file-system';
 import { createDownloadResumable } from 'expo-file-system/legacy';
 import * as Crypto from 'expo-crypto';
@@ -117,6 +118,38 @@ async function streamDownloadFile(
   }
 }
 
+/**
+ * Check if a model file is available via Play for On-Device AI pack.
+ *
+ * Android-only. Uses require() (not static import) for the ai-pack-delivery
+ * module to avoid breaking iOS builds where the native module is a no-op stub.
+ * Returns null on iOS, on any error, or if the AI pack is not yet completed.
+ *
+ * @param packId - Not used directly; AI pack is always 'ml-models'
+ * @param filename - The expected model filename within the AI pack assets
+ * @returns Full path to the model file if available, null otherwise
+ */
+async function resolveAiPackPath(_packId: string, filename: string): Promise<string | null> {
+  if (Platform.OS !== 'android') return null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-var-requires
+    const { aiPackDeliveryModule } = require('../../../modules/ai-pack-delivery/src/aiPackDeliveryModule');
+    const status = await aiPackDeliveryModule.getPackStatus('ml-models');
+    if (status === 'completed') {
+      const basePath = await aiPackDeliveryModule.getPackLocation('ml-models');
+      if (basePath) {
+        if (__DEV__) console.log(`[PackManager] Using AI pack path: ${basePath}/${filename}`);
+        return `${basePath}/${filename}`;
+      }
+    }
+    if (__DEV__) console.log(`[PackManager] AI pack not available (status: ${status}), falling back to R2`);
+    return null;
+  } catch {
+    if (__DEV__) console.log('[PackManager] AI pack resolution failed, falling back to R2');
+    return null;
+  }
+}
+
 export const PackManager = {
   /**
    * Download a pack from R2, verify its integrity, and record it.
@@ -139,6 +172,39 @@ export const PackManager = {
     const packDir = getPackDir(pack);
     const filename = getFilenameFromUrl(pack.url);
     const fileUri = `${packDir}${filename}`;
+
+    // Check AI pack availability before R2 download (Android only).
+    // If the model is already delivered via Play for On-Device AI, skip R2 entirely.
+    const aiPackPath = await resolveAiPackPath(pack.id, filename);
+    if (aiPackPath) {
+      const now = new Date().toISOString();
+      const record: InstalledPack = {
+        id: pack.id,
+        name: pack.name,
+        type: pack.type,
+        version: pack.version,
+        filePath: aiPackPath,
+        sizeBytes: pack.sizeBytes,
+        sha256: pack.sha256,
+        region: pack.region ?? null,
+        installedAt: now,
+        lastChecked: now,
+      };
+      await userDb.insert(installedPacks).values({
+        id: record.id,
+        name: record.name,
+        type: record.type,
+        version: record.version,
+        filePath: record.filePath,
+        mmprojFilePath: null,
+        sizeBytes: record.sizeBytes,
+        sha256: record.sha256,
+        region: record.region,
+        installedAt: record.installedAt,
+        lastChecked: record.lastChecked,
+      });
+      return record;
+    }
 
     // Ensure directory exists
     ensureDirectoryExists(getPacksDir());

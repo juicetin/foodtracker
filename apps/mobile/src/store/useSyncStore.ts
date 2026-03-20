@@ -8,10 +8,10 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import type { SyncConflict, SyncStatus } from '../services/sync/types';
+import type { SyncConflict, SyncStatus, FtpSyncStatus } from '../services/sync/types';
 
 interface SyncState {
-  // State
+  // State -- Google Drive
   signedIn: boolean;
   userEmail: string | null;
   lastSyncAt: string | null;
@@ -20,7 +20,13 @@ interface SyncState {
   wifiOnly: boolean;
   autoResolve: boolean;
 
-  // Actions
+  // State -- FTP
+  ftpEnabled: boolean;
+  ftpHost: string | null;
+  lastFtpSyncAt: string | null;
+  ftpSyncStatus: FtpSyncStatus;
+
+  // Actions -- Google Drive
   setSignedIn: (signedIn: boolean, email?: string | null) => void;
   setLastSyncAt: (timestamp: string | null) => void;
   setSyncStatus: (status: SyncStatus) => void;
@@ -28,12 +34,18 @@ interface SyncState {
   setWifiOnly: (wifiOnly: boolean) => void;
   setAutoResolve: (autoResolve: boolean) => void;
   clearSync: () => void;
+
+  // Actions -- FTP
+  setFtpEnabled: (enabled: boolean) => void;
+  setFtpHost: (host: string | null) => void;
+  setLastFtpSyncAt: (timestamp: string | null) => void;
+  setFtpSyncStatus: (status: FtpSyncStatus) => void;
 }
 
 export const useSyncStore = create<SyncState>()(
   persist(
     (set) => ({
-      // Defaults
+      // Defaults -- Google Drive
       signedIn: false,
       userEmail: null,
       lastSyncAt: null,
@@ -42,7 +54,13 @@ export const useSyncStore = create<SyncState>()(
       wifiOnly: true,
       autoResolve: false,
 
-      // Actions
+      // Defaults -- FTP
+      ftpEnabled: false,
+      ftpHost: null,
+      lastFtpSyncAt: null,
+      ftpSyncStatus: 'idle',
+
+      // Actions -- Google Drive
       setSignedIn: (signedIn, email) =>
         set({ signedIn, userEmail: email ?? null }),
       setLastSyncAt: (timestamp) => set({ lastSyncAt: timestamp }),
@@ -58,6 +76,12 @@ export const useSyncStore = create<SyncState>()(
           syncStatus: 'idle',
           pendingConflicts: [],
         }),
+
+      // Actions -- FTP
+      setFtpEnabled: (enabled) => set({ ftpEnabled: enabled }),
+      setFtpHost: (host) => set({ ftpHost: host }),
+      setLastFtpSyncAt: (timestamp) => set({ lastFtpSyncAt: timestamp }),
+      setFtpSyncStatus: (status) => set({ ftpSyncStatus: status }),
     }),
     {
       name: 'sync-state',
