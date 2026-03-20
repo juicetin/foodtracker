@@ -228,8 +228,8 @@ Plans:
 - [x] 07-02-PLAN.md -- VLM pipeline rewrite: primary identification with retry, text fallback with box-size assignment, store displayLabel update
 - [x] 07-03-PLAN.md -- Shimmer UX + DetectionScreen rewrite: ShimmerPlaceholder component, bbox/list shimmer, VLM-primary flow, text fallback UI
 
-### Phase 3.1: Daily Diary View + Macro Dashboard (INSERTED — replaces old Phase 3)
-**Goal**: Users see a daily food diary with chronological entries, photo thumbnails, and an always-visible macro summary — the core screen they live in every day
+### Phase 3.1: Daily Diary View + Macro Dashboard (INSERTED -- replaces old Phase 3)
+**Goal**: Users see a daily food diary with chronological entries, photo thumbnails, and an always-visible macro summary -- the core screen they live in every day
 **Depends on**: Phase 2.6, Phase 7, Phase 3.6
 **Requirements**: UI-01
 **Success Criteria** (what must be TRUE):
@@ -246,16 +246,16 @@ Plans:
 - [ ] 03.1-02-PLAN.md -- DiaryScreen refactor: wire components, swipe navigation, time-period grouping, human verification
 
 ### Phase 3.2: Food Search + Manual Add + Quick Add (INSERTED)
-**Goal**: Users can add food without using the camera — via text search across KG + OFF, personal food history, or raw calorie/macro entry as an escape hatch
+**Goal**: Users can add food without using the camera -- via text search across KG + OFF, personal food history, or raw calorie/macro entry as an escape hatch
 **Depends on**: Phase 3.1
 **Requirements**: UI-02, UI-06
 **Success Criteria** (what must be TRUE):
-  1. Persistent search bar visible on diary view — adding food is always 1 tap away
+  1. Persistent search bar visible on diary view -- adding food is always 1 tap away
   2. Search queries KG dishes + OFF cache simultaneously, returning results with name, Cal, P/F/C, and serving description
   3. "From History" results appear first, ranked by personal logging frequency (foods user has eaten before)
   4. Quick Add screen allows entering just Cal + P/F/C values directly (escape hatch when AI fails or DB doesn't have the food)
-  5. User can add a food item from search results to the diary in under 5 taps (search → select → confirm serving → logged)
-  6. Barcode scanner icon visible in search bar (stub — wired in v1.1)
+  5. User can add a food item from search results to the diary in under 5 taps (search -> select -> confirm serving -> logged)
+  6. Barcode scanner icon visible in search bar (stub -- wired in v1.1)
 **Plans**: 2 plans
 
 Plans:
@@ -263,7 +263,7 @@ Plans:
 - [ ] 03.2-02-PLAN.md -- DiaryScreen search bar integration, FoodSearchScreen history+QuickAdd enhancement, human verification
 
 ### Phase 3.3: Meal Editing + Portion Adjustment (INSERTED)
-**Goal**: Users can correct any logged meal after the fact — change ingredients, swap items, adjust portions, or re-run VLM identification
+**Goal**: Users can correct any logged meal after the fact -- change ingredients, swap items, adjust portions, or re-run VLM identification
 **Depends on**: Phase 3.1
 **Requirements**: UI-03, UI-07
 **Success Criteria** (what must be TRUE):
@@ -286,9 +286,9 @@ Plans:
 **Success Criteria** (what must be TRUE):
   1. User can save any logged meal as a named recipe with one tap ("Save as Recipe" action on entry detail)
   2. Recipe list screen shows all saved recipes with name, photo, Cal/P/F/C per serving, and times used
-  3. User can re-log a saved recipe to the diary in 1-2 taps (recipe list → confirm → logged)
+  3. User can re-log a saved recipe to the diary in 1-2 taps (recipe list -> confirm -> logged)
   4. User can edit recipe ingredients and portions (changes apply to the recipe template, not past entries)
-  5. Recipe search integrated into the food search flow (Phase 3.2) — recipes appear alongside KG/OFF results
+  5. Recipe search integrated into the food search flow (Phase 3.2) -- recipes appear alongside KG/OFF results
   6. Existing custom_recipes and recipeIngredients tables are used (no new schema required)
 **Plans:** 2 plans
 
@@ -301,7 +301,7 @@ Plans:
 **Depends on**: Phase 3
 **Success Criteria** (what must be TRUE):
   1. OFF barcode lookups and text search results are cached in a local SQLite table with stale-while-revalidate pattern (serve cache first, refresh from network)
-  2. When offline, cached OFF results are returned — user sees previously looked-up foods without internet
+  2. When offline, cached OFF results are returned -- user sees previously looked-up foods without internet
   3. Adaptive rate limiter respects OFF limits (100 product/min, 10 search/min) with variable debounce that ramps up as rolling window approaches capacity
   4. ODbL attribution link displayed in Profile/About screen crediting Open Food Facts
   5. OFF cache is included in data export (CSV/JSON) and backup system
@@ -394,20 +394,21 @@ Plans:
 - [ ] 06-02-PLAN.md -- Play for On-Device AI: withAiPack config plugin, ai-pack-delivery native bridge module, packManager AI pack resolution
 
 ### Phase 7.1: Integration Wiring + Dead Code Cleanup (GAP CLOSURE)
-**Goal**: Fix 2 broken E2E flows (gallery→diary, scale→portion), add confidence display, and remove orphaned code from YOLO→VLM-only pivot
+**Goal**: Fix 2 broken E2E flows (gallery->diary, scale->portion), drop obsolete requirements (DET-05/DET-06), and remove orphaned code from YOLO->VLM-only pivot
 **Depends on**: Phase 4, Phase 5, Phase 6
 **Requirements**: DET-05, DET-06
 **Gap Closure:** Closes gaps from v1.0 audit
 **Success Criteria** (what must be TRUE):
-  1. Gallery scan results show "Log Meal" action per meal group that creates diary entries
-  2. ScaleInputScreen returns confirmed netWeight to caller via navigation params callback
-  3. DishCard shows confidence indicator derived from Gemini Nano response quality
-  4. Orphaned SmolVLM code removed (VlmDownloadScreen, vlmService.ts, old detection components)
-  5. portionBridge.ts either wired into active pipeline or removed if Gemini Nano gram estimates suffice
-**Plans:** TBD
+  1. Gallery scan pipeline creates diary entries automatically from discovered meal groups via scanFood + logScanResult
+  2. ScaleInputScreen returns confirmed netWeight to caller via navigation params callback; DetectionScreen applies weight proportionally
+  3. DET-05 (confidence display) dropped -- Gemini Nano does not produce confidence scores
+  4. DET-06 (portionBridge) dropped -- Gemini Nano provides gram estimates directly
+  5. Orphaned SmolVLM code removed (VlmDownloadScreen, vlmService.ts, old detection components, portionBridge.ts)
+**Plans:** 2 plans
 
 Plans:
-- [ ] 07.1-01: TBD
+- [ ] 07.1-01-PLAN.md -- Gallery pipeline completion + scale weight return: wire drainScanQueue to diary, fix ScaleInput onResult, proportional weight redistribution
+- [ ] 07.1-02-PLAN.md -- Dead code removal: delete 10 orphaned files, update barrel exports and navigation, verify TypeScript compiles
 
 ## Progress
 
@@ -436,4 +437,4 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 4. Gallery Scanning + Deduplication | 2/2 | Complete | 2026-03-21 |
 | 5. Scale OCR + Notifications + Health Data | 4/4 | Complete | 2026-03-21 |
 | 6. Sync + Distribution | 2/2 | Complete | 2026-03-21 |
-| 7.1. Integration Wiring + Cleanup | 0/1 | Not started | - |
+| 7.1. Integration Wiring + Cleanup | 0/2 | Not started | - |
