@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 05-03-PLAN.md (Health Connect weight import + EMA trend)
+stopped_at: Completed 05-04-PLAN.md (UI screens for scale/weight/notifications)
 last_updated: "2026-03-20T17:37:00.000Z"
 progress:
   total_phases: 20
   completed_phases: 18
   total_plans: 59
-  completed_plans: 58
+  completed_plans: 59
 ---
 
 # Project State
@@ -23,8 +23,8 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 
 ## Current Position
 
-Phase: 05 (scale-ocr-notifications-health-data) — EXECUTING
-Plan: 4 of 4 (Plans 01-03 complete)
+Phase: 05 (scale-ocr-notifications-health-data) — COMPLETE
+Plan: 4 of 4 (All plans complete)
 
 ## Performance Metrics
 
@@ -115,6 +115,7 @@ Plan: 4 of 4 (Plans 01-03 complete)
 | Phase 05 P01 | 5min | 2 tasks | 12 files |
 | Phase 05 P02 | 4min | 2 tasks | 5 files |
 | Phase 05 P03 | 10min | 2 tasks | 12 files |
+| Phase 05 P04 | 6min | 2 tasks | 7 files |
 
 ## Accumulated Context
 
@@ -296,6 +297,9 @@ Recent decisions affecting current work:
 - [Phase 05]: Gemini Nano primary for scale OCR; ML Kit Text Recognition v2 stubbed (requires native dep, deferred)
 - [Phase 05]: opsqlite raw SQL for containerService (consistent with historyService/backupService pattern)
 - [Phase 05]: container_weights CREATE TABLE added to db/client.ts (was only in Drizzle schema)
+- [Phase 05]: View-based dot chart for weight trend (no chart library); proper chart deferred to gap closure
+- [Phase 05]: Scale Weight button in DetectionScreen footer alongside Log Meal for quick access
+- [Phase 05]: Notification time picker uses TextInputs, not DateTimePicker dep
 
 ### Roadmap Evolution
 
@@ -321,6 +325,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T17:31:46Z
-Stopped at: Completed 05-03-PLAN.md (Health Connect weight import + EMA trend)
+Last session: 2026-03-20T17:45:46Z
+Stopped at: Completed 05-04-PLAN.md (UI screens for scale/weight/notifications)
 Resume file: None
