@@ -239,11 +239,11 @@ Plans:
   4. User can tap an entry to expand detail view, navigate to edit, or delete
   5. Date navigation (previous/next day) and week overview bar showing which days have entries
   6. Entries logged via DetectionScreen appear immediately in the diary with correct time and photo association
-**Plans**: TBD
+**Plans**: 2 plans
 
 Plans:
-- [ ] 03.1-01: TBD
-- [ ] 03.1-02: TBD
+- [ ] 03.1-01-PLAN.md -- Service layer + diary components: time-period logic, diary queries, preferences extension, StickyMacroHeader, WeekOverviewBar, TimePeriodSection, ExpandableEntryCard
+- [ ] 03.1-02-PLAN.md -- DiaryScreen refactor: wire components, swipe navigation, time-period grouping, human verification
 
 ### Phase 3.2: Food Search + Manual Add + Quick Add (INSERTED)
 **Goal**: Users can add food without using the camera — via text search across KG + OFF, personal food history, or raw calorie/macro entry as an escape hatch
