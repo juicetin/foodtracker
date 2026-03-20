@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 03.1-01-PLAN.md
-last_updated: "2026-03-20T13:11:57.903Z"
+stopped_at: Completed 03.1-02-PLAN.md
+last_updated: "2026-03-20T13:24:31.754Z"
 progress:
   total_phases: 20
-  completed_phases: 12
+  completed_phases: 13
   total_plans: 44
-  completed_plans: 43
+  completed_plans: 44
 ---
 
 # Project State
@@ -100,6 +100,7 @@ Plan: 2 of 2
 | Phase 02.7 P01 | 25min | 5 tasks | 15 files |
 | Phase 02.7 P02 | 4min | 3 tasks | 3 files |
 | Phase 03.1 P01 | 5min | 2 tasks | 11 files |
+| Phase 03.1 P02 | 10min | 2 tasks | 1 files |
 
 ## Accumulated Context
 
@@ -244,6 +245,7 @@ Recent decisions affecting current work:
 - [Phase 02.7]: getLastVlmSource() tracks 'gemini-nano' | 'mock' (not 'smolvlm' -- SmolVLM path removed); model badge only shows for non-mock scans; _resetVlmSource() for test isolation
 - [Phase 03.1]: Midnight-6am maps to evening period (late night eating pattern)
 - [Phase 03.1]: Entries ordered ASC within periods (chronological), week boundaries Mon-Sun (ISO)
+- [Phase 03.1]: StickyMacroHeader outside ScrollView for true sticky behavior; Gesture.Pan with activeOffsetX/failOffsetY prevents swipe from hijacking vertical scroll
 
 ### Roadmap Evolution
 
@@ -269,6 +271,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-20T13:11:57.899Z
-Stopped at: Completed 03.1-01-PLAN.md
+Last session: 2026-03-20T13:24:31.750Z
+Stopped at: Completed 03.1-02-PLAN.md
 Resume file: None
