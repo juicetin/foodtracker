@@ -10,3 +10,4 @@ export { default as BarcodeScanScreen } from './BarcodeScanScreen';
 export { default as RecipeScreen } from './RecipeScreen';
 export { default as QuickAddScreen } from './QuickAddScreen';
 export { default as ReidentifyMergeScreen } from './ReidentifyMergeScreen';
+export { default as GalleryScanScreen } from './GalleryScanScreen';

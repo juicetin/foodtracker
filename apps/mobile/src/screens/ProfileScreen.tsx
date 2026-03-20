@@ -171,6 +171,15 @@ export default function ProfileScreen() {
       {/* Google Drive Sync */}
       <SyncCard />
 
+      {/* Gallery Scan */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Gallery Scan</Text>
+        <Pressable style={styles.row} onPress={() => rootNavigation.navigate('GalleryScan')}>
+          <Text style={styles.rowLabel}>Gallery Scan Settings</Text>
+          <Text style={styles.rowChevron}>→</Text>
+        </Pressable>
+      </View>
+
       {/* AI Models */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>AI Models</Text>
