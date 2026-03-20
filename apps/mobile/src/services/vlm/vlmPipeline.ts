@@ -11,6 +11,7 @@ import { geminiNanoModule } from 'gemini-nano';
 import { geminiNanoService } from './geminiNanoService';
 import { getMockScanResult } from './geminiNanoMock';
 import { getKnowledgeGraphService } from '../knowledge-graph';
+import { enrichDishesWithKgIngredients } from '../detection/hiddenIngredientsService';
 import type { ScannedDish, ScannedIngredient, ScanResult } from '../../types';
 import type { VlmIngredient } from './vlmTypes';
 
@@ -160,5 +161,8 @@ export async function scanFood(photoUri: string): Promise<ScanResult> {
     }),
   );
 
-  return { photoUri, dishes, isMock };
+  // Enrich dishes that have no VLM-provided ingredients with KG data
+  const enrichedDishes = await enrichDishesWithKgIngredients(dishes);
+
+  return { photoUri, dishes: enrichedDishes, isMock };
 }

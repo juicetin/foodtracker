@@ -9,6 +9,8 @@ module.exports = {
       '<rootDir>/__mocks__/@op-engineering/op-sqlite.ts',
     '\\.tflite$': '<rootDir>/__mocks__/tfliteAsset.js',
     '^llama\\.rn$': '<rootDir>/__mocks__/llama.rn.ts',
+    '^react-native-health-connect$':
+      '<rootDir>/src/__mocks__/react-native-health-connect.ts',
   },
   testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
 };

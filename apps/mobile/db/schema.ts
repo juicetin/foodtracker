@@ -211,6 +211,17 @@ export const photoHashes = sqliteTable('photo_hashes', {
   createdAt: text('created_at').default(sql`(datetime('now'))`),
 });
 
+// ── Weight Entries (Phase 05 -- Health Connect + manual weight tracking) ──
+
+export const weightEntries = sqliteTable('weight_entries', {
+  id: integer('id').primaryKey({ autoIncrement: true }),
+  date: text('date').notNull().unique(), // YYYY-MM-DD
+  weightKg: real('weight_kg').notNull(),
+  source: text('source').notNull(), // 'manual' | 'health_connect'
+  healthConnectId: text('health_connect_id'),
+  createdAt: text('created_at').default(sql`(datetime('now'))`),
+});
+
 // ── Container Weights (new) ──
 
 export const containerWeights = sqliteTable('container_weights', {

@@ -161,6 +161,16 @@ try { opsqlite.execute('ALTER TABLE custom_recipes ADD COLUMN photo_uri TEXT'); 
 // Add source_recipe_id to food_entries for recipe-entry linkage
 try { opsqlite.execute('ALTER TABLE food_entries ADD COLUMN source_recipe_id TEXT'); } catch {}
 
+// ── Weight Entries (Phase 05 -- Health Connect + manual weight tracking) ──
+opsqlite.execute(`CREATE TABLE IF NOT EXISTS weight_entries (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  date TEXT NOT NULL UNIQUE,
+  weight_kg REAL NOT NULL,
+  source TEXT NOT NULL,
+  health_connect_id TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+)`);
+
 opsqlite.execute(`CREATE TABLE IF NOT EXISTS correction_history (
   id TEXT PRIMARY KEY NOT NULL,
   original_class_name TEXT NOT NULL,
