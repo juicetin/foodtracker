@@ -11,6 +11,8 @@ module.exports = {
     '^llama\\.rn$': '<rootDir>/__mocks__/llama.rn.ts',
     '^react-native-health-connect$':
       '<rootDir>/src/__mocks__/react-native-health-connect.ts',
+    '^expo-notifications$':
+      '<rootDir>/src/__mocks__/expo-notifications.ts',
   },
   testPathIgnorePatterns: ['/node_modules/', '/android/', '/ios/'],
 };
