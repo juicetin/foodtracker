@@ -28,6 +28,8 @@ interface PreferencesState extends UserPreferences {
   notificationHour: number;
   /** Minute (0-59) for the daily notification. Default: 0. */
   notificationMinute: number;
+  /** Whether Health Connect weight import is enabled (opt-in). */
+  healthConnectEnabled: boolean;
   // Actions
   setRegion: (region: UserPreferences['region']) => void;
   setUnits: (units: UserPreferences['units']) => void;
@@ -38,6 +40,7 @@ interface PreferencesState extends UserPreferences {
   setUxMode: (mode: UxMode) => void;
   setNotificationsEnabled: (enabled: boolean) => void;
   setNotificationTime: (hour: number, minute: number) => void;
+  setHealthConnectEnabled: (enabled: boolean) => void;
   initRegionFromLocale: () => void;
 }
 
@@ -61,6 +64,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       notificationsEnabled: false,
       notificationHour: 21,
       notificationMinute: 0,
+      healthConnectEnabled: false,
 
       // Actions
       setRegion: (region) => set({ region }),
@@ -72,6 +76,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       setUxMode: (uxMode) => set({ uxMode }),
       setNotificationsEnabled: (enabled) => set({ notificationsEnabled: enabled }),
       setNotificationTime: (hour, minute) => set({ notificationHour: hour, notificationMinute: minute }),
+      setHealthConnectEnabled: (enabled) => set({ healthConnectEnabled: enabled }),
       initRegionFromLocale: () => {
         // Only auto-detect once — user manual override takes precedence
         if (get().regionAutoDetected) return;
