@@ -37,13 +37,24 @@ export function _resetVlmSource(): void {
 }
 
 // ---------------------------------------------------------------------------
-// Proxy constants (when KG has no data for an ingredient)
+// Nutrition lookup constants
 // ---------------------------------------------------------------------------
 
-const PROXY_KCAL_PER_G   = 1.5;
+/** Last-resort flat-rate proxy when KG and USDA both return nothing. */
+const PROXY_KCAL_PER_G    = 1.5;
 const PROXY_PROTEIN_PER_G = 0.08;
-const PROXY_CARBS_PER_G  = 0.20;
-const PROXY_FAT_PER_G    = 0.06;
+const PROXY_CARBS_PER_G   = 0.20;
+const PROXY_FAT_PER_G     = 0.06;
+
+/**
+ * Max fractional deviation allowed before a KG recipe/dish_average result is
+ * rejected in favour of the USDA value. E.g., 0.40 = 40% tolerance.
+ *
+ * RecipeNLG dish data can be noisy. If KG says 800 kcal and USDA says 35 kcal
+ * for the same 100g ingredient, we trust USDA. If they're within ±40% we use
+ * the KG result (it may have better regional/preparation context).
+ */
+const KG_USDA_MARGIN = 0.40;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -61,27 +72,64 @@ type NutritionFields = Pick<
   'calories' | 'protein' | 'carbs' | 'fat' | 'fiber' | 'sodium' | 'nutritionSource'
 >;
 
+/**
+ * Resolve nutrition for a detected ingredient/dish name at a given portion.
+ *
+ * Priority:
+ *   1. USDA direct lookup — authoritative per-100g values for raw ingredients.
+ *   2. KG recipe decomposition — USDA-backed per-ingredient sums, scaled to
+ *      portion. Only accepted if within ±KG_USDA_MARGIN of USDA (when USDA
+ *      also matched), or unconditionally when USDA had no match (composite dish).
+ *   3. KG dish averages — same margin guard as recipe path.
+ *   4. Flat-rate proxy — last resort, flags nutritionSource='proxy'.
+ */
 async function lookupNutrition(name: string, amount_g: number): Promise<NutritionFields> {
+  let usdaResult: { calories: number; protein: number; carbs: number; fat: number } | null = null;
+  let kgResult:   { calories: number; protein: number; carbs: number; fat: number } | null = null;
+
   try {
     const kg = await getKnowledgeGraphService();
     if (kg) {
-      const result = await kg.calculateDishNutrition(name, amount_g);
-      if (result) {
-        return {
-          calories: result.calories,
-          protein: result.protein,
-          carbs:   result.carbs,
-          fat:     result.fat,
-          fiber:   0,
-          sodium:  0,
-          nutritionSource: 'kg',
-        };
+      // 1. USDA direct — raw ingredient lookup (e.g., "broccoli" → usda_food)
+      const usda = await kg.lookupUsdaIngredient(name, amount_g);
+      if (usda) {
+        usdaResult = { calories: usda.calories, protein: usda.protein, carbs: usda.carbs, fat: usda.fat };
+      }
+
+      // 2. KG recipe/dish_average (composite dishes, or USDA validation)
+      const kg_r = await kg.calculateDishNutrition(name, amount_g);
+      if (kg_r) {
+        kgResult = { calories: kg_r.calories, protein: kg_r.protein, carbs: kg_r.carbs, fat: kg_r.fat };
       }
     }
   } catch {
-    // KG unavailable or ingredient not found — fall through to proxy
+    // KG unavailable — fall through
   }
 
+  // If both found: use USDA unless KG is within margin (KG may have better
+  // preparation-specific data, e.g., "sautéed" vs raw)
+  if (usdaResult && kgResult) {
+    const usda_cal = usdaResult.calories;
+    const kg_cal   = kgResult.calories;
+    const withinMargin =
+      usda_cal > 0 &&
+      Math.abs(kg_cal - usda_cal) / usda_cal <= KG_USDA_MARGIN;
+
+    const chosen = withinMargin ? kgResult : usdaResult;
+    return { ...chosen, fiber: 0, sodium: 0, nutritionSource: 'kg' };
+  }
+
+  // Only USDA matched (raw ingredient, not a composite dish)
+  if (usdaResult) {
+    return { ...usdaResult, fiber: 0, sodium: 0, nutritionSource: 'kg' };
+  }
+
+  // Only KG matched (composite dish not in USDA — accept without margin check)
+  if (kgResult) {
+    return { ...kgResult, fiber: 0, sodium: 0, nutritionSource: 'kg' };
+  }
+
+  // Last resort proxy
   return {
     calories: amount_g * PROXY_KCAL_PER_G,
     protein:  amount_g * PROXY_PROTEIN_PER_G,

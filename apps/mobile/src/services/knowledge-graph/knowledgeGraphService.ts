@@ -20,6 +20,7 @@ import {
   SQL_GET_DISH_BY_ID,
   SQL_GET_CANONICAL_RECIPE,
   SQL_GET_RECIPE_INGREDIENTS,
+  SQL_SEARCH_USDA_FOOD,
 } from './knowledgeGraphSchema';
 import { SymSpellIndex } from './symspellIndex';
 
@@ -37,7 +38,7 @@ export interface MacroResult {
   /** The weight in grams these values were calculated for. */
   weightGrams: number;
   /** How the values were derived. */
-  source: 'recipe' | 'dish_average' | 'proxy';
+  source: 'usda' | 'recipe' | 'dish_average' | 'proxy';
 }
 
 /** A dish found in the knowledge graph. */
@@ -317,6 +318,53 @@ export class KnowledgeGraphService {
     }
 
     return results.slice(0, limit);
+  }
+
+  /**
+   * Look up a raw ingredient directly in USDA FoodData Central.
+   *
+   * Intended for single-word or short ingredient names returned by Gemini Nano
+   * (e.g., "broccoli", "quinoa", "salmon") that are raw foods, not composite
+   * dishes. USDA values are authoritative for these.
+   *
+   * Matching: case-insensitive prefix LIKE search on description, ordered by
+   * description length so the simplest entry wins ("Broccoli, raw" before
+   * "Broccoli, frozen, chopped, cooked, boiled, drained, with salt").
+   *
+   * @param name - Ingredient name to look up
+   * @param portionGrams - Portion weight to scale to
+   * @returns Scaled macros with source='usda', or null if not found
+   */
+  async lookupUsdaIngredient(name: string, portionGrams: number): Promise<MacroResult | null> {
+    const db = this.getDb();
+    const normalized = this.normalize(name);
+    if (!normalized) return null;
+
+    // Try capitalised prefix first (most USDA descriptions start with capital)
+    const capitalised = normalized.charAt(0).toUpperCase() + normalized.slice(1);
+    for (const prefix of [`${capitalised}%`, `${normalized}%`]) {
+      try {
+        const result = await db.execute(SQL_SEARCH_USDA_FOOD, [prefix]);
+        if (result.rows.length === 0) continue;
+
+        const row = result.rows[0] as Record<string, unknown>;
+        const cal100 = row.calories_per_100g as number | null;
+        if (!cal100) continue;
+
+        const scale = portionGrams / 100;
+        return {
+          calories: (cal100 ?? 0) * scale,
+          protein:  ((row.protein_per_100g as number | null) ?? 0) * scale,
+          carbs:    ((row.carbs_per_100g  as number | null) ?? 0) * scale,
+          fat:      ((row.fat_per_100g    as number | null) ?? 0) * scale,
+          weightGrams: portionGrams,
+          source: 'usda',
+        };
+      } catch {
+        // LIKE search failure — continue
+      }
+    }
+    return null;
   }
 
   // ── Private helpers ──

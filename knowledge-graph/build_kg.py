@@ -364,10 +364,21 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
         dish_id = cursor.lastrowid
         dishes_inserted += 1
 
-        # Create canonical recipe
+        # Keep only top 30 ingredients by occurrence frequency across recipes
+        # (popular dishes aggregate thousands of unique ingredient strings from many recipes;
+        #  top 30 captures the essential/common ingredients while keeping DB size manageable)
+        sorted_ings = sorted(
+            data["ingredients"].items(),
+            key=lambda x: -len(x[1]),  # sort by number of recipes containing this ingredient
+        )[:30]
+
+        # Create canonical recipe — total_weight from the TOP 30 ONLY so that
+        # compute_dish_nutrition() gets a realistic serving weight. Previously
+        # this summed ALL unique ingredient variants (potentially thousands),
+        # making total_weight_grams 75-80x too large and corrupting default_serving_grams.
         total_weight = sum(
             sum(amounts) / len(amounts)
-            for amounts in data["ingredients"].values()
+            for _, amounts in sorted_ings
         ) or 1.0
 
         cursor.execute(
@@ -377,13 +388,6 @@ def seed_recipes(conn: sqlite3.Connection) -> dict:
         recipe_id = cursor.lastrowid
         recipes_inserted += 1
 
-        # Keep only top 30 ingredients by occurrence frequency across recipes
-        # (popular dishes aggregate thousands of unique ingredient strings from many recipes;
-        #  top 30 captures the essential/common ingredients while keeping DB size manageable)
-        sorted_ings = sorted(
-            data["ingredients"].items(),
-            key=lambda x: -len(x[1]),  # sort by number of recipes containing this ingredient
-        )[:30]
         for idx, (ing_name, amounts) in enumerate(sorted_ings):
             avg_g = sum(amounts) / len(amounts)
             cursor.execute(

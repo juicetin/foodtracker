@@ -106,3 +106,20 @@ export const SQL_SEARCH_INGREDIENT_NAMES = `
   ORDER BY ri.ingredient_name
   LIMIT ?
 `;
+
+/**
+ * Search USDA foods by description prefix.
+ *
+ * Matches "broccoli" → "Broccoli, cooked, boiled, drained, with salt" etc.
+ * Ordered by description length ASC so the simplest/most basic entry wins
+ * (e.g., "Quinoa, cooked" before "Quinoa, cooked, with added salt").
+ */
+export const SQL_SEARCH_USDA_FOOD = `
+  SELECT fdc_id, description,
+         calories_per_100g, protein_per_100g, fat_per_100g, carbs_per_100g,
+         fiber_per_100g, sodium_mg
+  FROM ${KG_TABLES.USDA_FOOD}
+  WHERE description LIKE ?
+  ORDER BY LENGTH(description) ASC
+  LIMIT 3
+`;

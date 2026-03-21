@@ -181,6 +181,8 @@ describe('KG nutrition lookup', () => {
 
     const mockKGService = {
       searchDish: jest.fn().mockResolvedValue(null),
+      // USDA returns null → KG recipe path is used unconditionally
+      lookupUsdaIngredient: jest.fn().mockResolvedValue(null),
       calculateDishNutrition: jest.fn().mockResolvedValue({
         calories: 260,
         protein: 5,
@@ -194,6 +196,7 @@ describe('KG nutrition lookup', () => {
 
     const result = await scanFood('file:///test.jpg');
 
+    expect(mockKGService.lookupUsdaIngredient).toHaveBeenCalledWith('rice', 200);
     expect(mockKGService.calculateDishNutrition).toHaveBeenCalledWith('rice', 200);
     expect(result.dishes[0].ingredients[0].nutritionSource).toBe('kg');
     expect(result.dishes[0].ingredients[0].calories).toBe(260);
