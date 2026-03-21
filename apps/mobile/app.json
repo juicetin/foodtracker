@@ -68,7 +68,8 @@
       "expo-notifications",
       "expo-background-task",
       ["@react-native-google-signin/google-signin", {
-        "scopes": ["https://www.googleapis.com/auth/drive.appdata"]
+        "scopes": ["https://www.googleapis.com/auth/drive.appdata"],
+        "iosUrlScheme": "com.googleusercontent.apps.placeholder"
       }],
       "react-native-cloud-storage",
       ["./plugins/withAiPack", {

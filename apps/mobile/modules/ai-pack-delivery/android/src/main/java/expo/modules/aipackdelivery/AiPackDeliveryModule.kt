@@ -1,10 +1,10 @@
 package expo.modules.aipackdelivery
 
-import com.google.android.play.core.aipack.AiPackManager
-import com.google.android.play.core.aipack.AiPackManagerFactory
-import com.google.android.play.core.aipack.AiPackRequest
-import com.google.android.play.core.aipack.AiPackState
-import com.google.android.play.core.aipack.model.AiPackStatus
+import com.google.android.play.core.aipacks.AiPackManager
+import com.google.android.play.core.aipacks.AiPackManagerFactory
+import com.google.android.play.core.aipacks.AiPackState
+import com.google.android.play.core.aipacks.AiPackStates
+import com.google.android.play.core.aipacks.model.AiPackStatus
 import expo.modules.kotlin.functions.Coroutine
 import expo.modules.kotlin.modules.Module
 import expo.modules.kotlin.modules.ModuleDefinition
@@ -16,7 +16,7 @@ class AiPackDeliveryModule : Module() {
 
     private fun getManager(): AiPackManager {
         if (manager == null) {
-            manager = AiPackManagerFactory.create(appContext.reactContext!!)
+            manager = AiPackManagerFactory.getInstance(appContext.reactContext!!)
         }
         return manager!!
     }
@@ -30,8 +30,9 @@ class AiPackDeliveryModule : Module() {
          */
         AsyncFunction("getPackStatus") Coroutine { packName: String ->
             try {
-                val states = getManager().getPackStates(listOf(packName)).await()
-                val packState: AiPackState? = states.packStates()[packName]
+                val states: AiPackStates = getManager().getPackStates(listOf(packName)).await()
+                val stateMap: Map<String, AiPackState> = states.packStates()
+                val packState: AiPackState? = stateMap[packName]
                 when (packState?.status()) {
                     AiPackStatus.COMPLETED -> "completed"
                     AiPackStatus.PENDING -> "pending"
@@ -50,8 +51,9 @@ class AiPackDeliveryModule : Module() {
          */
         AsyncFunction("getPackLocation") Coroutine { packName: String ->
             try {
-                val states = getManager().getPackStates(listOf(packName)).await()
-                val packState: AiPackState? = states.packStates()[packName]
+                val states: AiPackStates = getManager().getPackStates(listOf(packName)).await()
+                val stateMap: Map<String, AiPackState> = states.packStates()
+                val packState: AiPackState? = stateMap[packName]
                 if (packState?.status() == AiPackStatus.COMPLETED) {
                     val location = getManager().getPackLocation(packName)
                     location?.assetsPath()
@@ -69,10 +71,7 @@ class AiPackDeliveryModule : Module() {
          */
         AsyncFunction("requestDownload") Coroutine { packName: String ->
             try {
-                val request = AiPackRequest.newBuilder()
-                    .addPack(packName)
-                    .build()
-                getManager().fetch(request).await()
+                getManager().fetch(listOf(packName)).await()
                 true
             } catch (e: Exception) {
                 false

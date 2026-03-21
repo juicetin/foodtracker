@@ -27,6 +27,7 @@ dependencies {
   implementation project(':expo-modules-core')
   implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:${safeExtGet('kotlinVersion', '2.1.0')}"
   implementation "com.google.android.play:ai-delivery:0.1.1-alpha01"
+  implementation "org.jetbrains.kotlinx:kotlinx-coroutines-play-services:1.7.3"
 }
 
 def safeExtGet(prop, fallback) {
