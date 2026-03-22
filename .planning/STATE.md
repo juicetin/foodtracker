@@ -329,6 +329,8 @@ Recent decisions affecting current work:
 - Phase 02.7 inserted after Phase 02.6: Gemini Nano System-Managed VLM Integration — spike-first quality test of ML Kit GenAI APIs (Prompt API) on Pixel 9 Pro, then proper pipeline integration as Tier 0 above SmolVLM.
 
 - Phase 8 added: On-device vector search embedding via TFLite MiniLM
+- Phase 9 added: UX redesign — diary-first home, add food with barcode/photo/voice/gallery, item detail bottom sheet, long-press context menu, copy/move meals
+- Phase 09.1 inserted after Phase 9: Dark mode theme with system preference detection and manual toggle
 
 ### Pending Todos
 

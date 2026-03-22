@@ -457,3 +457,24 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 6. Sync + Distribution | 2/2 | Complete | 2026-03-21 |
 | 7.1. Integration Wiring + Cleanup | 0/2 | Not started | - |
 | 8. On-device vector search embedding | 0/2 | Not started | - |
+
+### Phase 9: UX redesign — diary-first home, add food with barcode/photo/voice/gallery, item detail bottom sheet, long-press context menu, copy/move meals
+
+**Goal:** [To be planned]
+**Requirements**: TBD
+**Depends on:** Phase 8
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 9 to break down)
+
+
+### Phase 09.1: Dark mode theme with system preference detection and manual toggle (INSERTED)
+
+**Goal:** [Urgent work - to be planned]
+**Requirements**: TBD
+**Depends on:** Phase 9
+**Plans:** 0 plans
+
+Plans:
+- [ ] TBD (run /gsd:plan-phase 09.1 to break down)
