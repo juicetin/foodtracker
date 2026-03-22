@@ -32,6 +32,7 @@ Decimal phases appear between their surrounding integers in numeric order.
 - [ ] **Phase 5: Scale OCR + Notifications + Health Data** - Kitchen scale reading, container weights, daily macro notifications, Apple Health/Google Fit
 - [ ] **Phase 6: Sync + Distribution** - Google Drive and iCloud sync, Play for On-Device AI, iOS On-Demand Resources, Gemini Nano adapter
 - [x] **Phase 7: Remove YOLO+EfficientNet pipeline -- VLM-only detection** - Strip EfficientNet classifier, YOLO bbox-only, shimmer UX, VLM failure fallback (completed 2026-03-15)
+- [ ] **Phase 8: On-device vector search embedding via TFLite MiniLM** - MiniLM-L6-v2 TFLite export, pure-JS WordPiece tokenizer, semantic USDA food matching
 
 ## Phase Details
 
@@ -410,10 +411,27 @@ Plans:
 - [ ] 07.1-01-PLAN.md -- Gallery pipeline completion + scale weight return: wire drainScanQueue to diary, fix ScaleInput onResult, proportional weight redistribution
 - [ ] 07.1-02-PLAN.md -- Dead code removal: delete 10 orphaned files, update barrel exports and navigation, verify TypeScript compiles
 
+### Phase 8: On-device vector search embedding via TFLite MiniLM
+
+**Goal:** Implement on-device query-time text embedding using MiniLM-L6-v2 TFLite with pure-JS WordPiece tokenizer, activating the existing vec search path (usda_embeddings + vec_distance_cosine) for semantic USDA food matching alongside BM25
+**Requirements**: EMB-01, EMB-02, EMB-03, EMB-04, EMB-05
+**Depends on:** Phase 7
+**Success Criteria** (what must be TRUE):
+  1. MiniLM-L6-v2 exported as TFLite INT8 (~11MB) with mean pooling + L2 normalization baked into the graph, producing 384-dim normalized float32 vectors matching build_kg.py embeddings
+  2. WordPiece vocabulary (30522 tokens) bundled as JSON asset, pure-JS tokenizer handles lowercasing, punctuation, subword splitting, [CLS]/[SEP], attention mask
+  3. EmbeddingService loads TFLite model via react-native-fast-tflite with lazy init on first detection flow, embed() returns Float32Array(384) after warmup
+  4. Vec search path in vlmPipeline activates automatically when embedding service is ready -- no pipeline code changes needed
+  5. Semantic USDA food matching works for non-exact food names (e.g., "tonkatsu" finds "pork, loin" via vector similarity)
+**Plans:** 2 plans
+
+Plans:
+- [ ] 08-01-PLAN.md -- Python export script: MiniLM ONNX export with pooling+norm, Docker onnx2tf INT8 conversion, vocab extraction, validation, asset deployment
+- [ ] 08-02-PLAN.md -- Pure-JS WordPiece tokenizer + EmbeddingService TFLite implementation, unit tests for both
+
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6 -> 7.1
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6 -> 7.1 -> 8
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -438,3 +456,4 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 5. Scale OCR + Notifications + Health Data | 4/4 | Complete | 2026-03-21 |
 | 6. Sync + Distribution | 2/2 | Complete | 2026-03-21 |
 | 7.1. Integration Wiring + Cleanup | 0/2 | Not started | - |
+| 8. On-device vector search embedding | 0/2 | Not started | - |

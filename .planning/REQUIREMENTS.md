@@ -77,6 +77,14 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **ML-04**: Nutrition database is enriched with Open Food Facts product data (4.4M products), Nutrition5k per-dish calorie data, and curated regional nutrition tables
 - [x] **ML-05**: Food labels include multilingual names, cuisine tags, and cultural context from WorldCuisines knowledge base (2,414 dishes, 35+ countries)
 
+### On-Device Embedding
+
+- [ ] **EMB-01**: MiniLM-L6-v2 exported as TFLite INT8 with mean pooling and L2 normalization baked into the graph, producing 384-dim normalized float32 vectors
+- [ ] **EMB-02**: WordPiece vocabulary (30522 tokens) extracted from HuggingFace tokenizer and bundled as JSON asset
+- [ ] **EMB-03**: Pure-JS WordPiece tokenizer handles lowercasing, punctuation splitting, subword splitting with ## prefixes, [CLS]/[SEP] special tokens, attention mask generation
+- [ ] **EMB-04**: EmbeddingService loads TFLite model via react-native-fast-tflite with lazy initialization on first detection flow
+- [ ] **EMB-05**: Vec search path in vlmPipeline activates when embedding service is ready, enabling semantic USDA food matching alongside BM25
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -165,11 +173,17 @@ Deferred to future release. Tracked but not in current roadmap.
 | BKP-05 | Phase 3.6 | Complete |
 | BKP-06 | Phase 3.6 | Complete |
 
+| EMB-01 | Phase 8 | Planned |
+| EMB-02 | Phase 8 | Planned |
+| EMB-03 | Phase 8 | Planned |
+| EMB-04 | Phase 8 | Planned |
+| EMB-05 | Phase 8 | Planned |
+
 **Coverage:**
-- v1 requirements: 39 total
-- Mapped to phases: 39
+- v1 requirements: 44 total
+- Mapped to phases: 44
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-12 after v1.0 roadmap creation*
+*Last updated: 2026-03-22 after Phase 8 planning*
