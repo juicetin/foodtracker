@@ -17,9 +17,31 @@
       "numClasses": 241,
       "inputNormalization": "float32_0_1",
       "inputDtype": "float32",
-      "outputShape": [1, 245, 8400],
+      "outputShape": [
+        1,
+        245,
+        8400
+      ],
       "name": "GGCD YOLOv8n (241-Class Food Detection)",
       "description": "YOLOv8n trained on Global Gastronomic Culinary Dataset. 241 food-specific classes spanning Central Asian, South Asian, East Asian, Middle Eastern, European, and American cuisines. INT8 quantized for mobile. NMS performed in JavaScript."
+    },
+    {
+      "id": "minilm-embedding-v1",
+      "stage": "embedding",
+      "version": "1.0.0",
+      "file": "embedding.tflite",
+      "sizeBytes": 23189536,
+      "format": "tflite",
+      "quantisation": "int8",
+      "embeddingDim": 384,
+      "maxSeqLen": 128,
+      "inputDtype": "int32",
+      "outputShape": [
+        1,
+        384
+      ],
+      "name": "MiniLM-L6-v2 (Sentence Embedding)",
+      "description": "all-MiniLM-L6-v2 with mean pooling and L2 normalisation baked in. Produces 384-dim normalised float32 vectors for on-device vector search. INT8 dynamic-range quantised for mobile."
     }
   ]
 }
