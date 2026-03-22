@@ -13,6 +13,8 @@ export const KG_TABLES = {
   RECIPE: 'recipe',
   RECIPE_INGREDIENT: 'recipe_ingredient',
   USDA_FOOD: 'usda_food',
+  USDA_EMBEDDINGS: 'usda_embeddings',
+  USDA_BM25_TERMS: 'usda_bm25_terms',
   DISH_FTS: 'dish_fts',
   DISH_ALIAS_FTS: 'dish_alias_fts',
   SYMSPELL_DELETES: 'symspell_deletes',
@@ -105,6 +107,53 @@ export const SQL_SEARCH_INGREDIENT_NAMES = `
   WHERE ri.ingredient_name LIKE ?
   ORDER BY ri.ingredient_name
   LIMIT ?
+`;
+
+/**
+ * Semantic vector search: brute-force cosine similarity over pre-computed
+ * MiniLM-L6-v2 float32 embeddings stored in usda_embeddings.
+ *
+ * Requires sqlite-vec extension (enabled via op-sqlite "sqliteVec": true).
+ * The ? parameter must be a 1536-byte blob of 384 float32 values (little-endian).
+ *
+ * Returns top 5 USDA entries ordered by cosine distance ASC (0 = identical).
+ * Caller should filter results by MAX_VEC_DISTANCE to reject weak matches.
+ */
+export const MAX_VEC_DISTANCE = 0.50; // reject matches with cosine distance > this
+
+export const SQL_SEARCH_USDA_VEC = `
+  SELECT u.fdc_id, u.description,
+         u.calories_per_100g, u.protein_per_100g, u.fat_per_100g, u.carbs_per_100g,
+         u.fiber_per_100g, u.sodium_mg,
+         vec_distance_cosine(e.vector, vec_f32(?)) AS distance
+  FROM ${KG_TABLES.USDA_EMBEDDINGS} e
+  JOIN ${KG_TABLES.USDA_FOOD} u ON u.fdc_id = e.fdc_id
+  WHERE u.calories_per_100g IS NOT NULL
+  ORDER BY distance ASC
+  LIMIT 5
+`;
+
+/**
+ * BM25 keyword search over pre-computed term weights in usda_bm25_terms.
+ *
+ * Pass query tokens as a SQL IN list. The caller builds the parameterised
+ * query dynamically since SQLite doesn't support array binding directly.
+ * Use buildBm25Query() in knowledgeGraphService.ts to generate this SQL.
+ *
+ * Returns top 5 USDA entries ordered by BM25 score DESC.
+ */
+export const SQL_SEARCH_USDA_BM25_TEMPLATE = (placeholders: string) => `
+  SELECT u.fdc_id, u.description,
+         u.calories_per_100g, u.protein_per_100g, u.fat_per_100g, u.carbs_per_100g,
+         u.fiber_per_100g, u.sodium_mg,
+         SUM(t.weight) AS bm25_score
+  FROM ${KG_TABLES.USDA_BM25_TERMS} t
+  JOIN ${KG_TABLES.USDA_FOOD} u ON u.fdc_id = t.fdc_id
+  WHERE t.term IN (${placeholders})
+    AND u.calories_per_100g IS NOT NULL
+  GROUP BY u.fdc_id
+  ORDER BY bm25_score DESC
+  LIMIT 5
 `;
 
 /**

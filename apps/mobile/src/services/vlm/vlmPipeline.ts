@@ -12,6 +12,7 @@ import { geminiNanoService } from './geminiNanoService';
 import { getMockScanResult } from './geminiNanoMock';
 import { getKnowledgeGraphService } from '../knowledge-graph';
 import { enrichDishesWithKgIngredients } from '../detection/hiddenIngredientsService';
+import { EmbeddingService } from '../embedding/embeddingService';
 import type { ScannedDish, ScannedIngredient, ScanResult } from '../../types';
 import type { VlmIngredient } from './vlmTypes';
 
@@ -76,12 +77,12 @@ type NutritionFields = Pick<
  * Resolve nutrition for a detected ingredient/dish name at a given portion.
  *
  * Priority:
- *   1. USDA direct lookup — authoritative per-100g values for raw ingredients.
- *   2. KG recipe decomposition — USDA-backed per-ingredient sums, scaled to
- *      portion. Only accepted if within ±KG_USDA_MARGIN of USDA (when USDA
- *      also matched), or unconditionally when USDA had no match (composite dish).
- *   3. KG dish averages — same margin guard as recipe path.
- *   4. Flat-rate proxy — last resort, flags nutritionSource='proxy'.
+ *   1. USDA prefix lookup — exact/prefix match (fast, works for simple names).
+ *   2. BM25 keyword search — tokenised term overlap (handles compound names).
+ *   3. Vec semantic search — cosine similarity on MiniLM embeddings (broadest recall).
+ *   4. KG recipe decomposition — USDA-backed per-ingredient sums.
+ *   5. KG dish averages — fallback aggregate.
+ *   6. Flat-rate proxy — last resort, flags nutritionSource='proxy'.
  */
 async function lookupNutrition(name: string, amount_g: number): Promise<NutritionFields> {
   let usdaResult: { calories: number; protein: number; carbs: number; fat: number } | null = null;
@@ -90,13 +91,35 @@ async function lookupNutrition(name: string, amount_g: number): Promise<Nutritio
   try {
     const kg = await getKnowledgeGraphService();
     if (kg) {
-      // 1. USDA direct — raw ingredient lookup (e.g., "broccoli" → usda_food)
-      const usda = await kg.lookupUsdaIngredient(name, amount_g);
-      if (usda) {
-        usdaResult = { calories: usda.calories, protein: usda.protein, carbs: usda.carbs, fat: usda.fat };
+      // 1. USDA prefix lookup (single-word raw ingredients, e.g., "broccoli")
+      const prefix = await kg.lookupUsdaIngredient(name, amount_g);
+      if (prefix) {
+        usdaResult = { calories: prefix.calories, protein: prefix.protein, carbs: prefix.carbs, fat: prefix.fat };
       }
 
-      // 2. KG recipe/dish_average (composite dishes, or USDA validation)
+      // 2. BM25 keyword search (compound names, e.g., "pork cutlet")
+      if (!usdaResult) {
+        const bm25 = await kg.searchUsdaByBm25(name, amount_g);
+        if (bm25) {
+          usdaResult = { calories: bm25.calories, protein: bm25.protein, carbs: bm25.carbs, fat: bm25.fat };
+        }
+      }
+
+      // 3. Vec semantic search (semantically similar names, e.g., "tonkatsu" → pork loin)
+      if (!usdaResult) {
+        const embSvc = EmbeddingService.getInstance();
+        if (embSvc.ready) {
+          const vec = await embSvc.embed(name);
+          if (vec) {
+            const vecResult = await kg.searchUsdaByVector(vec, amount_g);
+            if (vecResult) {
+              usdaResult = { calories: vecResult.calories, protein: vecResult.protein, carbs: vecResult.carbs, fat: vecResult.fat };
+            }
+          }
+        }
+      }
+
+      // 4. KG recipe/dish_average (composite dishes, or USDA validation)
       const kg_r = await kg.calculateDishNutrition(name, amount_g);
       if (kg_r) {
         kgResult = { calories: kg_r.calories, protein: kg_r.protein, carbs: kg_r.carbs, fat: kg_r.fat };
@@ -106,8 +129,7 @@ async function lookupNutrition(name: string, amount_g: number): Promise<Nutritio
     // KG unavailable — fall through
   }
 
-  // If both found: use USDA unless KG is within margin (KG may have better
-  // preparation-specific data, e.g., "sautéed" vs raw)
+  // If both USDA and KG found: use USDA unless KG is within margin
   if (usdaResult && kgResult) {
     const usda_cal = usdaResult.calories;
     const kg_cal   = kgResult.calories;
@@ -119,12 +141,10 @@ async function lookupNutrition(name: string, amount_g: number): Promise<Nutritio
     return { ...chosen, fiber: 0, sodium: 0, nutritionSource: 'kg' };
   }
 
-  // Only USDA matched (raw ingredient, not a composite dish)
   if (usdaResult) {
     return { ...usdaResult, fiber: 0, sodium: 0, nutritionSource: 'kg' };
   }
 
-  // Only KG matched (composite dish not in USDA — accept without margin check)
   if (kgResult) {
     return { ...kgResult, fiber: 0, sodium: 0, nutritionSource: 'kg' };
   }
@@ -139,6 +159,75 @@ async function lookupNutrition(name: string, amount_g: number): Promise<Nutritio
     sodium:   0,
     nutritionSource: 'proxy',
   };
+}
+
+// ---------------------------------------------------------------------------
+// Benchmark utility (dev/testing)
+// ---------------------------------------------------------------------------
+
+/** Result of a single USDA search benchmark run. */
+export type UsdaSearchBenchmarkResult = {
+  name: string;
+  portionGrams: number;
+  prefix: { match: string | null; calories: number | null; latencyMs: number };
+  bm25:   { match: string | null; calories: number | null; latencyMs: number };
+  vec:    { match: string | null; calories: number | null; latencyMs: number; modelReady: boolean };
+};
+
+/**
+ * Run all three USDA lookup strategies for a list of food names and return
+ * timing + match results. Useful for comparing accuracy and latency on device.
+ *
+ * Import and call from a debug screen or console via __DEV__ guard.
+ */
+export async function benchmarkUsdaSearch(
+  names: string[],
+  portionGrams = 100,
+): Promise<UsdaSearchBenchmarkResult[]> {
+  const kg = await getKnowledgeGraphService();
+  if (!kg) throw new Error('KG service unavailable');
+
+  const embSvc = EmbeddingService.getInstance();
+  const results: UsdaSearchBenchmarkResult[] = [];
+
+  for (const name of names) {
+    // 1. Prefix
+    const t1 = performance.now();
+    const prefix = await kg.lookupUsdaIngredient(name, portionGrams).catch(() => null);
+    const prefixMs = performance.now() - t1;
+
+    // 2. BM25
+    const t2 = performance.now();
+    const bm25 = await kg.searchUsdaByBm25(name, portionGrams).catch(() => null);
+    const bm25Ms = performance.now() - t2;
+
+    // 3. Vec (embed + search)
+    const t3 = performance.now();
+    let vecMatch: typeof prefix = null;
+    if (embSvc.ready) {
+      const vec = await embSvc.embed(name);
+      if (vec) vecMatch = await kg.searchUsdaByVector(vec, portionGrams).catch(() => null);
+    }
+    const vecMs = performance.now() - t3;
+
+    results.push({
+      name,
+      portionGrams,
+      prefix: { match: prefix ? 'hit' : null, calories: prefix?.calories ?? null, latencyMs: prefixMs },
+      bm25:   { match: bm25   ? 'hit' : null, calories: bm25?.calories   ?? null, latencyMs: bm25Ms  },
+      vec:    { match: vecMatch ? 'hit' : null, calories: vecMatch?.calories ?? null, latencyMs: vecMs, modelReady: embSvc.ready },
+    });
+
+    // Log inline for easy logcat reading
+    console.log(
+      `[usda-bench] ${name.padEnd(25)} ` +
+      `prefix=${prefix ? `${prefix.calories.toFixed(0)}kcal` : 'miss'} (${prefixMs.toFixed(1)}ms) | ` +
+      `bm25=${bm25 ? `${bm25.calories.toFixed(0)}kcal` : 'miss'} (${bm25Ms.toFixed(1)}ms) | ` +
+      `vec=${vecMatch ? `${vecMatch.calories.toFixed(0)}kcal` : embSvc.ready ? 'miss' : 'no-model'} (${vecMs.toFixed(1)}ms)`,
+    );
+  }
+
+  return results;
 }
 
 // ---------------------------------------------------------------------------

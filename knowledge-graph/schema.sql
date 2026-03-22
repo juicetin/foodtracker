@@ -104,6 +104,27 @@ CREATE INDEX IF NOT EXISTS idx_recipe_ingredient_usda ON recipe_ingredient(usda_
 CREATE INDEX IF NOT EXISTS idx_usda_food_group ON usda_food(food_group);
 CREATE INDEX IF NOT EXISTS idx_symspell_variant ON symspell_deletes(delete_variant);
 
+-- ── USDA Semantic Search ─────────────────────────────────────────────
+
+-- Pre-computed MiniLM-L6-v2 float32 embeddings (384 dims) for each USDA entry.
+-- Stored as raw float32 blob (384 * 4 = 1536 bytes). Used with sqlite-vec's
+-- vec_distance_cosine() for brute-force ANN at query time (~7793 entries → fast).
+CREATE TABLE IF NOT EXISTS usda_embeddings (
+    fdc_id  INTEGER PRIMARY KEY REFERENCES usda_food(fdc_id) ON DELETE CASCADE,
+    vector  BLOB NOT NULL  -- 384 float32 values, little-endian
+);
+
+-- Pre-computed BM25 term weights for USDA descriptions.
+-- Each (fdc_id, term) row holds the TF-IDF weight of that term for that entry.
+-- At query time: tokenize query, SQL-join on term, SUM(weight) → ranked results.
+CREATE TABLE IF NOT EXISTS usda_bm25_terms (
+    fdc_id  INTEGER NOT NULL REFERENCES usda_food(fdc_id) ON DELETE CASCADE,
+    term    TEXT    NOT NULL,
+    weight  REAL    NOT NULL,
+    PRIMARY KEY (fdc_id, term)
+);
+CREATE INDEX IF NOT EXISTS idx_usda_bm25_term ON usda_bm25_terms(term);
+
 -- ── FTS5 Full-Text Search ────────────────────────────────────────────
 
 CREATE VIRTUAL TABLE IF NOT EXISTS dish_fts USING fts5(

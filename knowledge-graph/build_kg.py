@@ -2127,11 +2127,123 @@ def print_summary(conn: sqlite3.Connection, db_path: str):
     print("=" * 60)
 
 
+def seed_usda_embeddings(conn: sqlite3.Connection) -> int:
+    """
+    Compute MiniLM-L6-v2 float32 embeddings for all USDA food descriptions
+    and store them in usda_embeddings as raw float32 blobs.
+
+    The stored format is 384 * 4 = 1536 bytes of little-endian float32.
+    At query time the app uses sqlite-vec's vec_distance_cosine() for
+    brute-force nearest-neighbour search (~7793 entries, very fast).
+    """
+    try:
+        from sentence_transformers import SentenceTransformer
+        import numpy as np
+    except ImportError:
+        print("  SKIP: sentence-transformers or numpy not installed")
+        print("  Run: pip install sentence-transformers numpy")
+        return 0
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT fdc_id, description FROM usda_food ORDER BY fdc_id")
+    rows = cursor.fetchall()
+    if not rows:
+        print("  No USDA entries found, skipping")
+        return 0
+
+    print(f"  Loading MiniLM-L6-v2...")
+    model = SentenceTransformer("all-MiniLM-L6-v2")
+
+    fdc_ids = [r[0] for r in rows]
+    descriptions = [r[1] for r in rows]
+
+    print(f"  Encoding {len(descriptions)} descriptions (batch 512)...")
+    embeddings = model.encode(
+        descriptions,
+        batch_size=512,
+        show_progress_bar=True,
+        normalize_embeddings=True,  # unit-norm so cosine = dot product
+        convert_to_numpy=True,
+    )  # shape: (N, 384), dtype float32
+
+    cursor.execute("DELETE FROM usda_embeddings")
+    cursor.executemany(
+        "INSERT INTO usda_embeddings (fdc_id, vector) VALUES (?, ?)",
+        [(fdc_id, emb.astype(np.float32).tobytes()) for fdc_id, emb in zip(fdc_ids, embeddings)],
+    )
+    conn.commit()
+    print(f"  Stored {len(rows)} embeddings ({len(rows) * 384 * 4 / 1024:.0f} KB)")
+    return len(rows)
+
+
+def seed_usda_bm25(conn: sqlite3.Connection) -> int:
+    """
+    Pre-compute BM25 TF-IDF term weights for USDA food descriptions and
+    store them in usda_bm25_terms.
+
+    At query time the app tokenizes the detected food name, looks up
+    matching terms via SQL, and ranks USDA entries by SUM(weight).
+
+    Parameters: k1=1.5, b=0.75 (standard BM25).
+    """
+    import math
+    import re
+
+    cursor = conn.cursor()
+    cursor.execute("SELECT fdc_id, description FROM usda_food ORDER BY fdc_id")
+    rows = cursor.fetchall()
+    if not rows:
+        print("  No USDA entries found, skipping")
+        return 0
+
+    def tokenize(text: str) -> list[str]:
+        """Lowercase, strip punctuation, split on whitespace."""
+        return [t for t in re.split(r"[\s,\-/()]+", text.lower()) if len(t) > 1]
+
+    # Build corpus
+    corpus: list[tuple[int, list[str]]] = [(fdc_id, tokenize(desc)) for fdc_id, desc in rows]
+    N = len(corpus)
+
+    # Document frequency per term
+    df: dict[str, int] = {}
+    for _, tokens in corpus:
+        for term in set(tokens):
+            df[term] = df.get(term, 0) + 1
+
+    # Average document length
+    avg_dl = sum(len(tokens) for _, tokens in corpus) / N
+
+    k1, b = 1.5, 0.75
+
+    records: list[tuple[int, str, float]] = []
+    for fdc_id, tokens in corpus:
+        dl = len(tokens)
+        tf_map: dict[str, int] = {}
+        for t in tokens:
+            tf_map[t] = tf_map.get(t, 0) + 1
+        for term, tf in tf_map.items():
+            idf = math.log((N - df[term] + 0.5) / (df[term] + 0.5) + 1)
+            numerator = tf * (k1 + 1)
+            denominator = tf + k1 * (1 - b + b * dl / avg_dl)
+            weight = idf * (numerator / denominator)
+            records.append((fdc_id, term, weight))
+
+    cursor.execute("DELETE FROM usda_bm25_terms")
+    cursor.executemany(
+        "INSERT INTO usda_bm25_terms (fdc_id, term, weight) VALUES (?, ?, ?)",
+        records,
+    )
+    conn.commit()
+    print(f"  Stored {len(records):,} BM25 term weights for {N} entries")
+    return len(records)
+
+
 def main():
     parser = argparse.ArgumentParser(description="Build the food knowledge graph")
     parser.add_argument("--db", default=None, help="Path to output database")
     parser.add_argument("--skip-recipenlg", action="store_true", help="Skip RecipeNLG seeding")
     parser.add_argument("--skip-worldcuisines", action="store_true", help="Skip WorldCuisines alias seeding")
+    parser.add_argument("--skip-embeddings", action="store_true", help="Skip USDA embedding generation (fast dev builds)")
     args = parser.parse_args()
 
     db_path = args.db or str(KG_DIR / "food-knowledge.db")
@@ -2205,6 +2317,17 @@ def main():
     conn.execute("INSERT INTO dish_alias_fts(dish_alias_fts) VALUES('rebuild')")
     conn.commit()
     print("  FTS5 indexes rebuilt")
+
+    # Step 10: USDA semantic embeddings (MiniLM-L6-v2 float32)
+    if not args.skip_embeddings:
+        print("\n[10/11] Computing USDA semantic embeddings...")
+        seed_usda_embeddings(conn)
+    else:
+        print("\n[10/11] Skipping USDA embeddings (--skip-embeddings)")
+
+    # Step 11: BM25 term weights for USDA descriptions
+    print("\n[11/11] Computing USDA BM25 term weights...")
+    seed_usda_bm25(conn)
 
     # Summary
     print_summary(conn, db_path)

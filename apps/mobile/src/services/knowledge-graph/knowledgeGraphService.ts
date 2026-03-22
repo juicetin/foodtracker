@@ -21,6 +21,9 @@ import {
   SQL_GET_CANONICAL_RECIPE,
   SQL_GET_RECIPE_INGREDIENTS,
   SQL_SEARCH_USDA_FOOD,
+  SQL_SEARCH_USDA_VEC,
+  SQL_SEARCH_USDA_BM25_TEMPLATE,
+  MAX_VEC_DISTANCE,
 } from './knowledgeGraphSchema';
 import { SymSpellIndex } from './symspellIndex';
 
@@ -367,6 +370,77 @@ export class KnowledgeGraphService {
     return null;
   }
 
+  /**
+   * Semantic vector search: embed the query name (384 float32 values, little-endian)
+   * and find the closest USDA entry by cosine distance via sqlite-vec.
+   *
+   * @param queryVector - Float32Array of length 384 from MiniLM-L6-v2
+   * @param portionGrams - Portion weight to scale results to
+   * @returns Top USDA match scaled to portion, or null if table is empty
+   */
+  async searchUsdaByVector(queryVector: Float32Array, portionGrams: number): Promise<MacroResult | null> {
+    const db = this.getDb();
+    try {
+      const blob = queryVector.buffer.slice(
+        queryVector.byteOffset,
+        queryVector.byteOffset + queryVector.byteLength,
+      ) as ArrayBuffer;
+      const result = await db.execute(SQL_SEARCH_USDA_VEC, [blob]);
+      if (result.rows.length === 0) return null;
+      const row = result.rows[0] as Record<string, unknown>;
+      // Reject weak matches — distance > MAX_VEC_DISTANCE means "no confident match"
+      const distance = row.distance as number | null;
+      if (distance != null && distance > MAX_VEC_DISTANCE) return null;
+      const cal100 = row.calories_per_100g as number | null;
+      if (!cal100) return null;
+      const scale = portionGrams / 100;
+      return {
+        calories: (cal100 ?? 0) * scale,
+        protein: ((row.protein_per_100g as number | null) ?? 0) * scale,
+        carbs: ((row.carbs_per_100g as number | null) ?? 0) * scale,
+        fat: ((row.fat_per_100g as number | null) ?? 0) * scale,
+        weightGrams: portionGrams,
+        source: 'usda',
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * BM25 keyword search: tokenize the name, look up pre-computed term weights,
+   * and return the highest-scoring USDA entry.
+   *
+   * @param name - Food name to search (e.g., "pork cutlet")
+   * @param portionGrams - Portion weight to scale results to
+   * @returns Top USDA match scaled to portion, or null if no terms match
+   */
+  async searchUsdaByBm25(name: string, portionGrams: number): Promise<MacroResult | null> {
+    const db = this.getDb();
+    const tokens = this.tokenize(name);
+    if (tokens.length === 0) return null;
+    try {
+      const placeholders = tokens.map(() => '?').join(', ');
+      const sql = SQL_SEARCH_USDA_BM25_TEMPLATE(placeholders);
+      const result = await db.execute(sql, tokens);
+      if (result.rows.length === 0) return null;
+      const row = result.rows[0] as Record<string, unknown>;
+      const cal100 = row.calories_per_100g as number | null;
+      if (!cal100) return null;
+      const scale = portionGrams / 100;
+      return {
+        calories: (cal100 ?? 0) * scale,
+        protein: ((row.protein_per_100g as number | null) ?? 0) * scale,
+        carbs: ((row.carbs_per_100g as number | null) ?? 0) * scale,
+        fat: ((row.fat_per_100g as number | null) ?? 0) * scale,
+        weightGrams: portionGrams,
+        source: 'usda',
+      };
+    } catch {
+      return null;
+    }
+  }
+
   // ── Private helpers ──
 
   /**
@@ -440,6 +514,18 @@ export class KnowledgeGraphService {
       .replace(/[-_]/g, ' ')
       .replace(/\s+/g, ' ')
       .trim();
+  }
+
+  /**
+   * Tokenize a food name for BM25 lookup.
+   * Mirrors the Python tokenizer in seed_usda_bm25(): lowercase, split on
+   * whitespace/commas/hyphens/parens, drop single-char tokens.
+   */
+  private tokenize(input: string): string[] {
+    return input
+      .toLowerCase()
+      .split(/[\s,\-/()]+/)
+      .filter((t) => t.length > 1);
   }
 
   /**
