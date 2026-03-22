@@ -85,6 +85,9 @@ type NutritionFields = Pick<
  *   6. Flat-rate proxy — last resort, flags nutritionSource='proxy'.
  */
 async function lookupNutrition(name: string, amount_g: number): Promise<NutritionFields> {
+  // Lazy warmup: load embedding TFLite model on first nutrition lookup (idempotent)
+  EmbeddingService.getInstance().warmup().catch(() => {});
+
   let usdaResult: { calories: number; protein: number; carbs: number; fat: number } | null = null;
   let kgResult:   { calories: number; protein: number; carbs: number; fat: number } | null = null;
 
