@@ -151,14 +151,31 @@ export default function ProfileScreen() {
       {/* Preferences */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Preferences</Text>
-        <View style={styles.row}>
+        <Pressable
+          style={styles.row}
+          onPress={() => {
+            const regions = Object.keys(regionLabels);
+            const currentIdx = regions.indexOf(region);
+            const nextIdx = (currentIdx + 1) % regions.length;
+            setRegion(regions[nextIdx]);
+          }}
+        >
           <Text style={styles.rowLabel}>Region</Text>
-          <Text style={styles.rowValue}>{regionLabels[region] ?? region}</Text>
-        </View>
-        <View style={styles.row}>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.rowValue}>{regionLabels[region] ?? region}</Text>
+            <Text style={styles.rowChevron}>{'\u2192'}</Text>
+          </View>
+        </Pressable>
+        <Pressable
+          style={styles.row}
+          onPress={() => setUnits(units === 'metric' ? 'imperial' : 'metric')}
+        >
           <Text style={styles.rowLabel}>Units</Text>
-          <Text style={styles.rowValue}>{units === 'metric' ? 'Metric' : 'Imperial'}</Text>
-        </View>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            <Text style={styles.rowValue}>{units === 'metric' ? 'Metric' : 'Imperial'}</Text>
+            <Text style={styles.rowChevron}>{'\u2192'}</Text>
+          </View>
+        </Pressable>
       </View>
 
       {/* Logging Mode */}
@@ -634,13 +651,18 @@ function HealthWeightCard() {
     if (enabled) {
       try {
         await initHealthConnect();
+      } catch {
+        Alert.alert('Error', 'Failed to initialize Health Connect. Make sure it is installed and up to date.');
+        return;
+      }
+      try {
         const granted = await requestWeightPermission();
         if (!granted) {
           Alert.alert('Permission Denied', 'Health Connect weight read permission is required.');
           return;
         }
       } catch {
-        Alert.alert('Error', 'Failed to initialize Health Connect.');
+        Alert.alert('Error', 'Failed to request Health Connect permissions.');
         return;
       }
     }

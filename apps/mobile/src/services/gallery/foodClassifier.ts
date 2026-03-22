@@ -39,7 +39,7 @@ const BASE_BACKOFF_MS = 1000;
 export async function classifyPhoto(photoUri: string): Promise<boolean> {
   try {
     const result = await geminiNanoService.identify(photoUri);
-    return result.dishes.length > 0;
+    return Array.isArray(result?.dishes) && result.dishes.length > 0;
   } catch {
     return false;
   }

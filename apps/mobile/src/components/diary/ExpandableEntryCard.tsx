@@ -1,8 +1,8 @@
 /**
- * ExpandableEntryCard — three-state tap cycle entry card with photo thumbnail.
+ * ExpandableEntryCard — two-state tap cycle entry card with photo thumbnail.
  *
- * States: summary (macros visible) -> ingredients (per-ingredient breakdown) -> collapsed (minimal)
- * Visual affordance: three dots at bottom-right showing cycle position.
+ * States: summary (macros visible) -> ingredients (per-ingredient breakdown)
+ * Visual affordance: two dots at bottom-right showing cycle position.
  * Long-press navigates to entry detail.
  */
 
@@ -13,8 +13,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { opsqlite } from '../../../db/client';
 import type { DiaryEntry } from '../../services/diary/diaryQueries';
 
-type CardState = 'summary' | 'ingredients' | 'collapsed';
-const STATE_CYCLE: CardState[] = ['summary', 'ingredients', 'collapsed'];
+type CardState = 'summary' | 'ingredients';
+const STATE_CYCLE: CardState[] = ['summary', 'ingredients'];
 
 interface ExpandableEntryCardProps {
   entry: DiaryEntry;
@@ -114,8 +114,8 @@ export function ExpandableEntryCard({ entry, onNavigateToDetail }: ExpandableEnt
           </View>
         </View>
 
-        {/* Summary state: calorie + macro row */}
-        {cardState !== 'collapsed' && (
+        {/* Calorie + macro row (always visible) */}
+        {(
           <View style={styles.macroRow} testID="macro-row">
             <Text style={styles.calorieText}>{Math.round(entry.totalCalories)} kcal</Text>
             <View style={styles.macroPills}>

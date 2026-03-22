@@ -22,12 +22,16 @@ const LAST_SCAN_KEY = 'gallery_last_scan_timestamp';
  * Returns a default of 30 days back if never scanned.
  */
 export async function getLastScanTimestamp(): Promise<number> {
-  const result = opsqlite.execute(
-    `SELECT value FROM user_settings WHERE id = ?`,
-    [LAST_SCAN_KEY],
-  );
-  if (result.rows.length > 0 && result.rows[0].value) {
-    return Number(result.rows[0].value);
+  try {
+    const result = opsqlite.execute(
+      `SELECT value FROM user_settings WHERE id = ?`,
+      [LAST_SCAN_KEY],
+    );
+    if (result.rows?.length > 0 && result.rows[0].value) {
+      return Number(result.rows[0].value);
+    }
+  } catch {
+    // user_settings table may not exist yet (drizzle migration pending)
   }
   return Date.now() - DEFAULT_SCAN_PREFS.firstScanDaysBack * 24 * 60 * 60 * 1000;
 }
