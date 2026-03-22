@@ -126,4 +126,4 @@ Accurate, effortless food tracking from photos you already take — no manual en
 | ADK removed as requirement | No cloud agent framework needed in local-first architecture | ✓ Decided |
 
 ---
-*Last updated: 2026-03-21 after Phase 7.1 gap closure (integration wiring + dead code cleanup)*
+*Last updated: 2026-03-22 after Phase 08 (on-device vector search embedding via TFLite MiniLM — semantic USDA food matching now active alongside BM25)*
