@@ -24,6 +24,9 @@ export default function IngredientRow({ ingredient, onNameTap, onWeightChange, o
     ? ingredient.amount_g / ingredient.originalAmount_g
     : 1;
   const displayCalories = Math.round(ingredient.calories * scale);
+  const displayProtein = Math.round(ingredient.protein * scale);
+  const displayCarbs = Math.round(ingredient.carbs * scale);
+  const displayFat = Math.round(ingredient.fat * scale);
 
   function handleWeightSubmit() {
     setEditingWeight(false);
@@ -43,7 +46,7 @@ export default function IngredientRow({ ingredient, onNameTap, onWeightChange, o
           <Text style={styles.name} numberOfLines={1}>{ingredient.name}</Text>
           <Text style={styles.tapHint}>tap to change</Text>
         </TouchableOpacity>
-        <Text style={styles.kcal}>{displayCalories} kcal</Text>
+        <Text style={styles.kcal}>{displayCalories} kcal  ·  P {displayProtein}g  C {displayCarbs}g  F {displayFat}g</Text>
       </View>
 
       {/* Right: weight chip (inline edit) + remove */}

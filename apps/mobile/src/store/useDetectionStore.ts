@@ -24,11 +24,11 @@ interface DetectionStore extends DetectionState {
   setPendingPhotos: (pending: number, total: number) => void;
   setAnalyzing: (val: boolean) => void;
   setMealType: (type: MealType) => void;
-  /** Edit an ingredient's name or weight. Marks it userModified. */
+  /** Edit an ingredient's name, weight, or nutrition. Marks it userModified. */
   updateIngredient: (
     dishId: string,
     ingId: string,
-    update: Partial<Pick<ScannedIngredient, 'name' | 'amount_g'>>,
+    update: Partial<Pick<ScannedIngredient, 'name' | 'amount_g' | 'calories' | 'protein' | 'carbs' | 'fat' | 'fiber' | 'sodium'>>,
   ) => void;
   /** Scale all non-userModified ingredients proportionally. */
   updateDishScale: (dishId: string, scale: number) => void;

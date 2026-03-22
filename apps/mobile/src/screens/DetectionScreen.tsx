@@ -28,7 +28,7 @@ import { geminiNanoService } from '../services/vlm/geminiNanoService';
 import { useDetectionStore } from '../store/useDetectionStore';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import DishCard from '../components/detection/DishCard';
-import IngredientSearchSheet from '../components/detection/IngredientSearchSheet';
+import IngredientSearchSheet, { type IngredientSearchResult } from '../components/detection/IngredientSearchSheet';
 import type { MealType } from '../services/detection/types';
 
 // ---------------------------------------------------------------------------
@@ -188,9 +188,23 @@ export function DetectionScreen() {
     setSearchTarget({ dishId, ingId, currentName });
   }
 
-  function handleIngredientSearchSelect(name: string) {
+  function handleIngredientSearchSelect(result: IngredientSearchResult) {
     if (searchTarget) {
-      updateIngredient(searchTarget.dishId, searchTarget.ingId, { name });
+      const update: Record<string, unknown> = { name: result.name };
+      // When selecting an OFF product, scale per-100g nutrition to current ingredient weight
+      if (result.nutrimentsPer100g) {
+        const ing = dishes
+          .find((d) => d.id === searchTarget.dishId)
+          ?.ingredients.find((i) => i.id === searchTarget.ingId);
+        const grams = ing?.amount_g ?? 100;
+        const scale = grams / 100;
+        const n = result.nutrimentsPer100g;
+        update.calories = n.calories * scale;
+        update.protein = n.protein * scale;
+        update.carbs = n.carbs * scale;
+        update.fat = n.fat * scale;
+      }
+      updateIngredient(searchTarget.dishId, searchTarget.ingId, update);
     }
     setSearchTarget(null);
   }

@@ -21,10 +21,24 @@ import {
 import { getKnowledgeGraphService } from '../../services/knowledge-graph';
 import { searchProducts } from '../../services/openfoodfacts/openFoodFactsService';
 
+export interface IngredientSearchResult {
+  name: string;
+  source: 'kg' | 'off' | 'custom';
+  /** Per-100g nutrition (OFF products only) */
+  nutrimentsPer100g?: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    fiber: number;
+    sodium: number;
+  };
+}
+
 interface Props {
   visible: boolean;
   initialQuery: string;
-  onSelect: (ingredientName: string) => void;
+  onSelect: (result: IngredientSearchResult) => void;
   onDismiss: () => void;
 }
 
@@ -35,7 +49,7 @@ export default function IngredientSearchSheet({
   onDismiss,
 }: Props) {
   const [query, setQuery] = useState(initialQuery);
-  const [results, setResults] = useState<{ name: string; source: 'kg' | 'off' }[]>([]);
+  const [results, setResults] = useState<IngredientSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<TextInput>(null);
@@ -59,7 +73,7 @@ export default function IngredientSearchSheet({
 
     setLoading(true);
     try {
-      const unified: { name: string; source: 'kg' | 'off' }[] = [];
+      const unified: IngredientSearchResult[] = [];
 
       // KG search (local, fast)
       const kg = await getKnowledgeGraphService();
@@ -76,7 +90,11 @@ export default function IngredientSearchSheet({
       for (const p of offResults) {
         const displayName = p.brand ? `${p.name} (${p.brand})` : p.name;
         if (!kgNames.has(p.name.toLowerCase())) {
-          unified.push({ name: displayName, source: 'off' });
+          unified.push({
+            name: displayName,
+            source: 'off',
+            nutrimentsPer100g: p.nutrimentsPer100g,
+          });
         }
       }
 
@@ -94,13 +112,13 @@ export default function IngredientSearchSheet({
     debounceRef.current = setTimeout(() => doSearch(text), 250);
   }
 
-  function handleSelectResult(item: { name: string; source: string }) {
-    onSelect(item.name);
+  function handleSelectResult(item: IngredientSearchResult) {
+    onSelect(item);
   }
 
   function handleSubmitCustom() {
     const trimmed = query.trim();
-    if (trimmed) onSelect(trimmed);
+    if (trimmed) onSelect({ name: trimmed, source: 'custom' });
   }
 
   return (
