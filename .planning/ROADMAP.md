@@ -426,7 +426,7 @@ Plans:
 
 Plans:
 - [x] 08-01-PLAN.md -- Python export script: MiniLM ONNX export with pooling+norm, Docker onnx2tf INT8 conversion, vocab extraction, validation, asset deployment
-- [ ] 08-02-PLAN.md -- Pure-JS WordPiece tokenizer + EmbeddingService TFLite implementation, unit tests for both
+- [x] 08-02-PLAN.md -- Pure-JS WordPiece tokenizer + EmbeddingService TFLite implementation, unit tests for both
 
 ## Progress
 

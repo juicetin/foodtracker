@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 08-01-PLAN.md
-last_updated: "2026-03-22T09:21:57.083Z"
+stopped_at: Completed 08-02-PLAN.md
+last_updated: "2026-03-22T09:26:50.951Z"
 progress:
   total_phases: 22
-  completed_phases: 21
+  completed_phases: 22
   total_plans: 65
-  completed_plans: 64
+  completed_plans: 65
 ---
 
 # Project State
@@ -121,6 +121,7 @@ Plan: 2 of 2
 | Phase 07.1 P02 | 2min | 1 tasks | 14 files |
 | Phase 07.1 P01 | 6min | 1 tasks | 9 files |
 | Phase 08 P01 | 49min | 1 tasks | 3 files |
+| Phase 08 P02 | 3min | 2 tasks | 4 files |
 
 ## Accumulated Context
 
@@ -315,6 +316,7 @@ Recent decisions affecting current work:
 - [Phase 08]: Dynamic-range INT8 quantisation for non-image TFLite models (int32 token inputs)
 - [Phase 08]: python:3.11-slim Docker for onnx2tf (avoids TF version conflicts in tensorflow images)
 - [Phase 08]: onnx2tf -rtpo Erf GeLU for BERT-family models to avoid FlexErf Select TF ops
+- [Phase 08]: Pure-JS WordPiece tokenizer (no native dependency) with [CLS]/[SEP] framing and Int32Array output
 
 ### Roadmap Evolution
 
@@ -342,6 +344,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T09:21:57.079Z
-Stopped at: Completed 08-01-PLAN.md
+Last session: 2026-03-22T09:26:50.947Z
+Stopped at: Completed 08-02-PLAN.md
 Resume file: None
