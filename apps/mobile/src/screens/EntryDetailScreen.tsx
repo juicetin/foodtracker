@@ -206,16 +206,12 @@ export default function EntryDetailScreen() {
   const editSession = useEditSession();
 
   const reload = useCallback(() => {
-    try {
-      const loaded = loadEntry(route.params?.entryId);
-      setEntry(loaded);
-      if (loaded && loaded.dishes.length > 0) {
-        setAlreadyFaved(isFavourited(loaded.dishes.map((d) => d.name).join(', ')));
-      }
-    } catch {
-      setEntry(null);
+    const loaded = loadEntry(route.params.entryId);
+    setEntry(loaded);
+    if (loaded && loaded.dishes.length > 0) {
+      setAlreadyFaved(isFavourited(loaded.dishes.map((d) => d.name).join(', ')));
     }
-  }, [route.params?.entryId]);
+  }, [route.params.entryId]);
 
   useEffect(() => {
     reload();
