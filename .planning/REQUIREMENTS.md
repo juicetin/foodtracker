@@ -79,8 +79,8 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### On-Device Embedding
 
-- [ ] **EMB-01**: MiniLM-L6-v2 exported as TFLite INT8 with mean pooling and L2 normalization baked into the graph, producing 384-dim normalized float32 vectors
-- [ ] **EMB-02**: WordPiece vocabulary (30522 tokens) extracted from HuggingFace tokenizer and bundled as JSON asset
+- [x] **EMB-01**: MiniLM-L6-v2 exported as TFLite INT8 with mean pooling and L2 normalization baked into the graph, producing 384-dim normalized float32 vectors
+- [x] **EMB-02**: WordPiece vocabulary (30522 tokens) extracted from HuggingFace tokenizer and bundled as JSON asset
 - [ ] **EMB-03**: Pure-JS WordPiece tokenizer handles lowercasing, punctuation splitting, subword splitting with ## prefixes, [CLS]/[SEP] special tokens, attention mask generation
 - [ ] **EMB-04**: EmbeddingService loads TFLite model via react-native-fast-tflite with lazy initialization on first detection flow
 - [ ] **EMB-05**: Vec search path in vlmPipeline activates when embedding service is ready, enabling semantic USDA food matching alongside BM25

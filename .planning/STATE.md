@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Phase 8 planned — 2 plans, verification passed
-last_updated: "2026-03-22T08:29:57.873Z"
+stopped_at: Completed 08-01-PLAN.md
+last_updated: "2026-03-22T09:21:57.083Z"
 progress:
   total_phases: 22
   completed_phases: 21
   total_plans: 65
-  completed_plans: 63
+  completed_plans: 64
 ---
 
 # Project State
@@ -19,11 +19,11 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-12)
 
 **Core value:** Accurate, effortless food tracking from photos you already take -- no manual entry, no barcode scanning, no subscription, just eat, photograph, and review.
-**Current focus:** Phase 07.1 — integration-wiring-cleanup
+**Current focus:** Phase 08 — on-device-vector-search-embedding-via-tflite-minilm
 
 ## Current Position
 
-Phase: 07.1 (integration-wiring-cleanup) — EXECUTING
+Phase: 08 (on-device-vector-search-embedding-via-tflite-minilm) — EXECUTING
 Plan: 2 of 2
 
 ## Performance Metrics
@@ -120,6 +120,7 @@ Plan: 2 of 2
 | Phase 06 P01 | 7min | 2 tasks | 14 files |
 | Phase 07.1 P02 | 2min | 1 tasks | 14 files |
 | Phase 07.1 P01 | 6min | 1 tasks | 9 files |
+| Phase 08 P01 | 49min | 1 tasks | 3 files |
 
 ## Accumulated Context
 
@@ -311,6 +312,9 @@ Recent decisions affecting current work:
 - [Phase 07.1]: Pre-existing TS errors in useDetectionStore.test.ts and useWeightStore.ts left untouched -- out of scope for dead code removal
 - [Phase 07.1]: onResult callback pattern for ScaleInput->Detection data flow via navigation params
 - [Phase 07.1]: DET-05 DROPPED: Gemini Nano has no confidence scores; DET-06 DROPPED: Gemini Nano provides gram estimates directly
+- [Phase 08]: Dynamic-range INT8 quantisation for non-image TFLite models (int32 token inputs)
+- [Phase 08]: python:3.11-slim Docker for onnx2tf (avoids TF version conflicts in tensorflow images)
+- [Phase 08]: onnx2tf -rtpo Erf GeLU for BERT-family models to avoid FlexErf Select TF ops
 
 ### Roadmap Evolution
 
@@ -338,6 +342,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-22T08:29:57.864Z
-Stopped at: Phase 8 planned — 2 plans, verification passed
-Resume file: .planning/phases/08-on-device-vector-search-embedding-via-tflite-minilm/08-01-PLAN.md
+Last session: 2026-03-22T09:21:57.079Z
+Stopped at: Completed 08-01-PLAN.md
+Resume file: None
