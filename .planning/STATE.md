@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 09.1-02-PLAN.md
-last_updated: "2026-03-23T20:37:45.068Z"
+stopped_at: Completed 09.1-03-PLAN.md
+last_updated: "2026-03-23T20:41:51.208Z"
 progress:
   total_phases: 24
-  completed_phases: 23
+  completed_phases: 24
   total_plans: 73
-  completed_plans: 72
+  completed_plans: 73
 ---
 
 # Project State
@@ -129,6 +129,7 @@ Plan: 3 of 3
 | Phase 09 P05 | 1min | 2 tasks | 7 files |
 | Phase 09.1 P01 | 5min | 2 tasks | 10 files |
 | Phase 09.1 P02 | 11min | 2 tasks | 15 files |
+| Phase 09.1 P03 | 12min | 2 tasks | 31 files |
 
 ## Accumulated Context
 
@@ -330,6 +331,8 @@ Recent decisions affecting current work:
 - [Phase 09]: Kept timePeriods.ts — still imported by diaryQueries.ts and mealGroups.ts
 - [Phase 09.1]: ThemeProvider context + useTheme hook for color distribution; createStyles(colors) factory for dynamic StyleSheet; Zustand persist v1 migration from darkMode to themePreference
 - [Phase 09.1]: All 15 screens migrated to useTheme()+createStyles(colors) pattern; helper components get own useTheme() call; debug-specific colors left as-is
+- [Phase 09.1]: AnnotatedPhoto/BoundingBoxOverlay/PhotoViewer not themed -- dark photo backdrop and confidence colors are semantically correct in both modes
+- [Phase 09.1]: Bottom sheets use inline backgroundStyle/handleIndicatorStyle props for theme
 
 ### Roadmap Evolution
 
@@ -359,6 +362,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-23T20:37:45.064Z
-Stopped at: Completed 09.1-02-PLAN.md
+Last session: 2026-03-23T20:41:51.203Z
+Stopped at: Completed 09.1-03-PLAN.md
 Resume file: None
