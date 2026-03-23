@@ -474,7 +474,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 **Plans:** 5 plans
 
 Plans:
-- [ ] 09-01-PLAN.md -- Foundation: install deps, types/contracts, mealGroups + copyMoveService, navigation restructure, InsightsScreen
+- [x] 09-01-PLAN.md -- Foundation: install deps, types/contracts, mealGroups + copyMoveService, navigation restructure, InsightsScreen
 - [ ] 09-02-PLAN.md -- Diary components + DiaryHomeScreen: MealGroupSection, FoodItemCard, MacroSummaryHeader, DateNavigator, CalendarPicker
 - [ ] 09-03-PLAN.md -- AddFoodScreen: search bar with icons, quick access tabs, entry method cards, navigation wiring
 - [ ] 09-04-PLAN.md -- Bottom sheets: ItemDetailSheet, ContextMenuSheet, MealGroupMenuSheet, wire into DiaryHomeScreen
@@ -486,7 +486,7 @@ Plans:
 **Goal:** [Urgent work - to be planned]
 **Requirements**: TBD
 **Depends on:** Phase 9
-**Plans:** 0 plans
+**Plans:** 1/5 plans executed
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 09.1 to break down)

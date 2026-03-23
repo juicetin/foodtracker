@@ -87,9 +87,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### UX Redesign
 
-- [ ] **UX-01**: Diary-first home screen with remaining calories display and P/C/F macro progress bars, replacing separate Home + Diary tabs
+- [x] **UX-01**: Diary-first home screen with remaining calories display and P/C/F macro progress bars, replacing separate Home + Diary tabs
 - [ ] **UX-02**: Date navigation with swipe gestures, arrow buttons, and calendar picker modal on date tap
-- [ ] **UX-03**: Meal group headers (Breakfast/Lunch/Dinner/Snacks) with tap expand/collapse and long-press menu, replacing time-period grouping
+- [x] **UX-03**: Meal group headers (Breakfast/Lunch/Dinner/Snacks) with tap expand/collapse and long-press menu, replacing time-period grouping
 - [ ] **UX-04**: Food item tap opens bottom sheet detail (read-only macros, ingredients, expandable sections) instead of navigating to full screen
 - [ ] **UX-05**: Food item long press opens context menu with Copy to clipboard, Copy to another day, Move to other meal, Save as favorite, Delete
 - [ ] **UX-06**: Unified Add Food screen with search bar containing camera, voice, and barcode icons
@@ -97,9 +97,9 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **UX-08**: Barcode scanning integrated into Add Food screen search bar (always visible)
 - [ ] **UX-09**: Voice input hint for food description via keyboard voice button
 - [ ] **UX-10**: AI Photo Scan results display with per-dish ingredient breakdown and macros
-- [ ] **UX-11**: Copy entry to another day and move entry to different meal type operations
+- [x] **UX-11**: Copy entry to another day and move entry to different meal type operations
 - [ ] **UX-12**: Item Detail Bottom Sheet with expandable micronutrients, nutrition source, and view photo sections
-- [ ] **QA-01**: Fix long press diary item crash (replaces broken handler with new context menu)
+- [x] **QA-01**: Fix long press diary item crash (replaces broken handler with new context menu)
 - [ ] **QA-02**: Fix re-log tap behavior (tap now opens detail bottom sheet, not re-log action)
 - [ ] **QA-03**: Remove third toggle view on diary items (keep two states: summary + ingredients)
 - [ ] **QA-06**: Barcode option always visible on add food screen
