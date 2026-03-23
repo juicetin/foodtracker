@@ -478,7 +478,7 @@ Plans:
 - [x] 09-02-PLAN.md -- Diary components + DiaryHomeScreen: MealGroupSection, FoodItemCard, MacroSummaryHeader, DateNavigator, CalendarPicker
 - [x] 09-03-PLAN.md -- AddFoodScreen: search bar with icons, quick access tabs, entry method cards, navigation wiring
 - [x] 09-04-PLAN.md -- Bottom sheets: ItemDetailSheet, ContextMenuSheet, MealGroupMenuSheet, wire into DiaryHomeScreen
-- [ ] 09-05-PLAN.md -- Cleanup + human verification: delete old screens/components, fix references, emulator test
+- [x] 09-05-PLAN.md -- Cleanup + human verification: delete old screens/components, fix references, emulator test
 
 
 ### Phase 09.1: Dark mode theme with system preference detection and manual toggle (INSERTED)
@@ -486,7 +486,7 @@ Plans:
 **Goal:** [Urgent work - to be planned]
 **Requirements**: TBD
 **Depends on:** Phase 9
-**Plans:** 4/5 plans executed
+**Plans:** 5/5 plans complete
 
 Plans:
 - [ ] TBD (run /gsd:plan-phase 09.1 to break down)
