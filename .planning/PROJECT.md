@@ -126,4 +126,4 @@ Accurate, effortless food tracking from photos you already take — no manual en
 | ADK removed as requirement | No cloud agent framework needed in local-first architecture | ✓ Decided |
 
 ---
-*Last updated: 2026-03-23 after Phase 09 (UX redesign — diary-first home, unified AddFood screen, bottom sheets, context menus, copy/move meals, QA fixes)*
+*Last updated: 2026-03-24 after Phase 09.1 (dark mode theme — semantic color tokens, ThemeProvider, system preference detection, manual toggle, full screen/component migration)*
