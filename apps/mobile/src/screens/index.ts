@@ -13,3 +13,4 @@ export { default as GalleryScanScreen } from './GalleryScanScreen';
 export { default as ScaleInputScreen } from './ScaleInputScreen';
 export { default as WeightTrendScreen } from './WeightTrendScreen';
 export { default as InsightsScreen } from './InsightsScreen';
+export { default as AddFoodScreen } from './AddFoodScreen';
