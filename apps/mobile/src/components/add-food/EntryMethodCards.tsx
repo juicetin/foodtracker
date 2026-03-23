@@ -1,13 +1,15 @@
 /**
- * EntryMethodCards — 2x2 grid of food entry method cards.
+ * EntryMethodCards -- 2x2 grid of food entry method cards.
  *
  * Provides quick access to: Scan Photo, Scan Barcode, Quick Add Macros,
  * and From Gallery. Each card has an icon and label.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 export interface EntryMethodCardsProps {
   onScanPhoto: () => void;
@@ -28,6 +30,9 @@ export function EntryMethodCards({
   onQuickAdd,
   onFromGallery,
 }: EntryMethodCardsProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const cards: CardConfig[] = [
     { label: 'Scan Photo', icon: 'camera-outline', onPress: onScanPhoto },
     { label: 'Scan Barcode', icon: 'barcode-outline', onPress: onScanBarcode },
@@ -45,7 +50,7 @@ export function EntryMethodCards({
           accessibilityRole="button"
           accessibilityLabel={card.label}
         >
-          <Ionicons name={card.icon} size={32} color="#16A34A" />
+          <Ionicons name={card.icon} size={32} color={colors.accent.green} />
           <Text style={styles.cardLabel}>{card.label}</Text>
         </Pressable>
       ))}
@@ -53,32 +58,34 @@ export function EntryMethodCards({
   );
 }
 
-const styles = StyleSheet.create({
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 12,
-  },
-  card: {
-    width: '47%' as any,
-    backgroundColor: '#FFFFFF',
-    borderRadius: 12,
-    padding: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 4,
-    flexGrow: 1,
-    flexBasis: '45%',
-  },
-  cardLabel: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    textAlign: 'center',
-    marginTop: 8,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+      gap: 12,
+    },
+    card: {
+      width: '47%' as any,
+      backgroundColor: colors.background.elevated,
+      borderRadius: 12,
+      padding: 16,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 1,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 4,
+      flexGrow: 1,
+      flexBasis: '45%',
+    },
+    cardLabel: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text.secondary,
+      textAlign: 'center',
+      marginTop: 8,
+    },
+  });
+}

@@ -5,6 +5,9 @@
  * and react-native-reanimated for smooth animated zoom/pan.
  * Horizontal FlatList for swiping between multiple photos.
  * Page indicator dots at bottom when multiple photos.
+ *
+ * Note: Dark backdrop (#000) and white text (#FFF) are intentional for
+ * photo viewing -- not theme-sensitive.
  */
 
 import React, { useCallback, useState } from 'react';

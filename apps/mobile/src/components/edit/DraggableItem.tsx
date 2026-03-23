@@ -8,7 +8,7 @@
  * When dragged past midpoint of screen, snaps to other column on release.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Dimensions, StyleSheet, Text, View } from 'react-native';
 import { Gesture, GestureDetector } from 'react-native-gesture-handler';
 import Animated, {
@@ -18,6 +18,8 @@ import Animated, {
   runOnJS,
 } from 'react-native-reanimated';
 import type { MergeItem } from '../../services/entryEditor/reidentifyService';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 const SCREEN_WIDTH = Dimensions.get('window').width;
 const SNAP_THRESHOLD = SCREEN_WIDTH * 0.25; // drag 25% of screen to snap
@@ -29,6 +31,8 @@ interface DraggableItemProps {
 }
 
 export function DraggableItem({ item, onDragComplete, currentSide }: DraggableItemProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const translateX = useSharedValue(0);
 
   const handleDragComplete = (side: 'left' | 'right') => {
@@ -45,10 +49,8 @@ export function DraggableItem({ item, onDragComplete, currentSide }: DraggableIt
       const draggedLeft = e.translationX < -SNAP_THRESHOLD;
 
       if (currentSide === 'left' && draggedRight) {
-        // Dragged from left (discard) to right (keep)
         runOnJS(handleDragComplete)('right');
       } else if (currentSide === 'right' && draggedLeft) {
-        // Dragged from right (keep) to left (discard)
         runOnJS(handleDragComplete)('left');
       }
 
@@ -84,69 +86,71 @@ export function DraggableItem({ item, onDragComplete, currentSide }: DraggableIt
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFF',
-    borderRadius: 10,
-    padding: 10,
-    marginBottom: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  itemName: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#111827',
-    flex: 1,
-    marginRight: 6,
-  },
-  sourceBadgeNew: {
-    backgroundColor: '#DCFCE7',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  sourceBadgeTextNew: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#16A34A',
-  },
-  sourceBadgeExisting: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-  },
-  sourceBadgeTextExisting: {
-    fontSize: 10,
-    fontWeight: '600',
-    color: '#6B7280',
-  },
-  cardDetails: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailText: {
-    fontSize: 12,
-    color: '#6B7280',
-  },
-  detailSep: {
-    fontSize: 12,
-    color: '#D1D5DB',
-  },
-  dishLabel: {
-    fontSize: 11,
-    color: '#9CA3AF',
-    marginTop: 2,
-    fontStyle: 'italic',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.background.elevated,
+      borderRadius: 10,
+      padding: 10,
+      marginBottom: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.08,
+      shadowRadius: 4,
+      elevation: 2,
+    },
+    cardHeader: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 4,
+    },
+    itemName: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.text.primary,
+      flex: 1,
+      marginRight: 6,
+    },
+    sourceBadgeNew: {
+      backgroundColor: colors.accentTint.green,
+      borderRadius: 10,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    sourceBadgeTextNew: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: colors.accent.green,
+    },
+    sourceBadgeExisting: {
+      backgroundColor: colors.background.surface,
+      borderRadius: 10,
+      paddingHorizontal: 6,
+      paddingVertical: 2,
+    },
+    sourceBadgeTextExisting: {
+      fontSize: 10,
+      fontWeight: '600',
+      color: colors.text.tertiary,
+    },
+    cardDetails: {
+      flexDirection: 'row',
+      alignItems: 'center',
+    },
+    detailText: {
+      fontSize: 12,
+      color: colors.text.tertiary,
+    },
+    detailSep: {
+      fontSize: 12,
+      color: colors.border.default,
+    },
+    dishLabel: {
+      fontSize: 11,
+      color: colors.text.tertiary,
+      marginTop: 2,
+      fontStyle: 'italic',
+    },
+  });
+}

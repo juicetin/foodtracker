@@ -6,7 +6,7 @@
  * "Manual Entry" fallback for items not found in either database.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -22,6 +22,8 @@ import { Ionicons } from '@expo/vector-icons';
 import { getKnowledgeGraphService, type DishResult } from '../../services/knowledge-graph';
 import { searchProducts, type OFFProduct } from '../../services/openfoodfacts/openFoodFactsService';
 import type { IngredientUpdate } from '../../services/entryEditor/entryEditorService';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -59,6 +61,8 @@ export function IngredientSearchSheet({
   onAdd,
   onClose,
 }: IngredientSearchSheetProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = React.useMemo(() => ['60%', '90%'], []);
 
@@ -97,7 +101,6 @@ export function IngredientSearchSheet({
     try {
       const unified: SearchResult[] = [];
 
-      // Search KG and OFF in parallel
       const [kgResult, offResult] = await Promise.all([
         (async () => {
           try {
@@ -164,7 +167,6 @@ export function IngredientSearchSheet({
   }, [doSearch]);
 
   const handleSelectResult = useCallback(async (result: SearchResult) => {
-    // Default 100g portion
     const portionG = 100;
 
     let cal = result.calPer100g;
@@ -173,7 +175,6 @@ export function IngredientSearchSheet({
     let fat = result.fatPer100g;
     let fiber = result.fiberPer100g;
 
-    // If KG dish, try to get better nutrition via calculateDishNutrition
     if (result.source === 'kg' && result.kgDish) {
       try {
         const kg = await getKnowledgeGraphService();
@@ -225,7 +226,6 @@ export function IngredientSearchSheet({
     if (index === -1) onClose();
   }, [onClose]);
 
-  // Cleanup debounce
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -239,29 +239,27 @@ export function IngredientSearchSheet({
       snapPoints={snapPoints}
       enablePanDownToClose
       onChange={handleSheetChange}
-      backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={{ backgroundColor: colors.background.elevated }}
+      handleIndicatorStyle={{ backgroundColor: colors.border.default }}
     >
       <BottomSheetView style={styles.content}>
         <Text style={styles.title}>Add Ingredient</Text>
 
         {!showManual ? (
           <>
-            {/* Search bar */}
             <View style={styles.searchRow}>
-              <Ionicons name="search" size={18} color="#9CA3AF" />
+              <Ionicons name="search" size={18} color={colors.text.tertiary} />
               <TextInput
                 style={styles.searchInput}
                 value={query}
                 onChangeText={handleQueryChange}
                 placeholder="Search foods..."
-                placeholderTextColor="#9CA3AF"
+                placeholderTextColor={colors.input.placeholder}
                 autoFocus
                 returnKeyType="search"
               />
             </View>
 
-            {/* Results */}
             <FlatList
               data={results}
               keyExtractor={(item) => item.id}
@@ -292,7 +290,6 @@ export function IngredientSearchSheet({
               }
             />
 
-            {/* Manual entry button */}
             <Pressable
               style={styles.manualBtn}
               onPress={() => {
@@ -300,22 +297,21 @@ export function IngredientSearchSheet({
                 setManualName(query.trim());
               }}
             >
-              <Ionicons name="create-outline" size={18} color="#3B82F6" />
+              <Ionicons name="create-outline" size={18} color={colors.accent.blue} />
               <Text style={styles.manualBtnText}>Manual Entry</Text>
             </Pressable>
           </>
         ) : (
-          /* Manual entry form */
           <KeyboardAvoidingView
             behavior={Platform.OS === 'ios' ? 'padding' : undefined}
           >
             <View style={styles.manualForm}>
-              <ManualField label="Name" value={manualName} onChange={setManualName} />
-              <ManualField label="Grams" value={manualGrams} onChange={setManualGrams} numeric />
-              <ManualField label="Calories" value={manualCal} onChange={setManualCal} numeric />
-              <ManualField label="Protein (g)" value={manualProtein} onChange={setManualProtein} numeric />
-              <ManualField label="Carbs (g)" value={manualCarbs} onChange={setManualCarbs} numeric />
-              <ManualField label="Fat (g)" value={manualFat} onChange={setManualFat} numeric />
+              <ManualField label="Name" value={manualName} onChange={setManualName} colors={colors} />
+              <ManualField label="Grams" value={manualGrams} onChange={setManualGrams} numeric colors={colors} />
+              <ManualField label="Calories" value={manualCal} onChange={setManualCal} numeric colors={colors} />
+              <ManualField label="Protein (g)" value={manualProtein} onChange={setManualProtein} numeric colors={colors} />
+              <ManualField label="Carbs (g)" value={manualCarbs} onChange={setManualCarbs} numeric colors={colors} />
+              <ManualField label="Fat (g)" value={manualFat} onChange={setManualFat} numeric colors={colors} />
 
               <View style={styles.manualActions}>
                 <Pressable style={styles.manualCancelBtn} onPress={() => setShowManual(false)}>
@@ -342,89 +338,107 @@ function ManualField({
   value,
   onChange,
   numeric,
+  colors,
 }: {
   label: string;
   value: string;
   onChange: (v: string) => void;
   numeric?: boolean;
+  colors: ThemeColors;
 }) {
   return (
-    <View style={styles.fieldRow}>
-      <Text style={styles.fieldLabel}>{label}</Text>
+    <View style={fieldStyles.fieldRow}>
+      <Text style={[fieldStyles.fieldLabel, { color: colors.text.secondary }]}>{label}</Text>
       <TextInput
-        style={styles.fieldInput}
+        style={[fieldStyles.fieldInput, {
+          color: colors.text.primary,
+          backgroundColor: colors.input.background,
+          borderColor: colors.input.border,
+        }]}
         value={value}
         onChangeText={onChange}
         keyboardType={numeric ? 'decimal-pad' : 'default'}
         returnKeyType="next"
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={colors.input.placeholder}
       />
     </View>
   );
 }
 
+const fieldStyles = StyleSheet.create({
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  fieldLabel: {
+    width: 90,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  fieldInput: {
+    flex: 1,
+    fontSize: 16,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderWidth: 1,
+  },
+});
+
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  sheetBackground: { backgroundColor: '#FFF', borderRadius: 20 },
-  handleIndicator: { backgroundColor: '#CCC', width: 40 },
-  content: { paddingHorizontal: 20, paddingBottom: 24, flex: 1 },
-  title: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 12 },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    content: { paddingHorizontal: 20, paddingBottom: 24, flex: 1 },
+    title: { fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 12 },
 
-  searchRow: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
-    marginBottom: 8,
-  },
-  searchInput: { flex: 1, fontSize: 16, color: '#111827' },
+    searchRow: {
+      flexDirection: 'row', alignItems: 'center', gap: 8,
+      backgroundColor: colors.input.background, borderRadius: 12, paddingHorizontal: 12, paddingVertical: 10,
+      marginBottom: 8,
+    },
+    searchInput: { flex: 1, fontSize: 16, color: colors.text.primary },
 
-  resultsList: { flex: 1, maxHeight: 300 },
-  resultRow: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingVertical: 12, paddingHorizontal: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
-  },
-  resultLeft: { flex: 1, marginRight: 8 },
-  resultName: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  resultMacros: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
-  sourceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  sourceBadgeKg: { backgroundColor: '#DCFCE7' },
-  sourceBadgeOff: { backgroundColor: '#DBEAFE' },
-  sourceBadgeText: { fontSize: 10, fontWeight: '700', color: '#374151' },
+    resultsList: { flex: 1, maxHeight: 300 },
+    resultRow: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingVertical: 12, paddingHorizontal: 8,
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
+    },
+    resultLeft: { flex: 1, marginRight: 8 },
+    resultName: { fontSize: 15, fontWeight: '600', color: colors.text.primary },
+    resultMacros: { fontSize: 12, color: colors.text.tertiary, marginTop: 2 },
+    sourceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+    sourceBadgeKg: { backgroundColor: colors.accentTint.green },
+    sourceBadgeOff: { backgroundColor: colors.accentTint.blue },
+    sourceBadgeText: { fontSize: 10, fontWeight: '700', color: colors.text.secondary },
 
-  emptyText: { textAlign: 'center', color: '#9CA3AF', paddingVertical: 20, fontSize: 14 },
+    emptyText: { textAlign: 'center', color: colors.text.tertiary, paddingVertical: 20, fontSize: 14 },
 
-  manualBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 14, marginTop: 8,
-    borderRadius: 12, borderWidth: 1, borderColor: '#BFDBFE', backgroundColor: '#EFF6FF',
-  },
-  manualBtnText: { fontSize: 15, fontWeight: '600', color: '#3B82F6' },
+    manualBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+      paddingVertical: 14, marginTop: 8,
+      borderRadius: 12, borderWidth: 1, borderColor: colors.accent.blue, backgroundColor: colors.accentTint.blue,
+    },
+    manualBtnText: { fontSize: 15, fontWeight: '600', color: colors.accent.blue },
 
-  manualForm: { paddingTop: 8 },
-  fieldRow: {
-    flexDirection: 'row', alignItems: 'center', marginBottom: 12,
-  },
-  fieldLabel: { width: 90, fontSize: 14, fontWeight: '500', color: '#374151' },
-  fieldInput: {
-    flex: 1, fontSize: 16, color: '#111827',
-    backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8,
-    borderWidth: 1, borderColor: '#E5E7EB',
-  },
+    manualForm: { paddingTop: 8 },
 
-  manualActions: {
-    flexDirection: 'row', gap: 12, marginTop: 16,
-  },
-  manualCancelBtn: {
-    flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center',
-    backgroundColor: '#F3F4F6',
-  },
-  manualCancelText: { fontSize: 15, fontWeight: '600', color: '#6B7280' },
-  manualAddBtn: {
-    flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center',
-    backgroundColor: '#16A34A',
-  },
-  manualAddText: { fontSize: 15, fontWeight: '700', color: '#FFF' },
-});
+    manualActions: {
+      flexDirection: 'row', gap: 12, marginTop: 16,
+    },
+    manualCancelBtn: {
+      flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center',
+      backgroundColor: colors.background.surface,
+    },
+    manualCancelText: { fontSize: 15, fontWeight: '600', color: colors.text.tertiary },
+    manualAddBtn: {
+      flex: 1, paddingVertical: 14, borderRadius: 12, alignItems: 'center',
+      backgroundColor: colors.accent.green,
+    },
+    manualAddText: { fontSize: 15, fontWeight: '700', color: colors.text.inverse },
+  });
+}

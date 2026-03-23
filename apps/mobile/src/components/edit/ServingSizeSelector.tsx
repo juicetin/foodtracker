@@ -6,7 +6,7 @@
  * Debounces free-form input 300ms before calling onWeightChange.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -17,6 +17,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { getKnowledgeGraphService } from '../../services/knowledge-graph';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -44,13 +46,14 @@ export function ServingSizeSelector({
   currentAmountG,
   onWeightChange,
 }: ServingSizeSelectorProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [showCustom, setShowCustom] = useState(false);
   const [customText, setCustomText] = useState('');
   const [kgPortions, setKgPortions] = useState<PortionOption[]>([]);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Load KG portions on mount / name change
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -65,7 +68,7 @@ export function ServingSizeSelector({
           }
         }
       } catch {
-        // KG not available -- no extra portions
+        // KG not available
       }
     })();
     return () => { cancelled = true; };
@@ -88,7 +91,6 @@ export function ServingSizeSelector({
     }, 300);
   }, [onWeightChange]);
 
-  // Cleanup debounce on unmount
   useEffect(() => {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -110,7 +112,7 @@ export function ServingSizeSelector({
     <View style={styles.container}>
       <Pressable style={styles.chip} onPress={() => setShowDropdown(true)}>
         <Text style={styles.chipText}>{Math.round(currentAmountG)}g</Text>
-        <Ionicons name="chevron-down" size={14} color="#92400E" />
+        <Ionicons name="chevron-down" size={14} color={colors.accent.amber} />
       </Pressable>
 
       <Modal
@@ -141,7 +143,7 @@ export function ServingSizeSelector({
                 style={styles.option}
                 onPress={() => { setShowCustom(true); setCustomText(String(Math.round(currentAmountG))); }}
               >
-                <Text style={[styles.optionText, { color: '#3B82F6' }]}>Custom...</Text>
+                <Text style={[styles.optionText, { color: colors.accent.blue }]}>Custom...</Text>
               </Pressable>
             ) : (
               <View style={styles.customRow}>
@@ -151,7 +153,7 @@ export function ServingSizeSelector({
                   onChangeText={handleCustomTextChange}
                   keyboardType="numeric"
                   placeholder="grams"
-                  placeholderTextColor="#9CA3AF"
+                  placeholderTextColor={colors.input.placeholder}
                   autoFocus
                   returnKeyType="done"
                   onSubmitEditing={() => {
@@ -173,40 +175,42 @@ export function ServingSizeSelector({
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: { flexDirection: 'row', alignItems: 'center' },
-  chip: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#FEF3C7', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#FDE68A',
-  },
-  chipText: { fontSize: 13, fontWeight: '700', color: '#92400E' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flexDirection: 'row', alignItems: 'center' },
+    chip: {
+      flexDirection: 'row', alignItems: 'center', gap: 4,
+      backgroundColor: colors.accentTint.amber, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 6,
+      borderWidth: 1, borderColor: colors.accent.amber,
+    },
+    chipText: { fontSize: 13, fontWeight: '700', color: colors.accent.amber },
 
-  overlay: {
-    flex: 1, backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  dropdown: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16,
-    width: 260, maxHeight: 400,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15,
-    shadowRadius: 12, elevation: 8,
-  },
-  dropdownTitle: {
-    fontSize: 15, fontWeight: '700', color: '#111827', marginBottom: 12,
-  },
-  option: {
-    paddingVertical: 12, paddingHorizontal: 8,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
-  },
-  optionText: { fontSize: 15, color: '#374151' },
-  customRow: {
-    flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8,
-  },
-  customInput: {
-    flex: 1, fontSize: 16, fontWeight: '600', color: '#111827',
-    backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8,
-    borderWidth: 1, borderColor: '#E5E7EB',
-  },
-  customUnit: { fontSize: 15, color: '#6B7280', marginLeft: 8 },
-});
+    overlay: {
+      flex: 1, backgroundColor: colors.overlay,
+      justifyContent: 'center', alignItems: 'center',
+    },
+    dropdown: {
+      backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16,
+      width: 260, maxHeight: 400,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15,
+      shadowRadius: 12, elevation: 8,
+    },
+    dropdownTitle: {
+      fontSize: 15, fontWeight: '700', color: colors.text.primary, marginBottom: 12,
+    },
+    option: {
+      paddingVertical: 12, paddingHorizontal: 8,
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
+    },
+    optionText: { fontSize: 15, color: colors.text.secondary },
+    customRow: {
+      flexDirection: 'row', alignItems: 'center', paddingVertical: 8, paddingHorizontal: 8,
+    },
+    customInput: {
+      flex: 1, fontSize: 16, fontWeight: '600', color: colors.text.primary,
+      backgroundColor: colors.input.background, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 8,
+      borderWidth: 1, borderColor: colors.input.border,
+    },
+    customUnit: { fontSize: 15, color: colors.text.tertiary, marginLeft: 8 },
+  });
+}

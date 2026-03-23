@@ -6,10 +6,12 @@
  * Contains a vertical ScrollView of DraggableItem cards.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { DraggableItem } from './DraggableItem';
 import type { MergeItem } from '../../services/entryEditor/reidentifyService';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface MergeColumnProps {
   title: string;
@@ -26,6 +28,9 @@ export function MergeColumn({
   onItemDraggedOut,
   headerColor,
 }: MergeColumnProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.column}>
       <View style={[styles.header, { backgroundColor: headerColor }]}>
@@ -60,48 +65,50 @@ export function MergeColumn({
   );
 }
 
-const styles = StyleSheet.create({
-  column: {
-    flex: 1,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    borderRadius: 10,
-    marginBottom: 8,
-  },
-  headerTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  countBadge: {
-    backgroundColor: 'rgba(255,255,255,0.3)',
-    borderRadius: 10,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-  },
-  countText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#FFF',
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingBottom: 16,
-  },
-  emptyState: {
-    paddingVertical: 40,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    textAlign: 'center',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    column: {
+      flex: 1,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      borderRadius: 10,
+      marginBottom: 8,
+    },
+    headerTitle: {
+      fontSize: 13,
+      fontWeight: '700',
+      color: '#FFF',
+    },
+    countBadge: {
+      backgroundColor: 'rgba(255,255,255,0.3)',
+      borderRadius: 10,
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+    },
+    countText: {
+      fontSize: 12,
+      fontWeight: '700',
+      color: '#FFF',
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingBottom: 16,
+    },
+    emptyState: {
+      paddingVertical: 40,
+      alignItems: 'center',
+    },
+    emptyText: {
+      fontSize: 12,
+      color: colors.text.tertiary,
+      textAlign: 'center',
+    },
+  });
+}

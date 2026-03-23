@@ -5,7 +5,7 @@
  * and lets user pick per-field or bulk "Keep Latest" resolution.
  */
 
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Modal,
   View,
@@ -18,6 +18,8 @@ import {
 import { useSyncStore } from '../../store/useSyncStore';
 import { applyResolution, autoResolveConflicts } from '../../services/sync/conflictResolver';
 import type { SyncConflict, SyncResolution } from '../../services/sync/types';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface Props {
   visible: boolean;
@@ -25,6 +27,8 @@ interface Props {
 }
 
 export default function ConflictResolverModal({ visible, onClose }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const { pendingConflicts, setPendingConflicts } = useSyncStore();
   const [resolving, setResolving] = useState(false);
 
@@ -98,6 +102,7 @@ export default function ConflictResolverModal({ visible, onClose }: Props) {
                 key={`${conflict.table}-${conflict.rowId}-${conflict.field}-${idx}`}
                 conflict={conflict}
                 onResolve={resolveConflict}
+                colors={colors}
               />
             ))
           )}
@@ -110,47 +115,49 @@ export default function ConflictResolverModal({ visible, onClose }: Props) {
 function ConflictCard({
   conflict,
   onResolve,
+  colors,
 }: {
   conflict: SyncConflict;
   onResolve: (c: SyncConflict, source: 'local' | 'remote') => void;
+  colors: ThemeColors;
 }) {
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTable}>
+    <View style={cardStyles(colors).card}>
+      <Text style={cardStyles(colors).cardTable}>
         {conflict.table} (row {conflict.rowId})
       </Text>
-      <Text style={styles.cardField}>Field: {conflict.field}</Text>
+      <Text style={cardStyles(colors).cardField}>Field: {conflict.field}</Text>
 
-      <View style={styles.valuesRow}>
-        <View style={styles.valueBox}>
-          <Text style={styles.valueLabel}>Local</Text>
-          <Text style={styles.valueText} numberOfLines={3}>
+      <View style={cardStyles(colors).valuesRow}>
+        <View style={cardStyles(colors).valueBox}>
+          <Text style={cardStyles(colors).valueLabel}>Local</Text>
+          <Text style={cardStyles(colors).valueText} numberOfLines={3}>
             {String(conflict.localValue)}
           </Text>
-          <Text style={styles.timestamp}>
+          <Text style={cardStyles(colors).timestamp}>
             {new Date(conflict.localTimestamp).toLocaleString()}
           </Text>
           <Pressable
-            style={[styles.resolveBtn, styles.localBtn]}
+            style={[cardStyles(colors).resolveBtn, { backgroundColor: colors.accentTint.blue }]}
             onPress={() => onResolve(conflict, 'local')}
           >
-            <Text style={styles.resolveBtnText}>Keep Local</Text>
+            <Text style={cardStyles(colors).resolveBtnText}>Keep Local</Text>
           </Pressable>
         </View>
 
-        <View style={styles.valueBox}>
-          <Text style={styles.valueLabel}>Remote</Text>
-          <Text style={styles.valueText} numberOfLines={3}>
+        <View style={cardStyles(colors).valueBox}>
+          <Text style={cardStyles(colors).valueLabel}>Remote</Text>
+          <Text style={cardStyles(colors).valueText} numberOfLines={3}>
             {String(conflict.remoteValue)}
           </Text>
-          <Text style={styles.timestamp}>
+          <Text style={cardStyles(colors).timestamp}>
             {new Date(conflict.remoteTimestamp).toLocaleString()}
           </Text>
           <Pressable
-            style={[styles.resolveBtn, styles.remoteBtn]}
+            style={[cardStyles(colors).resolveBtn, { backgroundColor: colors.accentTint.red }]}
             onPress={() => onResolve(conflict, 'remote')}
           >
-            <Text style={styles.resolveBtnText}>Keep Remote</Text>
+            <Text style={cardStyles(colors).resolveBtnText}>Keep Remote</Text>
           </Pressable>
         </View>
       </View>
@@ -158,37 +165,9 @@ function ConflictCard({
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 60,
-    paddingHorizontal: 16,
-    paddingBottom: 12,
-    backgroundColor: '#FFF',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
-  },
-  title: { fontSize: 20, fontWeight: '700', color: '#111827' },
-  closeBtn: { fontSize: 16, fontWeight: '600', color: '#3B82F6' },
-
-  bulkBtn: {
-    marginHorizontal: 16,
-    marginTop: 12,
-    backgroundColor: '#7C3AED',
-    borderRadius: 12,
-    paddingVertical: 14,
-    alignItems: 'center',
-  },
-  bulkBtnText: { fontSize: 15, fontWeight: '700', color: '#FFF' },
-
-  list: { flex: 1, paddingHorizontal: 16, marginTop: 12 },
-  emptyText: { fontSize: 15, color: '#9CA3AF', textAlign: 'center', marginTop: 40 },
-
+const cardStyles = (colors: ThemeColors) => StyleSheet.create({
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.background.elevated,
     borderRadius: 12,
     padding: 16,
     marginBottom: 12,
@@ -198,21 +177,49 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     elevation: 2,
   },
-  cardTable: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 4 },
-  cardField: { fontSize: 13, color: '#6B7280', marginBottom: 12 },
-
+  cardTable: { fontSize: 14, fontWeight: '700', color: colors.text.secondary, marginBottom: 4 },
+  cardField: { fontSize: 13, color: colors.text.tertiary, marginBottom: 12 },
   valuesRow: { flexDirection: 'row', gap: 12 },
   valueBox: { flex: 1 },
-  valueLabel: { fontSize: 12, fontWeight: '600', color: '#9CA3AF', marginBottom: 4 },
-  valueText: { fontSize: 14, color: '#111827', marginBottom: 4 },
-  timestamp: { fontSize: 11, color: '#9CA3AF', marginBottom: 8 },
-
+  valueLabel: { fontSize: 12, fontWeight: '600', color: colors.text.tertiary, marginBottom: 4 },
+  valueText: { fontSize: 14, color: colors.text.primary, marginBottom: 4 },
+  timestamp: { fontSize: 11, color: colors.text.tertiary, marginBottom: 8 },
   resolveBtn: {
     borderRadius: 8,
     paddingVertical: 8,
     alignItems: 'center',
   },
-  localBtn: { backgroundColor: '#DBEAFE' },
-  remoteBtn: { backgroundColor: '#FEE2E2' },
-  resolveBtnText: { fontSize: 13, fontWeight: '600', color: '#374151' },
+  resolveBtnText: { fontSize: 13, fontWeight: '600', color: colors.text.secondary },
 });
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background.primary },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingTop: 60,
+      paddingHorizontal: 16,
+      paddingBottom: 12,
+      backgroundColor: colors.background.elevated,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border.subtle,
+    },
+    title: { fontSize: 20, fontWeight: '700', color: colors.text.primary },
+    closeBtn: { fontSize: 16, fontWeight: '600', color: colors.accent.blue },
+
+    bulkBtn: {
+      marginHorizontal: 16,
+      marginTop: 12,
+      backgroundColor: colors.accent.purple,
+      borderRadius: 12,
+      paddingVertical: 14,
+      alignItems: 'center',
+    },
+    bulkBtnText: { fontSize: 15, fontWeight: '700', color: colors.text.inverse },
+
+    list: { flex: 1, paddingHorizontal: 16, marginTop: 12 },
+    emptyText: { fontSize: 15, color: colors.text.tertiary, textAlign: 'center', marginTop: 40 },
+  });
+}

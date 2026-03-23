@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { Photo } from '../types';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 interface PhotoPickerProps {
   onPhotosSelected: (photos: Photo[]) => void;
@@ -19,6 +21,8 @@ export default function PhotoPicker({
   onPhotosSelected,
   maxPhotos = 20,
 }: PhotoPickerProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [isLoading, setIsLoading] = useState(false);
 
   const requestPermissions = async () => {
@@ -146,7 +150,7 @@ export default function PhotoPicker({
   if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#007AFF" />
+        <ActivityIndicator size="large" color={colors.accent.blue} />
         <Text style={styles.loadingText}>Loading photos...</Text>
       </View>
     );
@@ -160,31 +164,33 @@ export default function PhotoPicker({
   );
 }
 
-const styles = StyleSheet.create({
-  button: {
-    backgroundColor: '#007AFF',
-    padding: 16,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  buttonText: {
-    color: '#fff',
-    fontSize: 18,
-    fontWeight: '600',
-    marginBottom: 4,
-  },
-  buttonSubtext: {
-    color: '#fff',
-    fontSize: 12,
-    opacity: 0.8,
-  },
-  loadingContainer: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 16,
-    color: '#666',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    button: {
+      backgroundColor: colors.accent.blue,
+      padding: 16,
+      borderRadius: 12,
+      alignItems: 'center',
+    },
+    buttonText: {
+      color: colors.text.inverse,
+      fontSize: 18,
+      fontWeight: '600',
+      marginBottom: 4,
+    },
+    buttonSubtext: {
+      color: colors.text.inverse,
+      fontSize: 12,
+      opacity: 0.8,
+    },
+    loadingContainer: {
+      padding: 32,
+      alignItems: 'center',
+    },
+    loadingText: {
+      marginTop: 12,
+      fontSize: 16,
+      color: colors.text.tertiary,
+    },
+  });
+}

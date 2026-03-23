@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,8 @@ import {
   Dimensions,
 } from 'react-native';
 import { Photo } from '../types';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 interface BatchPhotoGridProps {
   photos: Photo[];
@@ -26,6 +28,9 @@ export default function BatchPhotoGrid({
   onRemovePhoto,
   onPhotoPress,
 }: BatchPhotoGridProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   if (photos.length === 0) {
     return null;
   }
@@ -63,7 +68,7 @@ export default function BatchPhotoGrid({
                 style={styles.removeButton}
                 onPress={() => onRemovePhoto(photo.id)}
               >
-                <Text style={styles.removeButtonText}>×</Text>
+                <Text style={styles.removeButtonText}>x</Text>
               </TouchableOpacity>
             )}
           </View>
@@ -73,73 +78,75 @@ export default function BatchPhotoGrid({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginVertical: 16,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-    paddingHorizontal: 4,
-  },
-  title: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#333',
-  },
-  count: {
-    fontSize: 14,
-    color: '#666',
-  },
-  scrollContent: {
-    paddingHorizontal: 4,
-  },
-  photoContainer: {
-    marginRight: 12,
-    position: 'relative',
-  },
-  photo: {
-    width: 120,
-    height: 120,
-    borderRadius: 12,
-    backgroundColor: '#F5F5F5',
-  },
-  photoOverlay: {
-    position: 'absolute',
-    top: 8,
-    left: 8,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  photoNumber: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  removeButton: {
-    position: 'absolute',
-    top: -8,
-    right: -8,
-    backgroundColor: '#FF3B30',
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
-  },
-  removeButtonText: {
-    color: '#fff',
-    fontSize: 20,
-    fontWeight: 'bold',
-    lineHeight: 22,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      marginVertical: 16,
+    },
+    header: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+      paddingHorizontal: 4,
+    },
+    title: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    count: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+    },
+    scrollContent: {
+      paddingHorizontal: 4,
+    },
+    photoContainer: {
+      marginRight: 12,
+      position: 'relative',
+    },
+    photo: {
+      width: 120,
+      height: 120,
+      borderRadius: 12,
+      backgroundColor: colors.background.surface,
+    },
+    photoOverlay: {
+      position: 'absolute',
+      top: 8,
+      left: 8,
+      backgroundColor: 'rgba(0, 0, 0, 0.6)',
+      borderRadius: 12,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    photoNumber: {
+      color: '#fff',
+      fontSize: 12,
+      fontWeight: '600',
+    },
+    removeButton: {
+      position: 'absolute',
+      top: -8,
+      right: -8,
+      backgroundColor: colors.accent.red,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      justifyContent: 'center',
+      alignItems: 'center',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    removeButtonText: {
+      color: '#fff',
+      fontSize: 20,
+      fontWeight: 'bold',
+      lineHeight: 22,
+    },
+  });
+}

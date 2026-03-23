@@ -1,13 +1,15 @@
 /**
- * QuickAccessTabs — horizontal tab row for Recent/Frequent/Favorites/Recipes
+ * QuickAccessTabs -- horizontal tab row for Recent/Frequent/Favorites/Recipes
  * with a scrollable item list below.
  *
  * Each tab shows relevant food items. Empty states guide the user on how
  * to populate each tab.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -72,6 +74,8 @@ export function QuickAccessTabs({
   items,
   onItemPress,
 }: QuickAccessTabsProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const emptyState = EMPTY_STATES[activeTab];
 
   return (
@@ -133,80 +137,82 @@ export function QuickAccessTabs({
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  tabRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 8,
-  },
-  tab: {
-    height: 36,
-    paddingHorizontal: 16,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  tabActive: {
-    backgroundColor: '#16A34A',
-  },
-  tabInactive: {
-    backgroundColor: '#F3F4F6',
-  },
-  tabText: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  tabTextActive: {
-    color: '#FFFFFF',
-  },
-  tabTextInactive: {
-    color: '#374151',
-  },
-  itemList: {
-    flex: 1,
-    marginTop: 8,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#FFFFFF',
-    borderRadius: 10,
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    marginBottom: 4,
-  },
-  itemLeft: {
-    flex: 1,
-    marginRight: 12,
-  },
-  itemName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  itemCalories: {
-    fontSize: 14,
-    color: '#374151',
-    fontWeight: '500',
-  },
-  emptyContainer: {
-    alignItems: 'center',
-    paddingVertical: 32,
-    paddingHorizontal: 20,
-  },
-  emptyTitle: {
-    fontSize: 15,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 6,
-  },
-  emptySubtitle: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    lineHeight: 18,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    tabRow: {
+      flexDirection: 'row',
+      gap: 8,
+      paddingVertical: 8,
+    },
+    tab: {
+      height: 36,
+      paddingHorizontal: 16,
+      borderRadius: 20,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    tabActive: {
+      backgroundColor: colors.accent.green,
+    },
+    tabInactive: {
+      backgroundColor: colors.background.surface,
+    },
+    tabText: {
+      fontSize: 14,
+      fontWeight: '600',
+    },
+    tabTextActive: {
+      color: colors.text.inverse,
+    },
+    tabTextInactive: {
+      color: colors.text.secondary,
+    },
+    itemList: {
+      flex: 1,
+      marginTop: 8,
+    },
+    itemRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      backgroundColor: colors.background.elevated,
+      borderRadius: 10,
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      marginBottom: 4,
+    },
+    itemLeft: {
+      flex: 1,
+      marginRight: 12,
+    },
+    itemName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    itemCalories: {
+      fontSize: 14,
+      color: colors.text.secondary,
+      fontWeight: '500',
+    },
+    emptyContainer: {
+      alignItems: 'center',
+      paddingVertical: 32,
+      paddingHorizontal: 20,
+    },
+    emptyTitle: {
+      fontSize: 15,
+      fontWeight: '600',
+      color: colors.text.tertiary,
+      marginBottom: 6,
+    },
+    emptySubtitle: {
+      fontSize: 13,
+      color: colors.text.tertiary,
+      textAlign: 'center',
+      lineHeight: 18,
+    },
+  });
+}
