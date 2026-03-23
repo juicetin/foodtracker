@@ -92,17 +92,17 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **UX-03**: Meal group headers (Breakfast/Lunch/Dinner/Snacks) with tap expand/collapse and long-press menu, replacing time-period grouping
 - [ ] **UX-04**: Food item tap opens bottom sheet detail (read-only macros, ingredients, expandable sections) instead of navigating to full screen
 - [ ] **UX-05**: Food item long press opens context menu with Copy to clipboard, Copy to another day, Move to other meal, Save as favorite, Delete
-- [ ] **UX-06**: Unified Add Food screen with search bar containing camera, voice, and barcode icons
-- [ ] **UX-07**: Quick access tabs (Recent, Frequent, Favorites, My Recipes) on Add Food screen with personal food history
-- [ ] **UX-08**: Barcode scanning integrated into Add Food screen search bar (always visible)
-- [ ] **UX-09**: Voice input hint for food description via keyboard voice button
+- [x] **UX-06**: Unified Add Food screen with search bar containing camera, voice, and barcode icons
+- [x] **UX-07**: Quick access tabs (Recent, Frequent, Favorites, My Recipes) on Add Food screen with personal food history
+- [x] **UX-08**: Barcode scanning integrated into Add Food screen search bar (always visible)
+- [x] **UX-09**: Voice input hint for food description via keyboard voice button
 - [ ] **UX-10**: AI Photo Scan results display with per-dish ingredient breakdown and macros
 - [x] **UX-11**: Copy entry to another day and move entry to different meal type operations
 - [ ] **UX-12**: Item Detail Bottom Sheet with expandable micronutrients, nutrition source, and view photo sections
 - [x] **QA-01**: Fix long press diary item crash (replaces broken handler with new context menu)
 - [ ] **QA-02**: Fix re-log tap behavior (tap now opens detail bottom sheet, not re-log action)
 - [ ] **QA-03**: Remove third toggle view on diary items (keep two states: summary + ingredients)
-- [ ] **QA-06**: Barcode option always visible on add food screen
+- [x] **QA-06**: Barcode option always visible on add food screen
 
 ## v2 Requirements
 
