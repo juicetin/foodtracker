@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: unknown
-stopped_at: Completed 09.1-01-PLAN.md
-last_updated: "2026-03-23T20:24:11.141Z"
+stopped_at: Completed 09.1-02-PLAN.md
+last_updated: "2026-03-23T20:37:45.068Z"
 progress:
   total_phases: 24
   completed_phases: 23
   total_plans: 73
-  completed_plans: 71
+  completed_plans: 72
 ---
 
 # Project State
@@ -24,7 +24,7 @@ See: .planning/PROJECT.md (updated 2026-03-12)
 ## Current Position
 
 Phase: 09.1 (dark-mode-theme-with-system-preference-detection-and-manual-toggle) — EXECUTING
-Plan: 2 of 3
+Plan: 3 of 3
 
 ## Performance Metrics
 
@@ -128,6 +128,7 @@ Plan: 2 of 3
 | Phase 09 P04 | 3min | 2 tasks | 4 files |
 | Phase 09 P05 | 1min | 2 tasks | 7 files |
 | Phase 09.1 P01 | 5min | 2 tasks | 10 files |
+| Phase 09.1 P02 | 11min | 2 tasks | 15 files |
 
 ## Accumulated Context
 
@@ -328,6 +329,7 @@ Recent decisions affecting current work:
 - [Phase 09]: Calendar picker reused for copy-to-day and copy-from-date via datePickerContext state pattern
 - [Phase 09]: Kept timePeriods.ts — still imported by diaryQueries.ts and mealGroups.ts
 - [Phase 09.1]: ThemeProvider context + useTheme hook for color distribution; createStyles(colors) factory for dynamic StyleSheet; Zustand persist v1 migration from darkMode to themePreference
+- [Phase 09.1]: All 15 screens migrated to useTheme()+createStyles(colors) pattern; helper components get own useTheme() call; debug-specific colors left as-is
 
 ### Roadmap Evolution
 
@@ -357,6 +359,6 @@ None yet.
 
 ## Session Continuity
 
-Last session: 2026-03-23T20:24:11.136Z
-Stopped at: Completed 09.1-01-PLAN.md
+Last session: 2026-03-23T20:37:45.064Z
+Stopped at: Completed 09.1-02-PLAN.md
 Resume file: None

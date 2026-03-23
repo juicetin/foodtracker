@@ -458,7 +458,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 7.1. Integration Wiring + Cleanup | 0/2 | Not started | - |
 | 8. On-device vector search embedding | 0/2 | Not started | - |
 | 9. UX Redesign | 0/5 | Not started | - |
-| 9.1. Dark Mode Theme | 0/3 | Not started | - |
+| 9.1. Dark Mode Theme | 2/3 | In Progress|  |
 
 ### Phase 9: UX redesign -- diary-first home, add food with barcode/photo/voice/gallery, item detail bottom sheet, long-press context menu, copy/move meals
 
@@ -497,5 +497,5 @@ Plans:
 
 Plans:
 - [x] 09.1-01-PLAN.md -- Theme infrastructure: colors.ts, ThemeProvider, navigation theme, store migration, App.tsx wiring, ProfileScreen toggle
-- [ ] 09.1-02-PLAN.md -- Migrate all 15 screens to useTheme() semantic color tokens
+- [x] 09.1-02-PLAN.md -- Migrate all 15 screens to useTheme() semantic color tokens
 - [ ] 09.1-03-PLAN.md -- Migrate all 32 components/sheets to useTheme() + final verification sweep
