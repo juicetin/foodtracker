@@ -5,25 +5,25 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, RootStackParamList } from '../types';
-import { HomeScreen, DiaryScreen, ProfileScreen } from '../screens';
+import { DiaryScreen, ProfileScreen, InsightsScreen } from '../screens';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
-function DetectPlaceholder() {
+function AddPlaceholder() {
   return <View />;
 }
 
-function DetectTabButton({ children }: { children: React.ReactNode }) {
+function AddTabButton({ children }: { children: React.ReactNode }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
 
   return (
     <Pressable
-      onPress={() => navigation.navigate('Detection')}
-      style={styles.detectButton}
+      onPress={() => navigation.navigate('AddFood', {})}
+      style={styles.fabButton}
     >
-      <View style={styles.detectButtonInner}>
-        <Text style={styles.detectButtonText}>+</Text>
+      <View style={styles.fabButtonInner}>
+        <Text style={styles.fabButtonText}>+</Text>
       </View>
     </Pressable>
   );
@@ -49,29 +49,29 @@ export default function MainTabNavigator() {
       }}
     >
       <Tab.Screen
-        name="Home"
-        component={HomeScreen}
+        name="Today"
+        component={DiaryScreen}
         options={{
-          tabBarLabel: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarLabel: 'Today',
+          tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
-        name="Detect"
-        component={DetectPlaceholder}
+        name="Add"
+        component={AddPlaceholder}
         options={{
           tabBarButton: (props) => (
-            <DetectTabButton>{props.children}</DetectTabButton>
+            <AddTabButton>{props.children}</AddTabButton>
           ),
           tabBarLabel: '',
         }}
       />
       <Tab.Screen
-        name="Diary"
-        component={DiaryScreen}
+        name="Insights"
+        component={InsightsScreen}
         options={{
-          tabBarLabel: 'Diary',
-          tabBarIcon: ({ color, size }) => <Ionicons name="book-outline" size={size} color={color} />,
+          tabBarLabel: 'Insights',
+          tabBarIcon: ({ color, size }) => <Ionicons name="stats-chart-outline" size={size} color={color} />,
         }}
       />
       <Tab.Screen
@@ -87,16 +87,16 @@ export default function MainTabNavigator() {
 }
 
 const styles = StyleSheet.create({
-  detectButton: {
+  fabButton: {
     top: -12,
     justifyContent: 'center',
     alignItems: 'center',
     flex: 1,
   },
-  detectButtonInner: {
-    width: 52,
-    height: 52,
-    borderRadius: 26,
+  fabButtonInner: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: '#16A34A',
     justifyContent: 'center',
     alignItems: 'center',
@@ -106,7 +106,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 3,
   },
-  detectButtonText: {
+  fabButtonText: {
     color: '#fff',
     fontSize: 28,
     fontWeight: '600',

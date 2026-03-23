@@ -11,13 +11,13 @@ export type MainTabNavigationProp = CompositeNavigationProp<
   RootStackNavigationProp
 >;
 
-export type HomeScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'Home'>,
+export type TodayScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Today'>,
   RootStackNavigationProp
 >;
 
-export type DiaryScreenNavigationProp = CompositeNavigationProp<
-  BottomTabNavigationProp<MainTabParamList, 'Diary'>,
+export type InsightsScreenNavigationProp = CompositeNavigationProp<
+  BottomTabNavigationProp<MainTabParamList, 'Insights'>,
   RootStackNavigationProp
 >;
 

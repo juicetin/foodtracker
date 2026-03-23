@@ -1,4 +1,5 @@
 import React from 'react';
+import { View, Text, StyleSheet } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types';
@@ -7,6 +8,20 @@ import { DetectionScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScr
 import SyncSettingsScreen from '../screens/SyncSettingsScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
+
+/** Temporary placeholder until Plan 03 creates AddFoodScreen */
+function AddFoodPlaceholder() {
+  return (
+    <View style={addFoodStyles.container}>
+      <Text style={addFoodStyles.text}>Add Food - Coming in Plan 03</Text>
+    </View>
+  );
+}
+
+const addFoodStyles = StyleSheet.create({
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#F5F5F5' },
+  text: { fontSize: 16, color: '#6B7280', fontWeight: '600' },
+});
 
 export default function RootNavigator() {
   return (
@@ -17,6 +32,14 @@ export default function RootNavigator() {
         }}
       >
         <Stack.Screen name="Main" component={MainTabNavigator} />
+        <Stack.Screen
+          name="AddFood"
+          component={AddFoodPlaceholder}
+          options={{
+            animation: 'slide_from_right',
+            headerShown: false,
+          }}
+        />
         <Stack.Screen
           name="Detection"
           component={DetectionScreen}
