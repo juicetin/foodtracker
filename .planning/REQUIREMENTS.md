@@ -88,7 +88,7 @@ Requirements for initial release. Each maps to roadmap phases.
 ### UX Redesign
 
 - [x] **UX-01**: Diary-first home screen with remaining calories display and P/C/F macro progress bars, replacing separate Home + Diary tabs
-- [ ] **UX-02**: Date navigation with swipe gestures, arrow buttons, and calendar picker modal on date tap
+- [x] **UX-02**: Date navigation with swipe gestures, arrow buttons, and calendar picker modal on date tap
 - [x] **UX-03**: Meal group headers (Breakfast/Lunch/Dinner/Snacks) with tap expand/collapse and long-press menu, replacing time-period grouping
 - [ ] **UX-04**: Food item tap opens bottom sheet detail (read-only macros, ingredients, expandable sections) instead of navigating to full screen
 - [ ] **UX-05**: Food item long press opens context menu with Copy to clipboard, Copy to another day, Move to other meal, Save as favorite, Delete
@@ -101,7 +101,7 @@ Requirements for initial release. Each maps to roadmap phases.
 - [ ] **UX-12**: Item Detail Bottom Sheet with expandable micronutrients, nutrition source, and view photo sections
 - [x] **QA-01**: Fix long press diary item crash (replaces broken handler with new context menu)
 - [ ] **QA-02**: Fix re-log tap behavior (tap now opens detail bottom sheet, not re-log action)
-- [ ] **QA-03**: Remove third toggle view on diary items (keep two states: summary + ingredients)
+- [x] **QA-03**: Remove third toggle view on diary items (keep two states: summary + ingredients)
 - [x] **QA-06**: Barcode option always visible on add food screen
 
 ## v2 Requirements
