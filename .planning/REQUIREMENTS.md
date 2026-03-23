@@ -85,6 +85,25 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **EMB-04**: EmbeddingService loads TFLite model via react-native-fast-tflite with lazy initialization on first detection flow
 - [x] **EMB-05**: Vec search path in vlmPipeline activates when embedding service is ready, enabling semantic USDA food matching alongside BM25
 
+### UX Redesign
+
+- [ ] **UX-01**: Diary-first home screen with remaining calories display and P/C/F macro progress bars, replacing separate Home + Diary tabs
+- [ ] **UX-02**: Date navigation with swipe gestures, arrow buttons, and calendar picker modal on date tap
+- [ ] **UX-03**: Meal group headers (Breakfast/Lunch/Dinner/Snacks) with tap expand/collapse and long-press menu, replacing time-period grouping
+- [ ] **UX-04**: Food item tap opens bottom sheet detail (read-only macros, ingredients, expandable sections) instead of navigating to full screen
+- [ ] **UX-05**: Food item long press opens context menu with Copy to clipboard, Copy to another day, Move to other meal, Save as favorite, Delete
+- [ ] **UX-06**: Unified Add Food screen with search bar containing camera, voice, and barcode icons
+- [ ] **UX-07**: Quick access tabs (Recent, Frequent, Favorites, My Recipes) on Add Food screen with personal food history
+- [ ] **UX-08**: Barcode scanning integrated into Add Food screen search bar (always visible)
+- [ ] **UX-09**: Voice input hint for food description via keyboard voice button
+- [ ] **UX-10**: AI Photo Scan results display with per-dish ingredient breakdown and macros
+- [ ] **UX-11**: Copy entry to another day and move entry to different meal type operations
+- [ ] **UX-12**: Item Detail Bottom Sheet with expandable micronutrients, nutrition source, and view photo sections
+- [ ] **QA-01**: Fix long press diary item crash (replaces broken handler with new context menu)
+- [ ] **QA-02**: Fix re-log tap behavior (tap now opens detail bottom sheet, not re-log action)
+- [ ] **QA-03**: Remove third toggle view on diary items (keep two states: summary + ingredients)
+- [ ] **QA-06**: Barcode option always visible on add food screen
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -179,11 +198,28 @@ Deferred to future release. Tracked but not in current roadmap.
 | EMB-04 | Phase 8 | Planned |
 | EMB-05 | Phase 8 | Planned |
 
+| UX-01 | Phase 9 | Planned |
+| UX-02 | Phase 9 | Planned |
+| UX-03 | Phase 9 | Planned |
+| UX-04 | Phase 9 | Planned |
+| UX-05 | Phase 9 | Planned |
+| UX-06 | Phase 9 | Planned |
+| UX-07 | Phase 9 | Planned |
+| UX-08 | Phase 9 | Planned |
+| UX-09 | Phase 9 | Planned |
+| UX-10 | Phase 9 | Planned |
+| UX-11 | Phase 9 | Planned |
+| UX-12 | Phase 9 | Planned |
+| QA-01 | Phase 9 | Planned |
+| QA-02 | Phase 9 | Planned |
+| QA-03 | Phase 9 | Planned |
+| QA-06 | Phase 9 | Planned |
+
 **Coverage:**
-- v1 requirements: 44 total
-- Mapped to phases: 44
+- v1 requirements: 60 total
+- Mapped to phases: 60
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-22 after Phase 8 planning*
+*Last updated: 2026-03-23 after Phase 9 planning*

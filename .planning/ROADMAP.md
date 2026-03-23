@@ -431,7 +431,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6 -> 7.1 -> 8
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6 -> 7.1 -> 8 -> 9
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -457,16 +457,28 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 6. Sync + Distribution | 2/2 | Complete | 2026-03-21 |
 | 7.1. Integration Wiring + Cleanup | 0/2 | Not started | - |
 | 8. On-device vector search embedding | 0/2 | Not started | - |
+| 9. UX Redesign | 0/5 | Not started | - |
 
-### Phase 9: UX redesign — diary-first home, add food with barcode/photo/voice/gallery, item detail bottom sheet, long-press context menu, copy/move meals
+### Phase 9: UX redesign -- diary-first home, add food with barcode/photo/voice/gallery, item detail bottom sheet, long-press context menu, copy/move meals
 
-**Goal:** [To be planned]
-**Requirements**: TBD
+**Goal:** Complete UX overhaul: diary-first home screen with meal-type grouping, unified add food flow with barcode/photo/voice/gallery entry methods, item detail bottom sheet, long-press context menus with haptic feedback, copy/move meal operations. Fixes QA bugs #1 (long-press crash), #2 (tap re-log), #3 (third toggle), #6 (barcode missing).
+**Requirements**: UX-01, UX-02, UX-03, UX-04, UX-05, UX-06, UX-07, UX-08, UX-09, UX-10, UX-11, UX-12, QA-01, QA-02, QA-03, QA-06
 **Depends on:** Phase 8
-**Plans:** 0 plans
+**Success Criteria** (what must be TRUE):
+  1. Bottom navigation has 4 tabs: Today (diary-first home), + (FAB to AddFood), Insights, Profile
+  2. Diary groups entries by meal type (Breakfast/Lunch/Dinner/Snacks) with per-meal and daily macro totals, remaining calories display, and P/C/F progress bars
+  3. Tapping a food item opens a bottom sheet detail view; long-pressing opens a context menu with Copy/Move/Favorite/Delete + haptic feedback
+  4. Long-pressing a meal group header opens a menu with Copy from date/Copy yesterday/Save template options
+  5. Unified AddFoodScreen provides search bar with camera/voice/barcode icons, quick access tabs (Recent/Frequent/Favorites/Recipes), and entry method cards
+  6. InsightsScreen shows trend charts extracted from old diary screen
+**Plans:** 5 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 9 to break down)
+- [ ] 09-01-PLAN.md -- Foundation: install deps, types/contracts, mealGroups + copyMoveService, navigation restructure, InsightsScreen
+- [ ] 09-02-PLAN.md -- Diary components + DiaryHomeScreen: MealGroupSection, FoodItemCard, MacroSummaryHeader, DateNavigator, CalendarPicker
+- [ ] 09-03-PLAN.md -- AddFoodScreen: search bar with icons, quick access tabs, entry method cards, navigation wiring
+- [ ] 09-04-PLAN.md -- Bottom sheets: ItemDetailSheet, ContextMenuSheet, MealGroupMenuSheet, wire into DiaryHomeScreen
+- [ ] 09-05-PLAN.md -- Cleanup + human verification: delete old screens/components, fix references, emulator test
 
 
 ### Phase 09.1: Dark mode theme with system preference detection and manual toggle (INSERTED)
