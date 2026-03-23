@@ -6,7 +6,7 @@
  * first photo shown immediately, rest processed in background).
  */
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, {useCallback, useRef, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -30,6 +30,8 @@ import { useFoodLogStore } from '../store/useFoodLogStore';
 import DishCard from '../components/detection/DishCard';
 import IngredientSearchSheet, { type IngredientSearchResult } from '../components/detection/IngredientSearchSheet';
 import type { MealType } from '../services/detection/types';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -50,6 +52,9 @@ const MEAL_LABELS: Record<MealType, string> = {
 // ---------------------------------------------------------------------------
 
 export function DetectionScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const navigation = useNavigation();
   const [flowState, setFlowState] = useState<FlowState>('idle');
   const [error, setError] = useState<string | null>(null);
@@ -280,10 +285,10 @@ export function DetectionScreen() {
             <Text style={styles.secondaryBtnText}>🖼️  Choose from Gallery</Text>
           </Pressable>
           <Pressable
-            style={[styles.secondaryBtn, { marginTop: 12, backgroundColor: '#EFF6FF' }]}
+            style={[styles.secondaryBtn, { marginTop: 12, backgroundColor: colors.accentTint.blue }]}
             onPress={() => (navigation as any).navigate('FoodSearch')}
           >
-            <Text style={[styles.secondaryBtnText, { color: '#3B82F6' }]}>🔍  Search Food Database</Text>
+            <Text style={[styles.secondaryBtnText, { color: colors.accent.blue }]}>🔍  Search Food Database</Text>
           </Pressable>
         </View>
       </SafeAreaView>
@@ -298,7 +303,7 @@ export function DetectionScreen() {
           <Image source={{ uri: analyzingPhotoUri }} style={styles.analyzingPhoto} resizeMode="cover" />
         )}
         <View style={styles.analyzingOverlay}>
-          <ActivityIndicator size="large" color="#16A34A" />
+          <ActivityIndicator size="large" color={colors.accent.green} />
           <Text style={styles.analyzingTitle}>Analysing your meal…</Text>
           <Text style={styles.analyzingSubtitle}>
             Gemini Nano is identifying your food
@@ -313,7 +318,7 @@ export function DetectionScreen() {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.savingContainer}>
-          <ActivityIndicator size="large" color="#16A34A" />
+          <ActivityIndicator size="large" color={colors.accent.green} />
           <Text style={styles.savingText}>Saving meal…</Text>
         </View>
       </SafeAreaView>
@@ -372,7 +377,7 @@ export function DetectionScreen() {
         {/* Background processing banner */}
         {pendingPhotos > 0 && (
           <View style={styles.processingBanner}>
-            <ActivityIndicator size="small" color="#3B82F6" />
+            <ActivityIndicator size="small" color={colors.accent.blue} />
             <Text style={styles.processingText}>
               Processing {totalPhotos - pendingPhotos + 1}/{totalPhotos} photos…
             </Text>
@@ -426,7 +431,7 @@ export function DetectionScreen() {
           <Text style={styles.footerCalories}>{Math.round(totals.calories)} kcal</Text>
           <View style={styles.footerMacros}>
             <Text style={styles.footerMacro}>
-              <Text style={[styles.footerMacroNum, { color: '#3B82F6' }]}>{Math.round(totals.protein)}g</Text>
+              <Text style={[styles.footerMacroNum, { color: colors.accent.blue }]}>{Math.round(totals.protein)}g</Text>
               <Text style={styles.footerMacroLabel}> P</Text>
             </Text>
             <Text style={styles.footerMacro}>
@@ -434,7 +439,7 @@ export function DetectionScreen() {
               <Text style={styles.footerMacroLabel}> C</Text>
             </Text>
             <Text style={styles.footerMacro}>
-              <Text style={[styles.footerMacroNum, { color: '#16A34A' }]}>{Math.round(totals.fat)}g</Text>
+              <Text style={[styles.footerMacroNum, { color: colors.accent.green }]}>{Math.round(totals.fat)}g</Text>
               <Text style={styles.footerMacroLabel}> F</Text>
             </Text>
           </View>
@@ -518,61 +523,62 @@ export function DetectionScreen() {
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.primary },
 
   // ── Idle ──
   idleContainer: {
     flex: 1, justifyContent: 'center', alignItems: 'center',
-    paddingHorizontal: 32, backgroundColor: '#FFFFFF',
+    paddingHorizontal: 32, backgroundColor: colors.background.elevated,
   },
   closeBtn: { position: 'absolute', top: 16, right: 20, padding: 8 },
-  closeBtnText: { fontSize: 18, color: '#9CA3AF', fontWeight: '600' },
+  closeBtnText: { fontSize: 18, color: colors.text.tertiary, fontWeight: '600' },
   idleIcon: {
-    width: 80, height: 80, borderRadius: 40, backgroundColor: '#F0FDF4',
+    width: 80, height: 80, borderRadius: 40, backgroundColor: colors.accentTint.green,
     alignItems: 'center', justifyContent: 'center', marginBottom: 20,
   },
   idleIconText: { fontSize: 36 },
-  idleTitle: { fontSize: 26, fontWeight: '800', color: '#111827', marginBottom: 10 },
+  idleTitle: { fontSize: 26, fontWeight: '800', color: colors.text.primary, marginBottom: 10 },
   idleSubtitle: {
-    fontSize: 15, color: '#6B7280', textAlign: 'center', lineHeight: 22, marginBottom: 36,
+    fontSize: 15, color: colors.text.tertiary, textAlign: 'center', lineHeight: 22, marginBottom: 36,
   },
   errorBanner: {
-    width: '100%', backgroundColor: '#FEF2F2', borderRadius: 10, padding: 14, marginBottom: 20,
+    width: '100%', backgroundColor: colors.accentTint.red, borderRadius: 10, padding: 14, marginBottom: 20,
   },
-  errorText: { color: '#DC2626', fontSize: 14, textAlign: 'center' },
+  errorText: { color: colors.accent.red, fontSize: 14, textAlign: 'center' },
   primaryBtn: {
-    width: '100%', paddingVertical: 16, backgroundColor: '#16A34A',
+    width: '100%', paddingVertical: 16, backgroundColor: colors.accent.green,
     borderRadius: 14, alignItems: 'center', marginBottom: 12,
   },
-  primaryBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
+  primaryBtnText: { color: colors.text.inverse, fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
   secondaryBtn: {
-    width: '100%', paddingVertical: 16, backgroundColor: '#F3F4F6',
+    width: '100%', paddingVertical: 16, backgroundColor: colors.background.surface,
     borderRadius: 14, alignItems: 'center',
   },
-  secondaryBtnText: { color: '#374151', fontSize: 17, fontWeight: '600' },
+  secondaryBtnText: { color: colors.text.secondary, fontSize: 17, fontWeight: '600' },
 
   // ── Analyzing ──
   analyzingPhoto: { width: '100%', height: 240 },
   analyzingOverlay: {
     flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12, paddingHorizontal: 32,
   },
-  analyzingTitle: { fontSize: 20, fontWeight: '700', color: '#111827', marginTop: 8 },
-  analyzingSubtitle: { fontSize: 14, color: '#6B7280', textAlign: 'center' },
+  analyzingTitle: { fontSize: 20, fontWeight: '700', color: colors.text.primary, marginTop: 8 },
+  analyzingSubtitle: { fontSize: 14, color: colors.text.tertiary, textAlign: 'center' },
 
   // ── Saving ──
   savingContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 16 },
-  savingText: { fontSize: 16, color: '#6B7280', fontWeight: '500' },
+  savingText: { fontSize: 16, color: colors.text.tertiary, fontWeight: '500' },
 
   // ── Results ──
   resultsHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
   },
   headerBack: { padding: 4, width: 36 },
-  headerBackText: { fontSize: 18, color: '#9CA3AF', fontWeight: '600' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  headerBackText: { fontSize: 18, color: colors.text.tertiary, fontWeight: '600' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: colors.text.primary },
   headerRight: { width: 36 },
   scrollView: { flex: 1 },
   scrollContent: { paddingTop: 0 },
@@ -583,30 +589,30 @@ const styles = StyleSheet.create({
   },
   mockBannerText: { fontSize: 13, color: '#92400E', textAlign: 'center', fontWeight: '500' },
   processingBanner: {
-    backgroundColor: '#EFF6FF', paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: colors.accentTint.blue, paddingHorizontal: 16, paddingVertical: 10,
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
     borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#DBEAFE',
   },
   processingText: { fontSize: 13, color: '#1E40AF', fontWeight: '500' },
   mealTypeRow: {
     flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 14, gap: 8,
-    backgroundColor: '#FFFFFF', marginBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+    backgroundColor: colors.background.elevated, marginBottom: 12,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
   },
   mealTypePill: {
-    flex: 1, paddingVertical: 8, borderRadius: 20, backgroundColor: '#F3F4F6', alignItems: 'center',
+    flex: 1, paddingVertical: 8, borderRadius: 20, backgroundColor: colors.background.surface, alignItems: 'center',
   },
-  mealTypePillActive: { backgroundColor: '#16A34A' },
-  mealTypePillText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
-  mealTypePillTextActive: { color: '#FFFFFF' },
+  mealTypePillActive: { backgroundColor: colors.accent.green },
+  mealTypePillText: { fontSize: 13, fontWeight: '600', color: colors.text.tertiary },
+  mealTypePillTextActive: { color: colors.text.inverse },
   emptyDishesContainer: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 32, gap: 16 },
-  emptyDishesText: { fontSize: 16, color: '#6B7280', textAlign: 'center' },
+  emptyDishesText: { fontSize: 16, color: colors.text.tertiary, textAlign: 'center' },
 
   // ── Model badge + debug ──
   modelBadge: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingVertical: 6, paddingHorizontal: 16, backgroundColor: '#FFFFFF',
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+    paddingVertical: 6, paddingHorizontal: 16, backgroundColor: colors.background.elevated,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
   },
   modelBadgeText: { fontSize: 12, color: '#555', fontWeight: '500' },
   debugButton: {
@@ -614,7 +620,7 @@ const styles = StyleSheet.create({
     borderRadius: 12, borderWidth: 1, borderColor: '#90caf9',
   },
   debugButtonText: { fontSize: 11, color: '#1565c0', fontWeight: '600' },
-  debugModal: { flex: 1, backgroundColor: '#fff' },
+  debugModal: { flex: 1, backgroundColor: colors.background.elevated },
   debugModalHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
     padding: 20, borderBottomWidth: 1, borderBottomColor: '#eee',
@@ -627,31 +633,32 @@ const styles = StyleSheet.create({
   // ── Footer ──
   footer: {
     position: 'absolute', bottom: 0, left: 0, right: 0,
-    backgroundColor: '#FFFFFF', borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E5E7EB', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28,
+    backgroundColor: colors.background.elevated, borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border.subtle, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28,
     shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.06,
     shadowRadius: 8, elevation: 8,
   },
   footerTotals: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12,
   },
-  footerCalories: { fontSize: 22, fontWeight: '800', color: '#111827' },
+  footerCalories: { fontSize: 22, fontWeight: '800', color: colors.text.primary },
   footerMacros: { flexDirection: 'row', gap: 12 },
   footerMacro: { fontSize: 13 },
   footerMacroNum: { fontWeight: '700', fontSize: 14 },
-  footerMacroLabel: { color: '#9CA3AF', fontSize: 12 },
+  footerMacroLabel: { color: colors.text.tertiary, fontSize: 12 },
   footerButtons: {
     flexDirection: 'row', gap: 10,
   },
   scaleWeightBtn: {
-    backgroundColor: '#F3F4F6', borderRadius: 14, paddingVertical: 16, paddingHorizontal: 16,
+    backgroundColor: colors.background.surface, borderRadius: 14, paddingVertical: 16, paddingHorizontal: 16,
     alignItems: 'center', justifyContent: 'center',
   },
-  scaleWeightBtnText: { fontSize: 15, fontWeight: '600', color: '#374151' },
+  scaleWeightBtnText: { fontSize: 15, fontWeight: '600', color: colors.text.secondary },
   logBtn: {
-    backgroundColor: '#16A34A', borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+    backgroundColor: colors.accent.green, borderRadius: 14, paddingVertical: 16, alignItems: 'center',
   },
   logBtnFlex: { flex: 1 },
-  logBtnDisabled: { backgroundColor: '#D1D5DB' },
-  logBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
+  logBtnDisabled: { backgroundColor: colors.border.default },
+  logBtnText: { color: colors.text.inverse, fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
 });
+}

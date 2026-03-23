@@ -6,7 +6,7 @@
  *   undo/redo via command pattern, photo viewer with pinch-to-zoom, re-scan button.
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   Alert,
   Modal,
@@ -43,6 +43,8 @@ import {
 import { useEditSession } from '../hooks/useEditSession';
 import { ServingSizeSelector, IngredientSearchSheet, PhotoViewer } from '../components/edit';
 import { geminiNanoService } from '../services/vlm/geminiNanoService';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -192,6 +194,8 @@ export default function EntryDetailScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'EntryDetail'>>();
   const { deleteEntry, loadTodayEntries } = useFoodLogStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [entry, setEntry] = useState<EntryDetail | null>(null);
   const [alreadyFaved, setAlreadyFaved] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -353,7 +357,7 @@ export default function EntryDetailScreen() {
             <Image source={{ uri: entry.photoUri }} style={styles.photo} resizeMode="cover" />
             {entry.photos.length > 1 && (
               <View style={styles.photoCountBadge}>
-                <Ionicons name="images-outline" size={14} color="#FFF" />
+                <Ionicons name="images-outline" size={14} color={colors.text.inverse} />
                 <Text style={styles.photoCountText}>{entry.photos.length}</Text>
               </View>
             )}
@@ -384,7 +388,7 @@ export default function EntryDetailScreen() {
                 <Ionicons
                   name={editing ? 'checkmark' : 'pencil'}
                   size={16}
-                  color={editing ? '#FFF' : '#3B82F6'}
+                  color={editing ? colors.text.inverse : colors.accent.blue}
                 />
                 <Text style={editing ? styles.saveBtnText : styles.editBtnText}>
                   {editing ? 'Save' : 'Edit'}
@@ -401,9 +405,9 @@ export default function EntryDetailScreen() {
             <Text style={styles.totalCalLabel}>kcal</Text>
           </View>
           <View style={styles.totalMacros}>
-            <MacroPill value={entry.totalProtein} label="P" color="#3B82F6" />
+            <MacroPill value={entry.totalProtein} label="P" color={colors.accent.blue} />
             <MacroPill value={entry.totalCarbs} label="C" color="#D97706" />
-            <MacroPill value={entry.totalFat} label="F" color="#16A34A" />
+            <MacroPill value={entry.totalFat} label="F" color={colors.accent.green} />
           </View>
         </View>
 
@@ -469,7 +473,7 @@ export default function EntryDetailScreen() {
                 setRecipeModalVisible(true);
               }}
             >
-              <Ionicons name="book-outline" size={16} color="#7C3AED" />
+              <Ionicons name="book-outline" size={16} color={colors.accent.purple} />
               <Text style={styles.recipeBtnText}>Save as Recipe</Text>
             </Pressable>
           </View>
@@ -484,6 +488,7 @@ export default function EntryDetailScreen() {
                   value={dish.name}
                   onSubmit={(v) => handleDishNameChange(dish.id, dish.name, v)}
                   style={styles.dishName}
+                  editableStyle={styles.editableText}
                 />
               ) : (
                 <Text style={styles.dishName}>{dish.name}</Text>
@@ -507,6 +512,7 @@ export default function EntryDetailScreen() {
                         value={ing.name}
                         onSubmit={(v) => handleNameChange(ing.id, ing.name, v)}
                         style={styles.ingName}
+                        editableStyle={styles.editableText}
                       />
                       <Text style={styles.ingCal}>{Math.round(ing.calories)} kcal</Text>
                     </View>
@@ -520,7 +526,7 @@ export default function EntryDetailScreen() {
                       style={styles.removeBtn}
                       onPress={() => handleRemoveIngredient(ing, dish.id)}
                     >
-                      <Ionicons name="close-circle" size={20} color="#EF4444" />
+                      <Ionicons name="close-circle" size={20} color={colors.accent.red} />
                     </Pressable>
                   </>
                 ) : (
@@ -547,7 +553,7 @@ export default function EntryDetailScreen() {
                 style={styles.addIngBtn}
                 onPress={() => handleOpenIngredientSearch(dish.id)}
               >
-                <Ionicons name="add-circle-outline" size={18} color="#16A34A" />
+                <Ionicons name="add-circle-outline" size={18} color={colors.accent.green} />
                 <Text style={styles.addIngText}>Add Ingredient</Text>
               </Pressable>
             )}
@@ -564,7 +570,7 @@ export default function EntryDetailScreen() {
             style={styles.rescanBtn}
             onPress={() => navigation.navigate('ReidentifyMerge', { entryId: entry.id })}
           >
-            <Ionicons name="sparkles-outline" size={18} color="#7C3AED" />
+            <Ionicons name="sparkles-outline" size={18} color={colors.accent.purple} />
             <Text style={styles.rescanBtnText}>Re-scan with Gemini Nano</Text>
           </Pressable>
         )}
@@ -608,7 +614,7 @@ export default function EntryDetailScreen() {
             onPress={handleUndo}
             disabled={!editSession.canUndo}
           >
-            <Ionicons name="arrow-undo" size={18} color={editSession.canUndo ? '#3B82F6' : '#D1D5DB'} />
+            <Ionicons name="arrow-undo" size={18} color={editSession.canUndo ? colors.accent.blue : colors.border.default} />
             <Text style={[styles.undoRedoText, !editSession.canUndo && styles.undoRedoTextDisabled]}>Undo</Text>
           </Pressable>
 
@@ -617,7 +623,7 @@ export default function EntryDetailScreen() {
             onPress={handleRedo}
             disabled={!editSession.canRedo}
           >
-            <Ionicons name="arrow-redo" size={18} color={editSession.canRedo ? '#3B82F6' : '#D1D5DB'} />
+            <Ionicons name="arrow-redo" size={18} color={editSession.canRedo ? colors.accent.blue : colors.border.default} />
             <Text style={[styles.undoRedoText, !editSession.canRedo && styles.undoRedoTextDisabled]}>Redo</Text>
           </Pressable>
 
@@ -626,8 +632,8 @@ export default function EntryDetailScreen() {
             onPress={handleReset}
             disabled={!editSession.canUndo}
           >
-            <Ionicons name="refresh" size={18} color={editSession.canUndo ? '#EF4444' : '#D1D5DB'} />
-            <Text style={[styles.undoRedoText, !editSession.canUndo && styles.undoRedoTextDisabled, editSession.canUndo && { color: '#EF4444' }]}>Reset</Text>
+            <Ionicons name="refresh" size={18} color={editSession.canUndo ? colors.accent.red : colors.border.default} />
+            <Text style={[styles.undoRedoText, !editSession.canUndo && styles.undoRedoTextDisabled, editSession.canUndo && { color: colors.accent.red }]}>Reset</Text>
           </Pressable>
         </View>
       )}
@@ -661,7 +667,7 @@ export default function EntryDetailScreen() {
               value={recipeName}
               onChangeText={setRecipeName}
               placeholder="Recipe name"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.input.placeholder}
               autoFocus
               selectTextOnFocus
             />
@@ -670,7 +676,7 @@ export default function EntryDetailScreen() {
               value={recipeServings}
               onChangeText={setRecipeServings}
               placeholder="Servings"
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.input.placeholder}
               keyboardType="numeric"
             />
             <View style={styles.recipeModalActions}>
@@ -705,15 +711,17 @@ function EditableText({
   value,
   onSubmit,
   style,
+  editableStyle,
 }: {
   value: string;
   onSubmit: (v: string) => void;
   style: object;
+  editableStyle: object;
 }) {
   const [text, setText] = useState(value);
   return (
     <TextInput
-      style={[style, styles.editableText]}
+      style={[style, editableStyle]}
       value={text}
       onChangeText={setText}
       onBlur={() => onSubmit(text)}
@@ -725,202 +733,211 @@ function EditableText({
 }
 
 function MacroPill({ value, label, color }: { value: number; label: string; color: string }) {
+  const { colors } = useTheme();
+  const pillStyles = useMemo(() => createMacroPillStyles(colors), [colors]);
   return (
-    <View style={styles.macroPill}>
-      <Text style={[styles.macroPillNum, { color }]}>{Math.round(value)}g</Text>
-      <Text style={[styles.macroPillLabel, { color }]}> {label}</Text>
+    <View style={pillStyles.macroPill}>
+      <Text style={[pillStyles.macroPillNum, { color }]}>{Math.round(value)}g</Text>
+      <Text style={[pillStyles.macroPillLabel, { color }]}> {label}</Text>
     </View>
   );
+}
+
+function createMacroPillStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    macroPill: {
+      flexDirection: 'row', backgroundColor: colors.background.surface, borderRadius: 8,
+      paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center',
+    },
+    macroPillNum: { fontSize: 13, fontWeight: '700' },
+    macroPillLabel: { fontSize: 11, fontWeight: '600' },
+  });
 }
 
 // ---------------------------------------------------------------------------
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  scrollContent: { paddingBottom: 20 },
-  loadingText: { marginTop: 100, textAlign: 'center', color: '#6B7280', fontSize: 16 },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background.primary },
+    scrollContent: { paddingBottom: 20 },
+    loadingText: { marginTop: 100, textAlign: 'center', color: colors.text.tertiary, fontSize: 16 },
 
-  photo: { width: '100%', height: 240 },
-  photoCountBadge: {
-    position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4,
-  },
-  photoCountText: { fontSize: 12, fontWeight: '600', color: '#FFF' },
+    photo: { width: '100%', height: 240 },
+    photoCountBadge: {
+      position: 'absolute', bottom: 12, right: 12, flexDirection: 'row', alignItems: 'center', gap: 4,
+      backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: 12, paddingHorizontal: 8, paddingVertical: 4,
+    },
+    photoCountText: { fontSize: 12, fontWeight: '600', color: colors.text.inverse },
 
-  header: {
-    flexDirection: 'row', alignItems: 'center',
-    paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFF',
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
-  },
-  mealBadge: {
-    backgroundColor: '#16A34A', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4,
-  },
-  mealBadgeText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
-  timeText: { fontSize: 14, color: '#6B7280' },
+    header: {
+      flexDirection: 'row', alignItems: 'center',
+      paddingHorizontal: 16, paddingVertical: 14, backgroundColor: colors.background.elevated,
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
+    },
+    mealBadge: {
+      backgroundColor: colors.accent.green, borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4,
+    },
+    mealBadgeText: { fontSize: 13, fontWeight: '600', color: colors.text.inverse },
+    timeText: { fontSize: 14, color: colors.text.tertiary },
 
-  // Edit/Save/Cancel buttons
-  editBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#EFF6FF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
-    borderWidth: 1, borderColor: '#BFDBFE',
-  },
-  editBtnText: { fontSize: 13, fontWeight: '600', color: '#3B82F6' },
-  saveBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    backgroundColor: '#16A34A', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
-  },
-  saveBtnText: { fontSize: 13, fontWeight: '600', color: '#FFF' },
-  cancelBtn: {
-    borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
-    backgroundColor: '#F3F4F6', borderWidth: 1, borderColor: '#E5E7EB',
-  },
-  cancelBtnText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
+    // Edit/Save/Cancel buttons
+    editBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 4,
+      backgroundColor: colors.accentTint.blue, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+      borderWidth: 1, borderColor: '#BFDBFE',
+    },
+    editBtnText: { fontSize: 13, fontWeight: '600', color: colors.accent.blue },
+    saveBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 4,
+      backgroundColor: colors.accent.green, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+    },
+    saveBtnText: { fontSize: 13, fontWeight: '600', color: colors.text.inverse },
+    cancelBtn: {
+      borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+      backgroundColor: colors.background.surface, borderWidth: 1, borderColor: colors.border.subtle,
+    },
+    cancelBtnText: { fontSize: 13, fontWeight: '600', color: colors.text.tertiary },
 
-  totalsCard: {
-    backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
-    shadowRadius: 8, elevation: 3,
-  },
-  totalMain: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
-  totalCalNum: { fontSize: 28, fontWeight: '800', color: '#111827' },
-  totalCalLabel: { fontSize: 14, color: '#6B7280' },
-  totalMacros: { flexDirection: 'row', gap: 6 },
-  macroPill: {
-    flexDirection: 'row', backgroundColor: '#F9FAFB', borderRadius: 8,
-    paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center',
-  },
-  macroPillNum: { fontSize: 13, fontWeight: '700' },
-  macroPillLabel: { fontSize: 11, fontWeight: '600' },
+    totalsCard: {
+      backgroundColor: colors.background.elevated, marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
+      shadowRadius: 8, elevation: 3,
+    },
+    totalMain: { flexDirection: 'row', alignItems: 'baseline', gap: 4 },
+    totalCalNum: { fontSize: 28, fontWeight: '800', color: colors.text.primary },
+    totalCalLabel: { fontSize: 14, color: colors.text.tertiary },
+    totalMacros: { flexDirection: 'row', gap: 6 },
 
-  microCard: {
-    backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
-    shadowRadius: 8, elevation: 3,
-  },
-  microTitle: { fontSize: 14, fontWeight: '700', color: '#374151', marginBottom: 8 },
-  microRow: {
-    flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
-  },
-  microLabel: { fontSize: 14, color: '#6B7280' },
-  microValue: { fontSize: 14, fontWeight: '600', color: '#111827' },
+    microCard: {
+      backgroundColor: colors.background.elevated, marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
+      shadowRadius: 8, elevation: 3,
+    },
+    microTitle: { fontSize: 14, fontWeight: '700', color: colors.text.secondary, marginBottom: 8 },
+    microRow: {
+      flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6,
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
+    },
+    microLabel: { fontSize: 14, color: colors.text.tertiary },
+    microValue: { fontSize: 14, fontWeight: '600', color: colors.text.primary },
 
-  actionRow: {
-    flexDirection: 'row', gap: 8, marginHorizontal: 16, marginTop: 12,
-  },
-  favBtn: {
-    backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12,
-    alignItems: 'center', borderWidth: 1, borderColor: '#FDE68A',
-    flexDirection: 'row', justifyContent: 'center', gap: 6,
-  },
-  favBtnText: { fontSize: 14, fontWeight: '600', color: '#92400E' },
-  favedBadge: {
-    backgroundColor: '#F0FDF4', borderRadius: 12, paddingVertical: 10,
-    alignItems: 'center', borderWidth: 1, borderColor: '#BBF7D0',
-  },
-  favedBadgeText: { fontSize: 14, fontWeight: '500', color: '#16A34A' },
-  recipeBtn: {
-    flex: 1, backgroundColor: '#F5F3FF', borderRadius: 12, paddingVertical: 12,
-    alignItems: 'center', borderWidth: 1, borderColor: '#DDD6FE',
-    flexDirection: 'row', justifyContent: 'center', gap: 6,
-  },
-  recipeBtnText: { fontSize: 14, fontWeight: '600', color: '#7C3AED' },
+    actionRow: {
+      flexDirection: 'row', gap: 8, marginHorizontal: 16, marginTop: 12,
+    },
+    favBtn: {
+      backgroundColor: '#FEF3C7', borderRadius: 12, paddingVertical: 12,
+      alignItems: 'center', borderWidth: 1, borderColor: '#FDE68A',
+      flexDirection: 'row', justifyContent: 'center', gap: 6,
+    },
+    favBtnText: { fontSize: 14, fontWeight: '600', color: '#92400E' },
+    favedBadge: {
+      backgroundColor: colors.accentTint.green, borderRadius: 12, paddingVertical: 10,
+      alignItems: 'center', borderWidth: 1, borderColor: colors.accentTint.green,
+    },
+    favedBadgeText: { fontSize: 14, fontWeight: '500', color: colors.accent.green },
+    recipeBtn: {
+      flex: 1, backgroundColor: colors.accentTint.purple, borderRadius: 12, paddingVertical: 12,
+      alignItems: 'center', borderWidth: 1, borderColor: '#DDD6FE',
+      flexDirection: 'row', justifyContent: 'center', gap: 6,
+    },
+    recipeBtnText: { fontSize: 14, fontWeight: '600', color: colors.accent.purple },
 
-  // Recipe modal
-  recipeModalOverlay: { flex: 1, justifyContent: 'flex-end' },
-  recipeModalBackdrop: { flex: 1 },
-  recipeModalSheet: {
-    backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20,
-    padding: 24, paddingBottom: 40,
-    shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 10,
-  },
-  recipeModalTitle: { fontSize: 18, fontWeight: '700', color: '#111827', textAlign: 'center', marginBottom: 4 },
-  recipeModalHint: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginBottom: 16 },
-  recipeModalInput: {
-    backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 15, color: '#111827', marginBottom: 12,
-  },
-  recipeModalActions: { flexDirection: 'row', gap: 12, marginTop: 4 },
-  recipeModalCancel: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center' },
-  recipeModalCancelText: { fontSize: 16, fontWeight: '600', color: '#6B7280' },
-  recipeModalSave: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: '#7C3AED', alignItems: 'center' },
-  recipeModalSaveText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+    // Recipe modal
+    recipeModalOverlay: { flex: 1, justifyContent: 'flex-end' },
+    recipeModalBackdrop: { flex: 1 },
+    recipeModalSheet: {
+      backgroundColor: colors.background.elevated, borderTopLeftRadius: 20, borderTopRightRadius: 20,
+      padding: 24, paddingBottom: 40,
+      shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 10,
+    },
+    recipeModalTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary, textAlign: 'center', marginBottom: 4 },
+    recipeModalHint: { fontSize: 13, color: colors.input.placeholder, textAlign: 'center', marginBottom: 16 },
+    recipeModalInput: {
+      backgroundColor: colors.input.background, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
+      fontSize: 15, color: colors.text.primary, marginBottom: 12,
+    },
+    recipeModalActions: { flexDirection: 'row', gap: 12, marginTop: 4 },
+    recipeModalCancel: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: colors.background.surface, alignItems: 'center' },
+    recipeModalCancelText: { fontSize: 16, fontWeight: '600', color: colors.text.tertiary },
+    recipeModalSave: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: colors.accent.purple, alignItems: 'center' },
+    recipeModalSaveText: { fontSize: 16, fontWeight: '700', color: colors.text.inverse },
 
-  dishCard: {
-    backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16,
-    overflow: 'hidden',
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
-    shadowRadius: 8, elevation: 3,
-  },
-  dishHeader: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#F9FAFB',
-  },
-  dishName: { fontSize: 16, fontWeight: '700', color: '#111827', flex: 1 },
-  cuisinePill: { backgroundColor: '#DCFCE7', borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
-  cuisineText: { fontSize: 11, fontWeight: '500', color: '#16A34A' },
-  scaleText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
+    dishCard: {
+      backgroundColor: colors.background.elevated, marginHorizontal: 16, marginTop: 12, borderRadius: 16,
+      overflow: 'hidden',
+      shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
+      shadowRadius: 8, elevation: 3,
+    },
+    dishHeader: {
+      flexDirection: 'row', alignItems: 'center', gap: 8,
+      paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.background.surface,
+    },
+    dishName: { fontSize: 16, fontWeight: '700', color: colors.text.primary, flex: 1 },
+    cuisinePill: { backgroundColor: colors.accentTint.green, borderRadius: 20, paddingHorizontal: 8, paddingVertical: 2 },
+    cuisineText: { fontSize: 11, fontWeight: '500', color: colors.accent.green },
+    scaleText: { fontSize: 13, fontWeight: '600', color: colors.text.tertiary },
 
-  ingRow: {
-    flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F9FAFB',
-  },
-  ingLeft: { flex: 1 },
-  ingName: { fontSize: 14, fontWeight: '500', color: '#111827' },
-  ingCal: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
-  ingWeightChip: {
-    backgroundColor: '#F0FDF4', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
-    borderWidth: 1, borderColor: '#BBF7D0',
-  },
-  ingWeightText: { fontSize: 13, fontWeight: '600', color: '#16A34A' },
-  noIngText: { textAlign: 'center', padding: 16, color: '#9CA3AF', fontSize: 13 },
+    ingRow: {
+      flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 10,
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
+    },
+    ingLeft: { flex: 1 },
+    ingName: { fontSize: 14, fontWeight: '500', color: colors.text.primary },
+    ingCal: { fontSize: 12, color: colors.input.placeholder, marginTop: 1 },
+    ingWeightChip: {
+      backgroundColor: colors.accentTint.green, borderRadius: 8, paddingHorizontal: 10, paddingVertical: 4,
+      borderWidth: 1, borderColor: colors.accentTint.green,
+    },
+    ingWeightText: { fontSize: 13, fontWeight: '600', color: colors.accent.green },
+    noIngText: { textAlign: 'center', padding: 16, color: colors.input.placeholder, fontSize: 13 },
 
-  // Edit mode styles
-  editableText: {
-    backgroundColor: '#F3F4F6', borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4,
-    borderWidth: 1, borderColor: '#E5E7EB',
-  },
-  removeBtn: { marginLeft: 8, padding: 4 },
-  addIngBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#F3F4F6',
-  },
-  addIngText: { fontSize: 13, fontWeight: '600', color: '#16A34A' },
+    // Edit mode styles
+    editableText: {
+      backgroundColor: colors.input.background, borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4,
+      borderWidth: 1, borderColor: colors.border.subtle,
+    },
+    removeBtn: { marginLeft: 8, padding: 4 },
+    addIngBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+      paddingVertical: 12, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.background.surface,
+    },
+    addIngText: { fontSize: 13, fontWeight: '600', color: colors.accent.green },
 
-  // Re-scan button
-  rescanBtn: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    marginHorizontal: 16, marginTop: 12, paddingVertical: 14, borderRadius: 12,
-    backgroundColor: '#F5F3FF', borderWidth: 1, borderColor: '#DDD6FE',
-  },
-  rescanBtnText: { fontSize: 15, fontWeight: '600', color: '#7C3AED' },
+    // Re-scan button
+    rescanBtn: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+      marginHorizontal: 16, marginTop: 12, paddingVertical: 14, borderRadius: 12,
+      backgroundColor: colors.accentTint.purple, borderWidth: 1, borderColor: '#DDD6FE',
+    },
+    rescanBtnText: { fontSize: 15, fontWeight: '600', color: colors.accent.purple },
 
-  // Undo/Redo bar
-  undoRedoBar: {
-    position: 'absolute', bottom: 20, left: 16, right: 16,
-    flexDirection: 'row', justifyContent: 'space-around',
-    backgroundColor: '#FFF', borderRadius: 16, paddingVertical: 12, paddingHorizontal: 8,
-    shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1,
-    shadowRadius: 12, elevation: 8,
-  },
-  undoRedoBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 4,
-    paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8,
-  },
-  undoRedoBtnDisabled: { opacity: 0.4 },
-  undoRedoText: { fontSize: 13, fontWeight: '600', color: '#3B82F6' },
-  undoRedoTextDisabled: { color: '#D1D5DB' },
+    // Undo/Redo bar
+    undoRedoBar: {
+      position: 'absolute', bottom: 20, left: 16, right: 16,
+      flexDirection: 'row', justifyContent: 'space-around',
+      backgroundColor: colors.background.elevated, borderRadius: 16, paddingVertical: 12, paddingHorizontal: 8,
+      shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.1,
+      shadowRadius: 12, elevation: 8,
+    },
+    undoRedoBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 4,
+      paddingHorizontal: 16, paddingVertical: 8, borderRadius: 8,
+    },
+    undoRedoBtnDisabled: { opacity: 0.4 },
+    undoRedoText: { fontSize: 13, fontWeight: '600', color: colors.accent.blue },
+    undoRedoTextDisabled: { color: colors.border.default },
 
-  notesCard: {
-    backgroundColor: '#FFF', marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
-  },
-  notesText: { fontSize: 14, color: '#374151', lineHeight: 20 },
-  deleteBtn: {
-    marginHorizontal: 16, marginTop: 24, paddingVertical: 14, borderRadius: 12,
-    backgroundColor: '#FEF2F2', alignItems: 'center', borderWidth: 1, borderColor: '#FECACA',
-  },
-  deleteBtnText: { fontSize: 15, fontWeight: '600', color: '#DC2626' },
-});
+    notesCard: {
+      backgroundColor: colors.background.elevated, marginHorizontal: 16, marginTop: 12, borderRadius: 16, padding: 16,
+    },
+    notesText: { fontSize: 14, color: colors.text.secondary, lineHeight: 20 },
+    deleteBtn: {
+      marginHorizontal: 16, marginTop: 24, paddingVertical: 14, borderRadius: 12,
+      backgroundColor: colors.accentTint.red, alignItems: 'center', borderWidth: 1, borderColor: '#FECACA',
+    },
+    deleteBtnText: { fontSize: 15, fontWeight: '600', color: colors.accent.red },
+  });
+}

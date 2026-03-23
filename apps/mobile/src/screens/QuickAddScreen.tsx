@@ -22,8 +22,13 @@ import { Ionicons } from '@expo/vector-icons';
 import { validateMacros } from '../services/search/historyService';
 import { autoDetectMealType } from '../services/detection/types';
 import { useFoodLogStore } from '../store/useFoodLogStore';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 export default function QuickAddScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const navigation = useNavigation();
   const { addEntry, loadTodayEntries } = useFoodLogStore();
 
@@ -80,7 +85,7 @@ export default function QuickAddScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => navigation.goBack()} hitSlop={12}>
-            <Ionicons name="close" size={28} color="#111827" />
+            <Ionicons name="close" size={28} color={colors.text.primary} />
           </Pressable>
           <Text style={styles.headerTitle}>Quick Add</Text>
           <View style={{ width: 28 }} />
@@ -177,10 +182,11 @@ export default function QuickAddScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.elevated,
   },
   flex: {
     flex: 1,
@@ -195,15 +201,15 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text.primary,
   },
   nameInput: {
     marginHorizontal: 16,
     marginBottom: 20,
     fontSize: 16,
-    color: '#111827',
+    color: colors.text.primary,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border.subtle,
     paddingVertical: 10,
   },
   caloriesRow: {
@@ -213,22 +219,22 @@ const styles = StyleSheet.create({
   fieldLabel: {
     fontSize: 13,
     fontWeight: '500',
-    color: '#6B7280',
+    color: colors.text.tertiary,
     marginBottom: 6,
   },
   caloriesInput: {
     fontSize: 32,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text.primary,
     borderWidth: 1.5,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border.subtle,
     borderRadius: 12,
     paddingHorizontal: 16,
     paddingVertical: 14,
     textAlign: 'center',
   },
   caloriesInputWarning: {
-    borderColor: '#EF4444',
+    borderColor: colors.accent.red,
   },
   macroRow: {
     flexDirection: 'row',
@@ -241,9 +247,9 @@ const styles = StyleSheet.create({
   macroInput: {
     fontSize: 20,
     fontWeight: '600',
-    color: '#111827',
+    color: colors.text.primary,
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border.subtle,
     borderRadius: 10,
     paddingHorizontal: 12,
     paddingVertical: 12,
@@ -253,10 +259,10 @@ const styles = StyleSheet.create({
     marginHorizontal: 16,
     marginTop: 10,
     fontSize: 13,
-    color: '#DC2626',
+    color: colors.accent.red,
   },
   submitButton: {
-    backgroundColor: '#16A34A',
+    backgroundColor: colors.accent.green,
     borderRadius: 14,
     paddingVertical: 16,
     marginHorizontal: 16,
@@ -269,6 +275,7 @@ const styles = StyleSheet.create({
   submitButtonText: {
     fontSize: 17,
     fontWeight: '600',
-    color: '#FFFFFF',
+    color: colors.text.inverse,
   },
 });
+}

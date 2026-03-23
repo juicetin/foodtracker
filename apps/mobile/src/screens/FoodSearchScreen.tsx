@@ -8,7 +8,7 @@
  * Quick Add accessible from header and empty state.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   View,
   Text,
@@ -33,6 +33,8 @@ import { useFoodLogStore } from '../store/useFoodLogStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import { autoDetectMealType } from '../services/detection/types';
 import type { RootStackParamList } from '../types';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 /** Unified search result — either from KG or OFF. */
 interface SearchResult {
@@ -50,6 +52,8 @@ export default function FoodSearchScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { addEntry, loadTodayEntries } = useFoodLogStore();
   const uxMode = usePreferencesStore((s) => s.uxMode);
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<SearchResult[]>([]);
@@ -331,9 +335,9 @@ export default function FoodSearchScreen() {
                 <Text style={styles.nutritionCalLabel}>kcal</Text>
               </View>
               <View style={styles.nutritionMacros}>
-                <NutritionPill value={nutrition.protein} label="Protein" color="#3B82F6" />
-                <NutritionPill value={nutrition.carbs} label="Carbs" color="#D97706" />
-                <NutritionPill value={nutrition.fat} label="Fat" color="#16A34A" />
+                <NutritionPill value={nutrition.protein} label="Protein" color={colors.accent.blue} colors={colors} />
+                <NutritionPill value={nutrition.carbs} label="Carbs" color="#D97706" colors={colors} />
+                <NutritionPill value={nutrition.fat} label="Fat" color={colors.accent.green} colors={colors} />
               </View>
               <Text style={styles.nutritionSource}>
                 Source: {sourceLabel}
@@ -361,11 +365,11 @@ export default function FoodSearchScreen() {
       >
         <View style={styles.header}>
           <Pressable onPress={handleGoBack} style={styles.headerClose}>
-            <Ionicons name="close" size={22} color="#9CA3AF" />
+            <Ionicons name="close" size={22} color={colors.input.placeholder} />
           </Pressable>
           <Text style={styles.headerTitle}>Search Food</Text>
           <Pressable onPress={() => navigation.navigate('QuickAdd')} style={styles.headerQuickAdd}>
-            <Ionicons name="add-circle-outline" size={24} color="#16A34A" />
+            <Ionicons name="add-circle-outline" size={24} color={colors.accent.green} />
           </Pressable>
         </View>
 
@@ -376,12 +380,12 @@ export default function FoodSearchScreen() {
               value={query}
               onChangeText={handleQueryChange}
               placeholder="Search foods..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.input.placeholder}
               autoFocus
               returnKeyType="search"
             />
             <Pressable style={styles.barcodeBtn} onPress={() => {}}>
-              <Ionicons name="barcode-outline" size={20} color="#9CA3AF" />
+              <Ionicons name="barcode-outline" size={20} color={colors.input.placeholder} />
             </Pressable>
           </View>
         </View>
@@ -398,7 +402,7 @@ export default function FoodSearchScreen() {
             renderItem={({ item }) => (
               <Pressable style={styles.resultRow} onPress={() => handleHistoryItemPress(item)}>
                 <View style={styles.historyIconWrap}>
-                  <Ionicons name="time-outline" size={18} color="#9CA3AF" />
+                  <Ionicons name="time-outline" size={18} color={colors.input.placeholder} />
                 </View>
                 <View style={styles.resultLeft}>
                   <Text style={styles.resultName} numberOfLines={1}>{item.name}</Text>
@@ -422,7 +426,7 @@ export default function FoodSearchScreen() {
               <Pressable style={styles.resultRow} onPress={() => handleSelectResult(item)}>
                 {item.source === 'history' && (
                   <View style={styles.historyIconWrap}>
-                    <Ionicons name="time-outline" size={18} color="#9CA3AF" />
+                    <Ionicons name="time-outline" size={18} color={colors.input.placeholder} />
                   </View>
                 )}
                 <View style={styles.resultLeft}>
@@ -444,7 +448,7 @@ export default function FoodSearchScreen() {
                   ]}>
                     <Text style={[
                       styles.sourceBadgeText,
-                      item.source === 'recipe' && { color: '#7C3AED' },
+                      item.source === 'recipe' && { color: colors.accent.purple },
                     ]}>
                       {item.source === 'off' ? 'OFF' : item.source === 'history' ? 'History' : item.source === 'recipe' ? 'Recipe' : 'KG'}
                     </Text>
@@ -461,7 +465,7 @@ export default function FoodSearchScreen() {
                     style={styles.quickAddLink}
                     onPress={() => navigation.navigate('QuickAdd')}
                   >
-                    <Ionicons name="add-circle-outline" size={18} color="#16A34A" />
+                    <Ionicons name="add-circle-outline" size={18} color={colors.accent.green} />
                     <Text style={styles.quickAddLinkText}>Quick Add</Text>
                   </Pressable>
                 </View>
@@ -474,115 +478,110 @@ export default function FoodSearchScreen() {
   );
 }
 
-function NutritionPill({ value, label, color }: { value: number; label: string; color: string }) {
+function NutritionPill({ value, label, color, colors }: { value: number; label: string; color: string; colors: ThemeColors }) {
   return (
-    <View style={styles.nutPill}>
-      <Text style={[styles.nutPillNum, { color }]}>{Math.round(value)}g</Text>
-      <Text style={styles.nutPillLabel}>{label}</Text>
+    <View style={{ flex: 1, backgroundColor: colors.background.surface, borderRadius: 10, paddingVertical: 8, alignItems: 'center' }}>
+      <Text style={{ fontSize: 16, fontWeight: '700', color }}>{Math.round(value)}g</Text>
+      <Text style={{ fontSize: 11, color: colors.input.placeholder, fontWeight: '500', marginTop: 2 }}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background.primary },
 
-  // Header
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: 16, paddingVertical: 14, backgroundColor: '#FFF',
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
-  },
-  headerClose: { padding: 4, width: 36 },
-  headerCloseText: { fontSize: 18, color: '#9CA3AF', fontWeight: '600' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
-  headerQuickAdd: { padding: 4, width: 36, alignItems: 'flex-end' },
+    // Header
+    header: {
+      flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
+      paddingHorizontal: 16, paddingVertical: 14, backgroundColor: colors.background.elevated,
+      borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
+    },
+    headerClose: { padding: 4, width: 36 },
+    headerTitle: { fontSize: 17, fontWeight: '700', color: colors.text.primary },
+    headerQuickAdd: { padding: 4, width: 36, alignItems: 'flex-end' },
 
-  // Search
-  searchRow: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: '#FFF' },
-  searchInputContainer: {
-    flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F3F4F6', borderRadius: 12,
-  },
-  searchInput: {
-    flex: 1, paddingHorizontal: 16, paddingVertical: 12,
-    fontSize: 16, color: '#111827',
-  },
-  barcodeBtn: { paddingHorizontal: 12, paddingVertical: 10 },
+    // Search
+    searchRow: { paddingHorizontal: 16, paddingVertical: 12, backgroundColor: colors.background.elevated },
+    searchInputContainer: {
+      flexDirection: 'row', alignItems: 'center',
+      backgroundColor: colors.input.background, borderRadius: 12,
+    },
+    searchInput: {
+      flex: 1, paddingHorizontal: 16, paddingVertical: 12,
+      fontSize: 16, color: colors.text.primary,
+    },
+    barcodeBtn: { paddingHorizontal: 12, paddingVertical: 10 },
 
-  // Section headers
-  sectionHeader: {
-    fontSize: 13, fontWeight: '700', color: '#6B7280', textTransform: 'uppercase',
-    letterSpacing: 0.5, paddingHorizontal: 16, paddingVertical: 8,
-  },
+    // Section headers
+    sectionHeader: {
+      fontSize: 13, fontWeight: '700', color: colors.text.tertiary, textTransform: 'uppercase',
+      letterSpacing: 0.5, paddingHorizontal: 16, paddingVertical: 8,
+    },
 
-  // Results
-  listContent: { paddingTop: 8 },
-  resultRow: {
-    backgroundColor: '#FFF', marginHorizontal: 16, marginBottom: 4,
-    borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
-    flexDirection: 'row', alignItems: 'center',
-  },
-  historyIconWrap: { marginRight: 10 },
-  resultLeft: { flex: 1, marginRight: 8 },
-  resultRight: { alignItems: 'flex-end', gap: 4 },
-  resultName: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  resultBrand: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
-  resultCal: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
-  sourceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
-  sourceBadgeKg: { backgroundColor: '#DCFCE7' },
-  sourceBadgeOff: { backgroundColor: '#DBEAFE' },
-  sourceBadgeHistory: { backgroundColor: '#F3E8FF' },
-  sourceBadgeRecipe: { backgroundColor: '#F5F3FF' },
-  sourceBadgeText: { fontSize: 10, fontWeight: '700', color: '#374151' },
-  countBadge: {
-    backgroundColor: '#F3F4F6', borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
-  },
-  countBadgeText: { fontSize: 11, fontWeight: '700', color: '#6B7280' },
-  emptyList: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
-  emptyText: { fontSize: 15, color: '#6B7280', textAlign: 'center', marginBottom: 4 },
-  emptySubtext: { fontSize: 13, color: '#9CA3AF', textAlign: 'center' },
-  quickAddLink: {
-    flexDirection: 'row', alignItems: 'center', gap: 6,
-    marginTop: 16, paddingVertical: 10, paddingHorizontal: 16,
-    backgroundColor: '#F0FDF4', borderRadius: 10,
-  },
-  quickAddLinkText: { fontSize: 15, fontWeight: '600', color: '#16A34A' },
+    // Results
+    listContent: { paddingTop: 8 },
+    resultRow: {
+      backgroundColor: colors.background.elevated, marginHorizontal: 16, marginBottom: 4,
+      borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
+      flexDirection: 'row', alignItems: 'center',
+    },
+    historyIconWrap: { marginRight: 10 },
+    resultLeft: { flex: 1, marginRight: 8 },
+    resultRight: { alignItems: 'flex-end', gap: 4 },
+    resultName: { fontSize: 15, fontWeight: '600', color: colors.text.primary },
+    resultBrand: { fontSize: 12, color: colors.input.placeholder, marginTop: 1 },
+    resultCal: { fontSize: 13, fontWeight: '600', color: colors.text.tertiary },
+    sourceBadge: { borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2 },
+    sourceBadgeKg: { backgroundColor: colors.accentTint.green },
+    sourceBadgeOff: { backgroundColor: '#DBEAFE' },
+    sourceBadgeHistory: { backgroundColor: '#F3E8FF' },
+    sourceBadgeRecipe: { backgroundColor: colors.accentTint.purple },
+    sourceBadgeText: { fontSize: 10, fontWeight: '700', color: colors.text.secondary },
+    countBadge: {
+      backgroundColor: colors.background.surface, borderRadius: 6, paddingHorizontal: 6, paddingVertical: 2,
+    },
+    countBadgeText: { fontSize: 11, fontWeight: '700', color: colors.text.tertiary },
+    emptyList: { alignItems: 'center', paddingVertical: 40, paddingHorizontal: 20 },
+    emptyText: { fontSize: 15, color: colors.text.tertiary, textAlign: 'center', marginBottom: 4 },
+    emptySubtext: { fontSize: 13, color: colors.input.placeholder, textAlign: 'center' },
+    quickAddLink: {
+      flexDirection: 'row', alignItems: 'center', gap: 6,
+      marginTop: 16, paddingVertical: 10, paddingHorizontal: 16,
+      backgroundColor: colors.accentTint.green, borderRadius: 10,
+    },
+    quickAddLinkText: { fontSize: 15, fontWeight: '600', color: colors.accent.green },
 
-  // Detail
-  detailContainer: { flex: 1, padding: 20 },
-  backBtn: { marginBottom: 16 },
-  backBtnText: { fontSize: 15, color: '#3B82F6', fontWeight: '500' },
-  detailName: { fontSize: 24, fontWeight: '800', color: '#111827', marginBottom: 20 },
-  portionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
-  portionLabel: { fontSize: 15, color: '#374151', fontWeight: '500' },
-  portionInput: {
-    backgroundColor: '#FFF', borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10,
-    fontSize: 18, fontWeight: '700', color: '#111827', minWidth: 80, textAlign: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB',
-  },
-  portionUnit: { fontSize: 15, color: '#6B7280' },
+    // Detail
+    detailContainer: { flex: 1, padding: 20 },
+    backBtn: { marginBottom: 16 },
+    backBtnText: { fontSize: 15, color: colors.accent.blue, fontWeight: '500' },
+    detailName: { fontSize: 24, fontWeight: '800', color: colors.text.primary, marginBottom: 20 },
+    portionRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 20 },
+    portionLabel: { fontSize: 15, color: colors.text.secondary, fontWeight: '500' },
+    portionInput: {
+      backgroundColor: colors.background.elevated, borderRadius: 10, paddingHorizontal: 16, paddingVertical: 10,
+      fontSize: 18, fontWeight: '700', color: colors.text.primary, minWidth: 80, textAlign: 'center',
+      borderWidth: 1, borderColor: colors.border.subtle,
+    },
+    portionUnit: { fontSize: 15, color: colors.text.tertiary },
 
-  nutritionCard: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 24,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
-    shadowRadius: 8, elevation: 3,
-  },
-  nutritionMain: {
-    flexDirection: 'row', alignItems: 'baseline', gap: 4, marginBottom: 12,
-  },
-  nutritionCalNum: { fontSize: 32, fontWeight: '800', color: '#111827' },
-  nutritionCalLabel: { fontSize: 16, color: '#6B7280' },
-  nutritionMacros: { flexDirection: 'row', gap: 8, marginBottom: 8 },
-  nutritionSource: { fontSize: 11, color: '#9CA3AF', fontStyle: 'italic' },
+    nutritionCard: {
+      backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 24,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
+      shadowRadius: 8, elevation: 3,
+    },
+    nutritionMain: {
+      flexDirection: 'row', alignItems: 'baseline', gap: 4, marginBottom: 12,
+    },
+    nutritionCalNum: { fontSize: 32, fontWeight: '800', color: colors.text.primary },
+    nutritionCalLabel: { fontSize: 16, color: colors.text.tertiary },
+    nutritionMacros: { flexDirection: 'row', gap: 8, marginBottom: 8 },
+    nutritionSource: { fontSize: 11, color: colors.input.placeholder, fontStyle: 'italic' },
 
-  nutPill: {
-    flex: 1, backgroundColor: '#F9FAFB', borderRadius: 10, paddingVertical: 8, alignItems: 'center',
-  },
-  nutPillNum: { fontSize: 16, fontWeight: '700' },
-  nutPillLabel: { fontSize: 11, color: '#9CA3AF', fontWeight: '500', marginTop: 2 },
-
-  addBtn: {
-    backgroundColor: '#16A34A', borderRadius: 14, paddingVertical: 16, alignItems: 'center',
-  },
-  addBtnText: { color: '#FFF', fontSize: 17, fontWeight: '700' },
-});
+    addBtn: {
+      backgroundColor: colors.accent.green, borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+    },
+    addBtnText: { color: colors.text.inverse, fontSize: 17, fontWeight: '700' },
+  });
+}

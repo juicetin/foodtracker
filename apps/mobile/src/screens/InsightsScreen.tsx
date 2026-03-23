@@ -4,7 +4,7 @@
  * Extracted from DiaryScreen's TrendsCard section. Reloads data on tab focus.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, {useCallback, useState, useMemo} from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import { useFocusEffect } from '@react-navigation/native';
 import { loadDailyTotals, computeTrendStats, type DayTotals } from '../services/trends/trendsService';
 import { getTodayDateStr } from '../services/diary/diaryQueries';
 import { usePreferencesStore } from '../store/usePreferencesStore';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,6 +37,9 @@ const TREND_RANGES: { value: TrendRange; label: string }[] = [
 // ---------------------------------------------------------------------------
 
 export default function InsightsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [trendRange, setTrendRange] = useState<TrendRange>(7);
   const [trendDays, setTrendDays] = useState<DayTotals[]>([]);
   const { nutritionGoals } = usePreferencesStore();
@@ -115,7 +120,7 @@ export default function InsightsScreen() {
                       styles.barFill,
                       {
                         height: `${Math.max(pct * 100, day.calories > 0 ? 4 : 0)}%`,
-                        backgroundColor: overGoal ? '#EF4444' : isDayToday ? '#16A34A' : '#93C5FD',
+                        backgroundColor: overGoal ? colors.accent.red : isDayToday ? colors.accent.green : '#93C5FD',
                       },
                     ]}
                   />
@@ -152,16 +157,16 @@ export default function InsightsScreen() {
 
         {/* Macro averages */}
         <View style={styles.macroAvgRow}>
-          <View style={[styles.macroAvgPill, { backgroundColor: '#EFF6FF' }]}>
-            <Text style={[styles.macroAvgNum, { color: '#3B82F6' }]}>{Math.round(stats.avgProtein)}g</Text>
+          <View style={[styles.macroAvgPill, { backgroundColor: colors.accentTint.blue }]}>
+            <Text style={[styles.macroAvgNum, { color: colors.accent.blue }]}>{Math.round(stats.avgProtein)}g</Text>
             <Text style={styles.macroAvgLabel}>Avg P</Text>
           </View>
-          <View style={[styles.macroAvgPill, { backgroundColor: '#FFFBEB' }]}>
+          <View style={[styles.macroAvgPill, { backgroundColor: colors.accentTint.amber }]}>
             <Text style={[styles.macroAvgNum, { color: '#D97706' }]}>{Math.round(stats.avgCarbs)}g</Text>
             <Text style={styles.macroAvgLabel}>Avg C</Text>
           </View>
-          <View style={[styles.macroAvgPill, { backgroundColor: '#F0FDF4' }]}>
-            <Text style={[styles.macroAvgNum, { color: '#16A34A' }]}>{Math.round(stats.avgFat)}g</Text>
+          <View style={[styles.macroAvgPill, { backgroundColor: colors.accentTint.green }]}>
+            <Text style={[styles.macroAvgNum, { color: colors.accent.green }]}>{Math.round(stats.avgFat)}g</Text>
             <Text style={styles.macroAvgLabel}>Avg F</Text>
           </View>
         </View>
@@ -176,70 +181,71 @@ export default function InsightsScreen() {
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.primary },
   header: {
     paddingTop: 56,
     paddingHorizontal: 16,
     paddingBottom: 12,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: colors.background.elevated,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border.subtle,
   },
-  screenTitle: { fontSize: 28, fontWeight: '800', color: '#111827' },
+  screenTitle: { fontSize: 28, fontWeight: '800', color: colors.text.primary },
   scroll: { flex: 1 },
   scrollContent: { padding: 16 },
 
   // Empty state
   emptyState: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingTop: 120 },
-  emptyTitle: { fontSize: 20, fontWeight: '700', color: '#374151', marginBottom: 8 },
-  emptyBody: { fontSize: 15, color: '#9CA3AF', textAlign: 'center', maxWidth: 260 },
+  emptyTitle: { fontSize: 20, fontWeight: '700', color: colors.text.secondary, marginBottom: 8 },
+  emptyBody: { fontSize: 15, color: colors.text.tertiary, textAlign: 'center', maxWidth: 260 },
 
   // Range toggle
   rangeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  trendsTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
+  trendsTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary },
   rangePills: { flexDirection: 'row', gap: 4 },
   rangePill: {
     paddingHorizontal: 12, paddingVertical: 6, borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background.surface,
   },
-  rangePillActive: { backgroundColor: '#16A34A' },
-  rangePillText: { fontSize: 13, fontWeight: '600', color: '#6B7280' },
-  rangePillTextActive: { color: '#FFF' },
+  rangePillActive: { backgroundColor: colors.accent.green },
+  rangePillText: { fontSize: 13, fontWeight: '600', color: colors.text.tertiary },
+  rangePillTextActive: { color: colors.text.inverse },
 
   // Calorie bars
   barsContainer: {
     flexDirection: 'row', gap: 2, height: 140,
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 12,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 12,
     marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
   barCol: { alignItems: 'center' },
   barTrack: {
-    flex: 1, width: '100%', backgroundColor: '#F3F4F6', borderRadius: 3,
+    flex: 1, width: '100%', backgroundColor: colors.background.surface, borderRadius: 3,
     justifyContent: 'flex-end', overflow: 'hidden', minWidth: 4,
   },
   barFill: { width: '100%', borderRadius: 3 },
-  barDayLabel: { fontSize: 9, color: '#9CA3AF', fontWeight: '500', marginTop: 3 },
-  barDayLabelToday: { color: '#16A34A', fontWeight: '700' },
+  barDayLabel: { fontSize: 9, color: colors.text.tertiary, fontWeight: '500', marginTop: 3 },
+  barDayLabelToday: { color: colors.accent.green, fontWeight: '700' },
 
   // Stats
   statsRow: {
     flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 14,
-    backgroundColor: '#FFFFFF', borderRadius: 16, paddingHorizontal: 12,
+    backgroundColor: colors.background.elevated, borderRadius: 16, paddingHorizontal: 12,
     marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
   statItem: { alignItems: 'center', flex: 1 },
-  statValue: { fontSize: 18, fontWeight: '800', color: '#111827' },
-  statLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '500', marginTop: 2 },
+  statValue: { fontSize: 18, fontWeight: '800', color: colors.text.primary },
+  statLabel: { fontSize: 10, color: colors.text.tertiary, fontWeight: '500', marginTop: 2 },
 
   // Macro averages
   macroAvgRow: {
     flexDirection: 'row', gap: 8,
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 12,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 12,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
@@ -247,5 +253,6 @@ const styles = StyleSheet.create({
     flex: 1, borderRadius: 10, paddingVertical: 10, alignItems: 'center',
   },
   macroAvgNum: { fontSize: 16, fontWeight: '700' },
-  macroAvgLabel: { fontSize: 10, color: '#9CA3AF', fontWeight: '500', marginTop: 2 },
+  macroAvgLabel: { fontSize: 10, color: colors.text.tertiary, fontWeight: '500', marginTop: 2 },
 });
+}

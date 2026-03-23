@@ -9,7 +9,7 @@
  * (both in search bar icons and as an entry method card).
  */
 
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -35,6 +35,8 @@ import { getRecentHistory } from '../services/search/historyService';
 import { loadFavourites } from '../services/favourites';
 import { autoDetectMealType } from '../services/detection/types';
 import type { RootStackParamList } from '../types';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -54,6 +56,8 @@ const MEAL_TYPE_LABELS: Record<string, string> = {
 export default function AddFoodScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'AddFood'>>();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState<QuickAccessTabKey>('recent');
@@ -113,10 +117,6 @@ export default function AddFoodScreen() {
           break;
         }
         case 'recipes': {
-          // Recipes are loaded from the recipe service but we keep it
-          // simple and use an empty list for now — the recipe service
-          // searchRecipes requires a query string. Saved recipes will
-          // be populated when the recipes feature is enhanced.
           setTabItems([]);
           break;
         }
@@ -140,7 +140,6 @@ export default function AddFoodScreen() {
   function handleSearchChange(text: string) {
     setSearchQuery(text);
     if (text.trim().length >= 2) {
-      // Navigate to FoodSearchScreen for full search experience
       navigation.navigate('FoodSearch');
     }
   }
@@ -174,8 +173,6 @@ export default function AddFoodScreen() {
       });
 
       if (!result.canceled && result.assets.length > 0) {
-        // Navigate to Detection with the selected image
-        // The Detection screen will pick up the image from params or state
         navigation.navigate('Detection');
       }
     } catch {
@@ -184,7 +181,6 @@ export default function AddFoodScreen() {
   }
 
   function handleItemPress(item: QuickAccessItem) {
-    // Navigate to food search to allow user to review and log
     navigation.navigate('FoodSearch');
   }
 
@@ -204,7 +200,7 @@ export default function AddFoodScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={handleGoBack} style={styles.headerClose}>
-          <Ionicons name="close" size={24} color="#6B7280" />
+          <Ionicons name="close" size={24} color={colors.text.tertiary} />
         </Pressable>
         <Text style={styles.headerTitle}>Add Food</Text>
         <View style={styles.headerSpacer} />
@@ -265,64 +261,66 @@ export default function AddFoodScreen() {
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#FFFFFF',
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
-  },
-  headerClose: {
-    padding: 4,
-    width: 36,
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  headerSpacer: {
-    width: 36,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: 16,
-    paddingBottom: 40,
-  },
-  mealTypePillContainer: {
-    flexDirection: 'row',
-    marginTop: 16,
-    marginBottom: 12,
-  },
-  mealTypePill: {
-    backgroundColor: '#DCFCE7',
-    borderRadius: 16,
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-  },
-  mealTypePillText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#16A34A',
-  },
-  searchBarContainer: {
-    marginBottom: 16,
-  },
-  cardsContainer: {
-    marginBottom: 20,
-  },
-  tabsContainer: {
-    flex: 1,
-    minHeight: 200,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flex: 1,
+      backgroundColor: colors.background.primary,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 14,
+      backgroundColor: colors.background.elevated,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border.subtle,
+    },
+    headerClose: {
+      padding: 4,
+      width: 36,
+    },
+    headerTitle: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    headerSpacer: {
+      width: 36,
+    },
+    scrollView: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 16,
+      paddingBottom: 40,
+    },
+    mealTypePillContainer: {
+      flexDirection: 'row',
+      marginTop: 16,
+      marginBottom: 12,
+    },
+    mealTypePill: {
+      backgroundColor: colors.accentTint.green,
+      borderRadius: 16,
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+    },
+    mealTypePillText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.accent.green,
+    },
+    searchBarContainer: {
+      marginBottom: 16,
+    },
+    cardsContainer: {
+      marginBottom: 20,
+    },
+    tabsContainer: {
+      flex: 1,
+      minHeight: 200,
+    },
+  });
+}

@@ -7,7 +7,7 @@
  * long-press meal header -> MealGroupMenuSheet.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, RefreshControl, SafeAreaView, Alert } from 'react-native';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -46,6 +46,8 @@ import {
 import { ItemDetailSheet } from '../components/sheets/ItemDetailSheet';
 import { ContextMenuSheet, type ContextMenuAction } from '../components/sheets/ContextMenuSheet';
 import { MealGroupMenuSheet, type MealGroupAction } from '../components/sheets/MealGroupMenuSheet';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 const SWIPE_THRESHOLD = 50;
 
@@ -53,6 +55,8 @@ export default function DiaryHomeScreen() {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { nutritionGoals } = usePreferencesStore();
   const { deleteEntry } = useFoodLogStore();
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
 
   // State
   const [selectedDate, setSelectedDate] = useState(getTodayDateStr());
@@ -332,7 +336,7 @@ export default function DiaryHomeScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor="#16A34A"
+              tintColor={colors.accent.green}
             />
           }
         >
@@ -397,31 +401,33 @@ export default function DiaryHomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  screen: {
-    flex: 1,
-    backgroundColor: '#F5F5F5',
-  },
-  scroll: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingTop: 8,
-  },
-  emptyState: {
-    alignItems: 'center',
-    paddingVertical: 40,
-  },
-  emptyText: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: '#6B7280',
-    marginBottom: 6,
-  },
-  emptySubtext: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    paddingHorizontal: 32,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    screen: {
+      flex: 1,
+      backgroundColor: colors.background.primary,
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingTop: 8,
+    },
+    emptyState: {
+      alignItems: 'center',
+      paddingVertical: 40,
+    },
+    emptyText: {
+      fontSize: 18,
+      fontWeight: '600',
+      color: colors.text.tertiary,
+      marginBottom: 6,
+    },
+    emptySubtext: {
+      fontSize: 14,
+      color: colors.input.placeholder,
+      textAlign: 'center',
+      paddingHorizontal: 32,
+    },
+  });
+}
