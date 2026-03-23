@@ -431,7 +431,7 @@ Plans:
 ## Progress
 
 **Execution Order:**
-Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6 -> 7.1 -> 8 -> 9
+Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.6 -> 02.7 -> 7 -> 3.5 -> 3.6 -> 3.1 -> 3.2 -> 3.3 -> 3.4 -> 3.7 -> 4 -> 5 -> 6 -> 7.1 -> 8 -> 9 -> 9.1
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
@@ -458,6 +458,7 @@ Phases execute in numeric order: 1 -> 2 -> 2.1 -> 2.2 -> 2.3 -> 2.4 -> 2.5 -> 2.
 | 7.1. Integration Wiring + Cleanup | 0/2 | Not started | - |
 | 8. On-device vector search embedding | 0/2 | Not started | - |
 | 9. UX Redesign | 0/5 | Not started | - |
+| 9.1. Dark Mode Theme | 0/3 | Not started | - |
 
 ### Phase 9: UX redesign -- diary-first home, add food with barcode/photo/voice/gallery, item detail bottom sheet, long-press context menu, copy/move meals
 
@@ -483,10 +484,18 @@ Plans:
 
 ### Phase 09.1: Dark mode theme with system preference detection and manual toggle (INSERTED)
 
-**Goal:** [Urgent work - to be planned]
-**Requirements**: TBD
+**Goal:** Centralize ~967 hardcoded hex color values across 49 files into a semantic token system with light and dark palettes, ThemeProvider context with system preference detection, three-state toggle (System/Light/Dark), and full migration of all screens and components
+**Requirements**: DM-01, DM-02, DM-03, DM-04
 **Depends on:** Phase 9
-**Plans:** 5/5 plans complete
+**Success Criteria** (what must be TRUE):
+  1. Semantic color token system (ThemeColors interface) with light and dark palette objects in a single colors.ts
+  2. ThemeProvider wraps App root, useTheme() hook provides colors and isDark to all consumers
+  3. Three-state preference (System/Light/Dark) persists via Zustand with migration from legacy darkMode boolean
+  4. All 49 files with hardcoded hex colors migrated to semantic tokens via useTheme()
+  5. React Navigation theme, bottom sheets, and StatusBar all respond to active theme
+**Plans:** 3 plans
 
 Plans:
-- [ ] TBD (run /gsd:plan-phase 09.1 to break down)
+- [ ] 09.1-01-PLAN.md -- Theme infrastructure: colors.ts, ThemeProvider, navigation theme, store migration, App.tsx wiring, ProfileScreen toggle
+- [ ] 09.1-02-PLAN.md -- Migrate all 15 screens to useTheme() semantic color tokens
+- [ ] 09.1-03-PLAN.md -- Migrate all 32 components/sheets to useTheme() + final verification sweep

@@ -104,6 +104,13 @@ Requirements for initial release. Each maps to roadmap phases.
 - [x] **QA-03**: Remove third toggle view on diary items (keep two states: summary + ingredients)
 - [x] **QA-06**: Barcode option always visible on add food screen
 
+### Dark Mode
+
+- [ ] **DM-01**: Semantic color token system with ThemeColors interface defining background, text, border, accent, and component-specific color groups
+- [ ] **DM-02**: Light and dark palettes defined as plain objects with Slate-based dark theme (#0F172A background, #1E293B surface, #334155 elevated)
+- [ ] **DM-03**: Three-state theme preference (System/Light/Dark) with system detection via useColorScheme(), persisted in Zustand store with migration from legacy darkMode boolean
+- [ ] **DM-04**: All screens and components migrated from hardcoded hex colors to semantic theme tokens via useTheme() hook, including React Navigation theme and bottom sheet theming
+
 ## v2 Requirements
 
 Deferred to future release. Tracked but not in current roadmap.
@@ -215,11 +222,16 @@ Deferred to future release. Tracked but not in current roadmap.
 | QA-03 | Phase 9 | Planned |
 | QA-06 | Phase 9 | Planned |
 
+| DM-01 | Phase 9.1 | Planned |
+| DM-02 | Phase 9.1 | Planned |
+| DM-03 | Phase 9.1 | Planned |
+| DM-04 | Phase 9.1 | Planned |
+
 **Coverage:**
-- v1 requirements: 60 total
-- Mapped to phases: 60
+- v1 requirements: 64 total
+- Mapped to phases: 64
 - Unmapped: 0
 
 ---
 *Requirements defined: 2026-03-12*
-*Last updated: 2026-03-23 after Phase 9 planning*
+*Last updated: 2026-03-24 after Phase 9.1 planning*
