@@ -106,9 +106,9 @@ Requirements for initial release. Each maps to roadmap phases.
 
 ### Dark Mode
 
-- [ ] **DM-01**: Semantic color token system with ThemeColors interface defining background, text, border, accent, and component-specific color groups
-- [ ] **DM-02**: Light and dark palettes defined as plain objects with Slate-based dark theme (#0F172A background, #1E293B surface, #334155 elevated)
-- [ ] **DM-03**: Three-state theme preference (System/Light/Dark) with system detection via useColorScheme(), persisted in Zustand store with migration from legacy darkMode boolean
+- [x] **DM-01**: Semantic color token system with ThemeColors interface defining background, text, border, accent, and component-specific color groups
+- [x] **DM-02**: Light and dark palettes defined as plain objects with Slate-based dark theme (#0F172A background, #1E293B surface, #334155 elevated)
+- [x] **DM-03**: Three-state theme preference (System/Light/Dark) with system detection via useColorScheme(), persisted in Zustand store with migration from legacy darkMode boolean
 - [ ] **DM-04**: All screens and components migrated from hardcoded hex colors to semantic theme tokens via useTheme() hook, including React Navigation theme and bottom sheet theming
 
 ## v2 Requirements

@@ -493,9 +493,9 @@ Plans:
   3. Three-state preference (System/Light/Dark) persists via Zustand with migration from legacy darkMode boolean
   4. All 49 files with hardcoded hex colors migrated to semantic tokens via useTheme()
   5. React Navigation theme, bottom sheets, and StatusBar all respond to active theme
-**Plans:** 3 plans
+**Plans:** 1/3 plans executed
 
 Plans:
-- [ ] 09.1-01-PLAN.md -- Theme infrastructure: colors.ts, ThemeProvider, navigation theme, store migration, App.tsx wiring, ProfileScreen toggle
+- [x] 09.1-01-PLAN.md -- Theme infrastructure: colors.ts, ThemeProvider, navigation theme, store migration, App.tsx wiring, ProfileScreen toggle
 - [ ] 09.1-02-PLAN.md -- Migrate all 15 screens to useTheme() semantic color tokens
 - [ ] 09.1-03-PLAN.md -- Migrate all 32 components/sheets to useTheme() + final verification sweep
