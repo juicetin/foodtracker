@@ -93,19 +93,20 @@ Key new dependencies needed: `expo-haptics` (haptic feedback for long-press), `e
 |---------|---------|---------|-----|
 | expo-haptics | ~55.0.9 | Haptic feedback on long-press context menu | Platform-native feel for long-press actions |
 | expo-clipboard | ~55.0.9 | Copy meal info to clipboard | Context menu "Copy to clipboard" action |
-| expo-speech | ~55.0.9 | Speech-to-text for voice food input | Voice icon in search bar |
+
+
+> **Note:** expo-speech is text-to-speech (OUTPUT), not speech-to-text (INPUT). Voice input is deferred — keyboard voice input hint used instead. Do NOT install expo-speech.
 
 ### Alternatives Considered
 | Instead of | Could Use | Tradeoff |
 |------------|-----------|----------|
-| expo-speech | @react-native-voice/voice (v3.2.4) | More powerful but requires native linking; expo-speech is simpler, Expo-managed |
 | react-native-context-menu-view | @gorhom/bottom-sheet (already installed) | Native context menus look platform-native but are limited in customization; bottom sheet is consistent with existing app patterns |
 | zeego (v3.0.6) | @gorhom/bottom-sheet | zeego provides native context menus on iOS + Android but adds a new dependency; not worth it when bottom-sheet is already in use |
 | react-native-calendars | Simple modal date picker | Full calendar library is overkill; a simple month-view picker built with Views suffices for date-tap |
 
 **Installation:**
 ```bash
-npx expo install expo-haptics expo-clipboard expo-speech
+npx expo install expo-haptics expo-clipboard
 ```
 
 ## Architecture Patterns
