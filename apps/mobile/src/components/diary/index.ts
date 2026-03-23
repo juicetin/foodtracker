@@ -4,3 +4,4 @@ export { MealGroupSection } from './MealGroupSection';
 export { MealGroupHeader } from './MealGroupHeader';
 export { FoodItemCard } from './FoodItemCard';
 export { WeekOverviewBar } from './WeekOverviewBar';
+export { CalendarPicker } from './CalendarPicker';
