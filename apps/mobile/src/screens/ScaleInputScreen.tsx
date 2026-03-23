@@ -6,7 +6,7 @@
  *   - onResult (optional): Callback receiving the confirmed net weight in grams.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -29,10 +29,15 @@ import {
   recordContainerUsage,
   type Container,
 } from '../services/scale/containerService';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 type ScaleInputRoute = RouteProp<RootStackParamList, 'ScaleInput'>;
 
 export default function ScaleInputScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const navigation = useNavigation();
   const route = useRoute<ScaleInputRoute>();
   const photoUri = route.params?.photoUri ?? null;
@@ -172,7 +177,7 @@ export default function ScaleInputScreen() {
         {/* OCR Result */}
         {ocrLoading ? (
           <View style={styles.ocrSection}>
-            <ActivityIndicator size="small" color="#16A34A" />
+            <ActivityIndicator size="small" color={colors.accent.green} />
             <Text style={styles.ocrLoadingText}>Reading scale...</Text>
           </View>
         ) : reading ? (
@@ -188,7 +193,7 @@ export default function ScaleInputScreen() {
                     styles.confidenceBadge,
                     {
                       backgroundColor:
-                        reading.confidence === 'high' ? '#DCFCE7' : '#FEF9C3',
+                        reading.confidence === 'high' ? colors.accentTint.green : '#FEF9C3',
                     },
                   ]}
                 >
@@ -197,7 +202,7 @@ export default function ScaleInputScreen() {
                       styles.confidenceText,
                       {
                         color:
-                          reading.confidence === 'high' ? '#16A34A' : '#CA8A04',
+                          reading.confidence === 'high' ? colors.accent.green : '#CA8A04',
                       },
                     ]}
                   >
@@ -346,87 +351,89 @@ export default function ScaleInputScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.primary },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
   },
   headerBack: { padding: 4 },
-  headerBackText: { fontSize: 15, color: '#3B82F6', fontWeight: '500' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  headerBackText: { fontSize: 15, color: colors.accent.blue, fontWeight: '500' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: colors.text.primary },
   headerRight: { width: 60 },
 
   body: { flex: 1, paddingHorizontal: 16, paddingTop: 16 },
 
   ocrSection: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 16,
     flexDirection: 'row', alignItems: 'center', gap: 12,
   },
-  ocrLoadingText: { fontSize: 14, color: '#6B7280' },
+  ocrLoadingText: { fontSize: 14, color: colors.text.tertiary },
   ocrResult: { flex: 1 },
-  ocrLabel: { fontSize: 13, color: '#6B7280', marginBottom: 4 },
+  ocrLabel: { fontSize: 13, color: colors.text.tertiary, marginBottom: 4 },
   ocrValueRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  ocrValue: { fontSize: 28, fontWeight: '800', color: '#111827' },
+  ocrValue: { fontSize: 28, fontWeight: '800', color: colors.text.primary },
   confidenceBadge: { borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
   confidenceText: { fontSize: 12, fontWeight: '600' },
-  ocrFallbackText: { fontSize: 14, color: '#6B7280', fontStyle: 'italic' },
+  ocrFallbackText: { fontSize: 14, color: colors.text.tertiary, fontStyle: 'italic' },
 
   inputSection: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 16,
   },
-  sectionTitle: { fontSize: 15, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.text.secondary, marginBottom: 8 },
   weightInput: {
-    fontSize: 32, fontWeight: '800', color: '#111827',
-    paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: '#16A34A',
+    fontSize: 32, fontWeight: '800', color: colors.text.primary,
+    paddingVertical: 8, borderBottomWidth: 2, borderBottomColor: colors.accent.green,
   },
 
   containerSection: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 16,
   },
   containerHeader: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12,
   },
-  addContainerBtn: { fontSize: 14, fontWeight: '600', color: '#3B82F6' },
+  addContainerBtn: { fontSize: 14, fontWeight: '600', color: colors.accent.blue },
   addForm: {
     flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 12,
   },
   addFormInput: {
-    flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: '#111827',
+    flex: 1, backgroundColor: colors.background.surface, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 8, fontSize: 14, color: colors.text.primary,
   },
   addFormSave: {
-    backgroundColor: '#16A34A', borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8,
+    backgroundColor: colors.accent.green, borderRadius: 8, paddingHorizontal: 14, paddingVertical: 8,
   },
-  addFormSaveText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  addFormSaveText: { fontSize: 14, fontWeight: '600', color: colors.text.inverse },
   containerList: { gap: 8 },
   containerPill: {
-    backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
+    backgroundColor: colors.background.surface, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 10,
     alignItems: 'center', borderWidth: 1.5, borderColor: 'transparent',
   },
   containerPillSelected: {
-    borderColor: '#16A34A', backgroundColor: '#F0FDF4',
+    borderColor: colors.accent.green, backgroundColor: colors.accentTint.green,
   },
-  containerPillName: { fontSize: 13, fontWeight: '600', color: '#374151' },
-  containerPillWeight: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  containerPillTextSelected: { color: '#16A34A' },
-  emptyText: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', paddingVertical: 12 },
+  containerPillName: { fontSize: 13, fontWeight: '600', color: colors.text.secondary },
+  containerPillWeight: { fontSize: 12, color: colors.text.tertiary, marginTop: 2 },
+  containerPillTextSelected: { color: colors.accent.green },
+  emptyText: { fontSize: 13, color: colors.text.tertiary, textAlign: 'center', paddingVertical: 12 },
 
   netWeightSection: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, alignItems: 'center',
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, alignItems: 'center',
   },
-  netWeightLabel: { fontSize: 13, color: '#6B7280', marginBottom: 4 },
-  netWeightValue: { fontSize: 40, fontWeight: '800', color: '#16A34A' },
-  netWeightCalc: { fontSize: 12, color: '#9CA3AF', marginTop: 4 },
+  netWeightLabel: { fontSize: 13, color: colors.text.tertiary, marginBottom: 4 },
+  netWeightValue: { fontSize: 40, fontWeight: '800', color: colors.accent.green },
+  netWeightCalc: { fontSize: 12, color: colors.text.tertiary, marginTop: 4 },
 
   footer: {
-    backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28,
-    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, paddingHorizontal: 16, paddingTop: 12, paddingBottom: 28,
+    borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: colors.border.subtle,
   },
   confirmBtn: {
-    backgroundColor: '#16A34A', borderRadius: 14, paddingVertical: 16, alignItems: 'center',
+    backgroundColor: colors.accent.green, borderRadius: 14, paddingVertical: 16, alignItems: 'center',
   },
-  confirmBtnDisabled: { backgroundColor: '#D1D5DB' },
-  confirmBtnText: { color: '#FFFFFF', fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
+  confirmBtnDisabled: { backgroundColor: colors.border.default },
+  confirmBtnText: { color: colors.text.inverse, fontSize: 17, fontWeight: '700', letterSpacing: 0.3 },
 });
+}

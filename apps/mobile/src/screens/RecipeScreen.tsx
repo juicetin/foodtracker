@@ -6,7 +6,7 @@
  * - Builder: create/edit a recipe (manually or from URL import) with versioning
  */
 
-import React, { useCallback, useState } from 'react';
+import React, {useCallback, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -45,12 +45,17 @@ import { autoDetectMealType } from '../services/detection/types';
 import { useFoodLogStore } from '../store/useFoodLogStore';
 import { usePreferencesStore } from '../store/usePreferencesStore';
 import type { UxMode } from '../types';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 
 export default function RecipeScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const navigation = useNavigation();
   const { loadTodayEntries } = useFoodLogStore();
   const uxMode = usePreferencesStore((s) => s.uxMode);
@@ -304,7 +309,7 @@ export default function RecipeScreen() {
       <View style={styles.container}>
         <View style={styles.builderHeader}>
           <Pressable onPress={() => { setActiveRecipe(null); refreshList(); }}>
-            <Ionicons name="arrow-back" size={24} color="#111827" />
+            <Ionicons name="arrow-back" size={24} color={colors.text.primary} />
           </Pressable>
           <TextInput
             style={styles.builderTitleInput}
@@ -321,7 +326,7 @@ export default function RecipeScreen() {
             selectTextOnFocus
           />
           <Pressable onPress={() => handleDeleteRecipe(activeRecipe.id)}>
-            <Ionicons name="trash-outline" size={22} color="#DC2626" />
+            <Ionicons name="trash-outline" size={22} color={colors.accent.red} />
           </Pressable>
         </View>
 
@@ -363,7 +368,7 @@ export default function RecipeScreen() {
                 )}
               </View>
               <Pressable onPress={() => handleRemoveIngredient(ing.id)} style={styles.ingRemove}>
-                <Ionicons name="close-circle" size={20} color="#EF4444" />
+                <Ionicons name="close-circle" size={20} color={colors.accent.red} />
               </Pressable>
             </View>
           ))}
@@ -395,14 +400,14 @@ export default function RecipeScreen() {
                 keyboardType="numeric"
               />
               <Pressable style={styles.addIngBtn} onPress={handleAddIngredient}>
-                <Ionicons name="add" size={20} color="#FFF" />
+                <Ionicons name="add" size={20} color={colors.text.inverse} />
               </Pressable>
             </View>
           </View>
 
           {/* Save with versioning */}
           <Pressable style={styles.versionBtn} onPress={handleSaveWithVersioning}>
-            <Ionicons name="save-outline" size={18} color="#7C3AED" />
+            <Ionicons name="save-outline" size={18} color={colors.accent.purple} />
             <Text style={styles.versionBtnText}>Save Changes</Text>
           </Pressable>
 
@@ -414,7 +419,7 @@ export default function RecipeScreen() {
               if (uxMode !== 'guided-edit') setActiveRecipe(null);
             }}
           >
-            <Ionicons name="add-circle" size={20} color="#FFF" />
+            <Ionicons name="add-circle" size={20} color={colors.text.inverse} />
             <Text style={styles.logBtnText}>Log to Diary</Text>
           </Pressable>
         </ScrollView>
@@ -432,7 +437,7 @@ export default function RecipeScreen() {
     <View style={styles.container}>
       <View style={styles.listHeader}>
         <Pressable onPress={() => navigation.canGoBack() && navigation.goBack()}>
-          <Ionicons name="close" size={24} color="#111827" />
+          <Ionicons name="close" size={24} color={colors.text.primary} />
         </Pressable>
         <Text style={styles.listTitle}>Recipes</Text>
         <View style={{ width: 24 }} />
@@ -441,7 +446,7 @@ export default function RecipeScreen() {
       {/* Search bar */}
       <View style={styles.searchRow}>
         <View style={styles.searchInputContainer}>
-          <Ionicons name="search" size={18} color="#9CA3AF" style={{ marginLeft: 12 }} />
+          <Ionicons name="search" size={18} color={colors.text.tertiary} style={{ marginLeft: 12 }} />
           <TextInput
             style={styles.searchInput}
             value={searchQuery}
@@ -456,12 +461,12 @@ export default function RecipeScreen() {
       {/* Action buttons */}
       <View style={styles.actionsRow}>
         <Pressable style={styles.actionBtn} onPress={handleCreateRecipe}>
-          <Ionicons name="add-circle-outline" size={20} color="#16A34A" />
+          <Ionicons name="add-circle-outline" size={20} color={colors.accent.green} />
           <Text style={styles.actionText}>Create</Text>
         </Pressable>
         <Pressable style={styles.actionBtn} onPress={() => setImportModalVisible(true)}>
-          <Ionicons name="link-outline" size={20} color="#3B82F6" />
-          <Text style={[styles.actionText, { color: '#3B82F6' }]}>Import URL</Text>
+          <Ionicons name="link-outline" size={20} color={colors.accent.blue} />
+          <Text style={[styles.actionText, { color: colors.accent.blue }]}>Import URL</Text>
         </Pressable>
       </View>
 
@@ -483,7 +488,7 @@ export default function RecipeScreen() {
                 <Image source={{ uri: item.photoUri }} style={styles.recipeThumb} />
               ) : (
                 <View style={styles.recipeThumbPlaceholder}>
-                  <Ionicons name="restaurant-outline" size={20} color="#D1D5DB" />
+                  <Ionicons name="restaurant-outline" size={20} color={colors.border.default} />
                 </View>
               )}
               <View style={styles.recipeInfo}>
@@ -503,14 +508,14 @@ export default function RecipeScreen() {
                   if (full) setBuilderServings(String(full.servings || 1));
                 }}
               >
-                <Ionicons name="create-outline" size={20} color="#6B7280" />
+                <Ionicons name="create-outline" size={20} color={colors.text.tertiary} />
               </Pressable>
             </Pressable>
           );
         }}
         ListEmptyComponent={
           <View style={styles.emptyState}>
-            <Ionicons name="restaurant-outline" size={48} color="#D1D5DB" />
+            <Ionicons name="restaurant-outline" size={48} color={colors.border.default} />
             <Text style={styles.emptyTitle}>No recipes yet</Text>
             <Text style={styles.emptySub}>Create one or import from a URL.</Text>
           </View>
@@ -536,7 +541,7 @@ export default function RecipeScreen() {
               autoFocus
             />
             {importing ? (
-              <ActivityIndicator size="small" color="#16A34A" style={{ marginTop: 16 }} />
+              <ActivityIndicator size="small" color={colors.accent.green} style={{ marginTop: 16 }} />
             ) : (
               <View style={styles.importActions}>
                 <Pressable style={styles.importCancel} onPress={() => setImportModalVisible(false)}>
@@ -558,26 +563,27 @@ export default function RecipeScreen() {
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.primary },
 
   // List header
   listHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingTop: 50, paddingBottom: 12,
-    backgroundColor: '#FFF', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
   },
-  listTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  listTitle: { fontSize: 17, fontWeight: '700', color: colors.text.primary },
 
   // Search
-  searchRow: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: '#FFF' },
+  searchRow: { paddingHorizontal: 16, paddingTop: 12, paddingBottom: 4, backgroundColor: colors.background.elevated },
   searchInputContainer: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#F3F4F6', borderRadius: 12,
+    backgroundColor: colors.background.surface, borderRadius: 12,
   },
   searchInput: {
     flex: 1, paddingHorizontal: 10, paddingVertical: 10,
-    fontSize: 15, color: '#111827',
+    fontSize: 15, color: colors.text.primary,
   },
 
   // Actions
@@ -586,15 +592,15 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
-    backgroundColor: '#FFF', borderRadius: 12, paddingVertical: 12,
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, borderRadius: 12, paddingVertical: 12,
+    borderWidth: 1, borderColor: colors.border.subtle,
   },
-  actionText: { fontSize: 14, fontWeight: '600', color: '#16A34A' },
+  actionText: { fontSize: 14, fontWeight: '600', color: colors.accent.green },
 
   // Recipe list
   listContent: { paddingBottom: 40 },
   recipeCard: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background.elevated,
     marginHorizontal: 16, marginBottom: 8, borderRadius: 12, padding: 12,
     shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.03, shadowRadius: 4, elevation: 1,
   },
@@ -603,105 +609,106 @@ const styles = StyleSheet.create({
   },
   recipeThumbPlaceholder: {
     width: 44, height: 44, borderRadius: 10, marginRight: 12,
-    backgroundColor: '#F3F4F6', justifyContent: 'center', alignItems: 'center',
+    backgroundColor: colors.background.surface, justifyContent: 'center', alignItems: 'center',
   },
   recipeInfo: { flex: 1 },
-  recipeName: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  recipeMacros: { fontSize: 12, color: '#374151', marginTop: 2 },
-  recipeUsage: { fontSize: 11, color: '#9CA3AF', marginTop: 1 },
+  recipeName: { fontSize: 15, fontWeight: '600', color: colors.text.primary },
+  recipeMacros: { fontSize: 12, color: colors.text.secondary, marginTop: 2 },
+  recipeUsage: { fontSize: 11, color: colors.text.tertiary, marginTop: 1 },
   recipeEditBtn: { padding: 8 },
 
   emptyState: { alignItems: 'center', paddingVertical: 60 },
-  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#9CA3AF', marginTop: 12 },
-  emptySub: { fontSize: 14, color: '#D1D5DB', marginTop: 4 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: colors.text.tertiary, marginTop: 12 },
+  emptySub: { fontSize: 14, color: colors.border.default, marginTop: 4 },
 
   // Builder
   builderHeader: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: 16, paddingTop: 50, paddingBottom: 12,
-    backgroundColor: '#FFF', borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
   },
   builderTitleInput: {
-    fontSize: 17, fontWeight: '700', color: '#111827', flex: 1, textAlign: 'center',
-    marginHorizontal: 12, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: '#E5E7EB',
+    fontSize: 17, fontWeight: '700', color: colors.text.primary, flex: 1, textAlign: 'center',
+    marginHorizontal: 12, paddingVertical: 4, borderBottomWidth: 1, borderBottomColor: colors.border.subtle,
   },
   builderContent: { padding: 16, paddingBottom: 40 },
 
   totalsRow: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 12,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 12,
     alignItems: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 3,
   },
-  totalsBig: { fontSize: 24, fontWeight: '800', color: '#111827' },
-  totalsSub: { fontSize: 13, color: '#6B7280', marginTop: 4 },
-  perServingSub: { fontSize: 12, color: '#7C3AED', marginTop: 4, fontWeight: '600' },
+  totalsBig: { fontSize: 24, fontWeight: '800', color: colors.text.primary },
+  totalsSub: { fontSize: 13, color: colors.text.tertiary, marginTop: 4 },
+  perServingSub: { fontSize: 12, color: colors.accent.purple, marginTop: 4, fontWeight: '600' },
 
   servingsRow: {
     flexDirection: 'row', alignItems: 'center', gap: 8,
     marginBottom: 16, paddingHorizontal: 4,
   },
-  servingsLabel: { fontSize: 15, fontWeight: '500', color: '#374151' },
+  servingsLabel: { fontSize: 15, fontWeight: '500', color: colors.text.secondary },
   servingsInput: {
-    backgroundColor: '#FFF', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
-    fontSize: 15, fontWeight: '700', color: '#111827', minWidth: 50, textAlign: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+    fontSize: 15, fontWeight: '700', color: colors.text.primary, minWidth: 50, textAlign: 'center',
+    borderWidth: 1, borderColor: colors.border.subtle,
   },
 
-  sectionLabel: { fontSize: 15, fontWeight: '700', color: '#374151', marginBottom: 8 },
+  sectionLabel: { fontSize: 15, fontWeight: '700', color: colors.text.secondary, marginBottom: 8 },
 
   ingRow: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF',
+    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.background.elevated,
     borderRadius: 10, padding: 12, marginBottom: 6,
   },
   ingInfo: { flex: 1 },
-  ingName: { fontSize: 14, fontWeight: '500', color: '#111827' },
-  ingMeta: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  ingName: { fontSize: 14, fontWeight: '500', color: colors.text.primary },
+  ingMeta: { fontSize: 12, color: colors.text.tertiary, marginTop: 2 },
   ingRemove: { padding: 4, marginLeft: 8 },
 
   addIngForm: {
-    backgroundColor: '#FFF', borderRadius: 12, padding: 12, marginTop: 8, marginBottom: 12,
-    borderWidth: 1, borderColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, borderRadius: 12, padding: 12, marginTop: 8, marginBottom: 12,
+    borderWidth: 1, borderColor: colors.border.subtle,
   },
   addIngInput: {
-    backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
-    fontSize: 14, color: '#111827', marginBottom: 8,
+    backgroundColor: colors.background.surface, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 10,
+    fontSize: 14, color: colors.text.primary, marginBottom: 8,
   },
   addIngRow: { flexDirection: 'row', gap: 8 },
   addIngBtn: {
-    backgroundColor: '#16A34A', borderRadius: 8, width: 40, height: 40,
+    backgroundColor: colors.accent.green, borderRadius: 8, width: 40, height: 40,
     justifyContent: 'center', alignItems: 'center',
   },
 
   versionBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: '#F5F3FF', borderRadius: 14, paddingVertical: 14, marginBottom: 12,
+    backgroundColor: colors.accentTint.purple, borderRadius: 14, paddingVertical: 14, marginBottom: 12,
     borderWidth: 1, borderColor: '#DDD6FE',
   },
-  versionBtnText: { color: '#7C3AED', fontSize: 15, fontWeight: '600' },
+  versionBtnText: { color: colors.accent.purple, fontSize: 15, fontWeight: '600' },
 
   logBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: '#16A34A', borderRadius: 14, paddingVertical: 16,
+    backgroundColor: colors.accent.green, borderRadius: 14, paddingVertical: 16,
   },
-  logBtnText: { color: '#FFF', fontSize: 16, fontWeight: '700' },
+  logBtnText: { color: colors.text.inverse, fontSize: 16, fontWeight: '700' },
 
   // Import modal
   modalOverlay: { flex: 1, justifyContent: 'flex-end' },
   modalBackdrop: { flex: 1 },
   importSheet: {
-    backgroundColor: '#FFF', borderTopLeftRadius: 20, borderTopRightRadius: 20,
+    backgroundColor: colors.background.elevated, borderTopLeftRadius: 20, borderTopRightRadius: 20,
     padding: 24, paddingBottom: 40,
     shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 12, elevation: 10,
   },
-  importTitle: { fontSize: 18, fontWeight: '700', color: '#111827', textAlign: 'center', marginBottom: 4 },
-  importHint: { fontSize: 13, color: '#9CA3AF', textAlign: 'center', marginBottom: 16 },
+  importTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary, textAlign: 'center', marginBottom: 4 },
+  importHint: { fontSize: 13, color: colors.text.tertiary, textAlign: 'center', marginBottom: 16 },
   importInput: {
-    backgroundColor: '#F3F4F6', borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
-    fontSize: 15, color: '#111827',
+    backgroundColor: colors.background.surface, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14,
+    fontSize: 15, color: colors.text.primary,
   },
   importActions: { flexDirection: 'row', gap: 12, marginTop: 16 },
-  importCancel: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: '#F3F4F6', alignItems: 'center' },
-  importCancelText: { fontSize: 16, fontWeight: '600', color: '#6B7280' },
-  importConfirm: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: '#16A34A', alignItems: 'center' },
-  importConfirmText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
+  importCancel: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: colors.background.surface, alignItems: 'center' },
+  importCancelText: { fontSize: 16, fontWeight: '600', color: colors.text.tertiary },
+  importConfirm: { flex: 1, paddingVertical: 14, borderRadius: 12, backgroundColor: colors.accent.green, alignItems: 'center' },
+  importConfirmText: { fontSize: 16, fontWeight: '700', color: colors.text.inverse },
 });
+}

@@ -6,7 +6,7 @@
  * This is throwaway UI -- the spike evaluates Gemini Nano output quality on Pixel 9 Pro.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -18,10 +18,15 @@ import {
 import * as ImagePicker from 'expo-image-picker';
 import { geminiNanoModule, type AvailabilityStatus } from '../../modules/gemini-nano/src/geminiNanoModule';
 import { SPIKE_PROMPT, SPIKE_NUTRITION_PROMPT } from '../services/vlm/geminiNanoService';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 type TestState = 'idle' | 'running' | 'done' | 'error';
 
 export default function GeminiNanoTestScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [availability, setAvailability] = useState<AvailabilityStatus | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [testState, setTestState] = useState<TestState>('idle');
@@ -142,7 +147,7 @@ export default function GeminiNanoTestScreen() {
           disabled={downloadState === 'requesting'}
         >
           {downloadState === 'requesting' ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.text.inverse} />
           ) : (
             <Text style={styles.runButtonText}>
               {downloadState === 'started' ? 'Download Started — Check Status' : 'Download Gemini Nano Model'}
@@ -194,7 +199,7 @@ export default function GeminiNanoTestScreen() {
           disabled={!photoUri || testState === 'running'}
         >
           {testState === 'running' ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.text.inverse} />
           ) : (
             <Text style={styles.runButtonText}>Basic</Text>
           )}
@@ -205,7 +210,7 @@ export default function GeminiNanoTestScreen() {
           disabled={!photoUri || testState === 'running'}
         >
           {testState === 'running' ? (
-            <ActivityIndicator color="#fff" />
+            <ActivityIndicator color={colors.text.inverse} />
           ) : (
             <Text style={styles.runButtonText}>+ Weights</Text>
           )}
@@ -245,13 +250,14 @@ export default function GeminiNanoTestScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#fff' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.elevated },
   content: { padding: 20, paddingBottom: 60 },
   heading: { fontSize: 22, fontWeight: 'bold', marginBottom: 4 },
   subheading: { fontSize: 13, color: '#888', marginBottom: 20 },
   statusRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
-  label: { fontSize: 15, color: '#333' },
+  label: { fontSize: 15, color: colors.text.primary },
   statusText: { fontSize: 15, fontWeight: '600' },
   buttonRow: { flexDirection: 'row', gap: 12, marginBottom: 12 },
   button: {
@@ -261,7 +267,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     alignItems: 'center',
   },
-  buttonText: { color: '#fff', fontWeight: '600' },
+  buttonText: { color: colors.text.inverse, fontWeight: '600' },
   photoUri: { fontSize: 12, color: '#666', marginBottom: 12 },
   runButton: {
     backgroundColor: '#388e3c',
@@ -278,7 +284,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 16,
   },
-  runButtonText: { color: '#fff', fontWeight: '700', fontSize: 16 },
+  runButtonText: { color: colors.text.inverse, fontWeight: '700', fontSize: 16 },
   timing: { textAlign: 'center', color: '#555', fontSize: 13, marginBottom: 12 },
   errorBox: {
     backgroundColor: '#ffebee',
@@ -293,7 +299,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     marginBottom: 16,
   },
-  outputLabel: { fontWeight: '600', marginBottom: 6, color: '#333' },
+  outputLabel: { fontWeight: '600', marginBottom: 6, color: colors.text.primary },
   outputText: { fontFamily: 'monospace', fontSize: 13, color: '#1a1a1a' },
   promptBox: {
     backgroundColor: '#e8f5e9',
@@ -302,5 +308,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   promptLabel: { fontWeight: '600', marginBottom: 4, color: '#2e7d32' },
-  promptText: { fontSize: 12, color: '#333', lineHeight: 18 },
+  promptText: { fontSize: 12, color: colors.text.primary, lineHeight: 18 },
 });
+}

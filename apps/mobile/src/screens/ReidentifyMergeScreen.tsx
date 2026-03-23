@@ -31,6 +31,8 @@ import {
   applyMergeResult,
   type MergeItem,
 } from '../services/entryEditor/reidentifyService';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -48,6 +50,9 @@ interface MoveItemCommand {
 // ---------------------------------------------------------------------------
 
 export default function ReidentifyMergeScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'ReidentifyMerge'>>();
   const { entryId } = route.params;
@@ -245,7 +250,7 @@ export default function ReidentifyMergeScreen() {
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#7C3AED" />
+        <ActivityIndicator size="large" color={colors.accent.purple} />
         <Text style={styles.loadingText}>Re-scanning with Gemini Nano...</Text>
       </View>
     );
@@ -256,7 +261,7 @@ export default function ReidentifyMergeScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable style={styles.closeBtn} onPress={handleClose}>
-          <Ionicons name="close" size={22} color="#374151" />
+          <Ionicons name="close" size={22} color={colors.text.secondary} />
         </Pressable>
         <Text style={styles.headerTitle}>Re-identify</Text>
         <View style={styles.undoRedoGroup}>
@@ -265,14 +270,14 @@ export default function ReidentifyMergeScreen() {
             onPress={handleUndo}
             disabled={!canUndo}
           >
-            <Ionicons name="arrow-undo" size={18} color={canUndo ? '#3B82F6' : '#D1D5DB'} />
+            <Ionicons name="arrow-undo" size={18} color={canUndo ? colors.accent.blue : colors.border.default} />
           </Pressable>
           <Pressable
             style={[styles.undoRedoBtn, !canRedo && styles.undoRedoBtnDisabled]}
             onPress={handleRedo}
             disabled={!canRedo}
           >
-            <Ionicons name="arrow-redo" size={18} color={canRedo ? '#3B82F6' : '#D1D5DB'} />
+            <Ionicons name="arrow-redo" size={18} color={canRedo ? colors.accent.blue : colors.border.default} />
           </Pressable>
         </View>
       </View>
@@ -307,11 +312,11 @@ export default function ReidentifyMergeScreen() {
       {/* Footer */}
       <View style={styles.footer}>
         <Pressable style={styles.resetBtn} onPress={handleReset}>
-          <Ionicons name="refresh" size={16} color="#6B7280" />
+          <Ionicons name="refresh" size={16} color={colors.text.tertiary} />
           <Text style={styles.resetBtnText}>Reset</Text>
         </Pressable>
         <Pressable style={styles.saveBtn} onPress={handleSaveConfirm}>
-          <Ionicons name="checkmark-circle" size={18} color="#FFF" />
+          <Ionicons name="checkmark-circle" size={18} color={colors.text.inverse} />
           <Text style={styles.saveBtnText}>Save + Confirm</Text>
         </Pressable>
       </View>
@@ -323,21 +328,22 @@ export default function ReidentifyMergeScreen() {
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.primary,
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5F5',
+    backgroundColor: colors.background.primary,
     gap: 16,
   },
   loadingText: {
     fontSize: 16,
-    color: '#7C3AED',
+    color: colors.accent.purple,
     fontWeight: '500',
   },
 
@@ -347,9 +353,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: 12,
     paddingVertical: 12,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.background.elevated,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
+    borderBottomColor: colors.border.subtle,
   },
   closeBtn: {
     padding: 4,
@@ -358,7 +364,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 17,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text.primary,
     textAlign: 'center',
     marginHorizontal: 8,
   },
@@ -369,7 +375,7 @@ const styles = StyleSheet.create({
   undoRedoBtn: {
     padding: 6,
     borderRadius: 8,
-    backgroundColor: '#F3F4F6',
+    backgroundColor: colors.background.surface,
   },
   undoRedoBtnDisabled: {
     opacity: 0.4,
@@ -382,20 +388,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: 8,
     paddingHorizontal: 16,
-    backgroundColor: '#F0FDF4',
+    backgroundColor: colors.accentTint.green,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#BBF7D0',
+    borderBottomColor: colors.accentTint.green,
   },
   totalsLabel: {
     fontSize: 12,
     fontWeight: '600',
-    color: '#16A34A',
+    color: colors.accent.green,
     marginRight: 6,
   },
   totalsValue: {
     fontSize: 12,
     fontWeight: '700',
-    color: '#111827',
+    color: colors.text.primary,
   },
 
   // Columns
@@ -416,9 +422,9 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
-    backgroundColor: '#FFF',
+    backgroundColor: colors.background.elevated,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E5E7EB',
+    borderTopColor: colors.border.subtle,
   },
   resetBtn: {
     flexDirection: 'row',
@@ -428,13 +434,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderRadius: 10,
     borderWidth: 1,
-    borderColor: '#D1D5DB',
-    backgroundColor: '#F9FAFB',
+    borderColor: colors.border.default,
+    backgroundColor: colors.background.surface,
   },
   resetBtnText: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#6B7280',
+    color: colors.text.tertiary,
   },
   saveBtn: {
     flexDirection: 'row',
@@ -443,11 +449,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingVertical: 10,
     borderRadius: 10,
-    backgroundColor: '#16A34A',
+    backgroundColor: colors.accent.green,
   },
   saveBtnText: {
     fontSize: 14,
     fontWeight: '700',
-    color: '#FFF',
+    color: colors.text.inverse,
   },
 });
+}

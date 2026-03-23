@@ -3,7 +3,7 @@
  * auto-scan toggle, permission handling, and scan results.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   View,
@@ -16,8 +16,13 @@ import {
 import * as MediaLibrary from 'expo-media-library';
 import { Ionicons } from '@expo/vector-icons';
 import { useGalleryScanStore } from '../store/useGalleryScanStore';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 export default function GalleryScanScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const {
     isScanning,
     progress,
@@ -60,7 +65,7 @@ export default function GalleryScanScreen() {
       {needsPermission && (
         <View style={styles.card}>
           <View style={styles.permissionRow}>
-            <Ionicons name="images-outline" size={24} color="#F59E0B" />
+            <Ionicons name="images-outline" size={24} color={colors.accent.amber} />
             <View style={{ flex: 1, marginLeft: 12 }}>
               <Text style={styles.permissionTitle}>Gallery Access Required</Text>
               <Text style={styles.permissionDesc}>
@@ -85,7 +90,7 @@ export default function GalleryScanScreen() {
             </View>
             <View style={styles.row}>
               <Text style={styles.rowLabel}>Food photos found</Text>
-              <Text style={[styles.rowValue, { color: '#16A34A', fontWeight: '700' }]}>
+              <Text style={[styles.rowValue, { color: colors.accent.green, fontWeight: '700' }]}>
                 {lastScanResult.foodPhotos}
               </Text>
             </View>
@@ -96,7 +101,7 @@ export default function GalleryScanScreen() {
             {lastScanResult.entriesCreated > 0 && (
               <View style={styles.row}>
                 <Text style={styles.rowLabel}>Diary entries created</Text>
-                <Text style={[styles.rowValue, { color: '#16A34A', fontWeight: '700' }]}>
+                <Text style={[styles.rowValue, { color: colors.accent.green, fontWeight: '700' }]}>
                   {lastScanResult.entriesCreated}
                 </Text>
               </View>
@@ -111,7 +116,7 @@ export default function GalleryScanScreen() {
       {isScanning && (
         <View style={styles.card}>
           <View style={styles.progressRow}>
-            <ActivityIndicator size="small" color="#7C3AED" />
+            <ActivityIndicator size="small" color={colors.accent.purple} />
             <Text style={styles.progressText}>
               {progress
                 ? `Classifying photo ${progress.done} of ${progress.total}...`
@@ -145,7 +150,7 @@ export default function GalleryScanScreen() {
         <Ionicons
           name="scan-outline"
           size={20}
-          color={isScanning ? '#9CA3AF' : '#FFF'}
+          color={isScanning ? colors.text.tertiary : colors.text.inverse}
         />
         <Text style={[styles.scanBtnText, isScanning && styles.scanBtnTextDisabled]}>
           {isScanning ? 'Scanning...' : 'Scan Gallery'}
@@ -165,15 +170,15 @@ export default function GalleryScanScreen() {
           <Switch
             value={scanEnabled}
             onValueChange={handleToggleAutoScan}
-            trackColor={{ false: '#D1D5DB', true: '#C4B5FD' }}
-            thumbColor={scanEnabled ? '#7C3AED' : '#F4F3F4'}
+            trackColor={{ false: colors.border.default, true: '#C4B5FD' }}
+            thumbColor={scanEnabled ? colors.accent.purple : '#F4F3F4'}
           />
         </View>
       </View>
 
       {/* Info text */}
       <View style={styles.infoCard}>
-        <Ionicons name="information-circle-outline" size={18} color="#6B7280" />
+        <Ionicons name="information-circle-outline" size={18} color={colors.text.tertiary} />
         <Text style={styles.infoText}>
           Gallery scanning discovers food photos from your camera roll and classifies
           them using Gemini Nano. Auto-scan discovers photos in the background, but
@@ -186,58 +191,60 @@ export default function GalleryScanScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.primary },
   content: { paddingTop: 60, paddingHorizontal: 16 },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827', marginBottom: 20 },
+  title: { fontSize: 28, fontWeight: '800', color: colors.text.primary, marginBottom: 20 },
 
   card: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 12 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 12 },
 
   row: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
   },
-  rowLabel: { fontSize: 15, color: '#374151' },
-  rowValue: { fontSize: 15, color: '#6B7280' },
+  rowLabel: { fontSize: 15, color: colors.text.secondary },
+  rowValue: { fontSize: 15, color: colors.text.tertiary },
 
-  noScans: { fontSize: 15, color: '#9CA3AF', fontStyle: 'italic', paddingVertical: 8 },
+  noScans: { fontSize: 15, color: colors.text.tertiary, fontStyle: 'italic', paddingVertical: 8 },
 
   progressRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  progressText: { fontSize: 15, color: '#7C3AED', fontWeight: '500' },
+  progressText: { fontSize: 15, color: colors.accent.purple, fontWeight: '500' },
 
   errorCard: { borderWidth: 1, borderColor: '#FCA5A5' },
-  errorText: { fontSize: 14, color: '#DC2626', marginBottom: 12 },
+  errorText: { fontSize: 14, color: colors.accent.red, marginBottom: 12 },
   errorActions: { flexDirection: 'row', justifyContent: 'flex-end', gap: 16 },
-  dismissBtn: { fontSize: 14, color: '#6B7280', fontWeight: '500' },
-  retryBtn: { fontSize: 14, color: '#DC2626', fontWeight: '600' },
+  dismissBtn: { fontSize: 14, color: colors.text.tertiary, fontWeight: '500' },
+  retryBtn: { fontSize: 14, color: colors.accent.red, fontWeight: '600' },
 
   scanBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
-    backgroundColor: '#7C3AED', borderRadius: 12, paddingVertical: 16, marginBottom: 16,
+    backgroundColor: colors.accent.purple, borderRadius: 12, paddingVertical: 16, marginBottom: 16,
   },
-  scanBtnDisabled: { backgroundColor: '#E5E7EB' },
-  scanBtnText: { fontSize: 16, fontWeight: '700', color: '#FFF' },
-  scanBtnTextDisabled: { color: '#9CA3AF' },
+  scanBtnDisabled: { backgroundColor: colors.border.subtle },
+  scanBtnText: { fontSize: 16, fontWeight: '700', color: colors.text.inverse },
+  scanBtnTextDisabled: { color: colors.text.tertiary },
 
   toggleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  toggleLabel: { fontSize: 16, fontWeight: '600', color: '#111827' },
-  toggleDesc: { fontSize: 13, color: '#9CA3AF', marginTop: 4, lineHeight: 18 },
+  toggleLabel: { fontSize: 16, fontWeight: '600', color: colors.text.primary },
+  toggleDesc: { fontSize: 13, color: colors.text.tertiary, marginTop: 4, lineHeight: 18 },
 
   permissionRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 12 },
-  permissionTitle: { fontSize: 16, fontWeight: '600', color: '#F59E0B' },
-  permissionDesc: { fontSize: 13, color: '#6B7280', marginTop: 2 },
+  permissionTitle: { fontSize: 16, fontWeight: '600', color: colors.accent.amber },
+  permissionDesc: { fontSize: 13, color: colors.text.tertiary, marginTop: 2 },
   primaryBtn: {
-    backgroundColor: '#F59E0B', borderRadius: 10, paddingVertical: 12, alignItems: 'center',
+    backgroundColor: colors.accent.amber, borderRadius: 10, paddingVertical: 12, alignItems: 'center',
   },
-  primaryBtnText: { fontSize: 15, fontWeight: '700', color: '#FFF' },
+  primaryBtnText: { fontSize: 15, fontWeight: '700', color: colors.text.inverse },
 
   infoCard: {
     flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingVertical: 12,
   },
-  infoText: { flex: 1, fontSize: 13, color: '#6B7280', lineHeight: 18 },
+  infoText: { flex: 1, fontSize: 13, color: colors.text.tertiary, lineHeight: 18 },
 });
+}

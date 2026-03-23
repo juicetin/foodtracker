@@ -6,7 +6,7 @@
  * and custom Drive folder option.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, {useState, useEffect, useMemo} from 'react';
 import {
   View,
   Text,
@@ -34,6 +34,8 @@ import {
 import type { FtpCredentials } from '../services/sync/ftpClient';
 import ConflictResolverModal from '../components/sync/ConflictResolverModal';
 import { Paths } from 'expo-file-system';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime();
@@ -47,6 +49,9 @@ function relativeTime(iso: string): string {
 }
 
 export default function SyncSettingsScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const {
     signedIn,
     userEmail,
@@ -294,13 +299,13 @@ export default function SyncSettingsScreen() {
   function statusColor(): string {
     switch (syncStatus) {
       case 'syncing':
-        return '#F59E0B';
+        return colors.accent.amber;
       case 'error':
-        return '#EF4444';
+        return colors.accent.red;
       case 'conflict':
-        return '#F59E0B';
+        return colors.accent.amber;
       default:
-        return '#16A34A';
+        return colors.accent.green;
     }
   }
 
@@ -327,18 +332,18 @@ export default function SyncSettingsScreen() {
         {signedIn ? (
           <>
             <View style={styles.row}>
-              <Ionicons name="person-circle-outline" size={20} color="#16A34A" />
+              <Ionicons name="person-circle-outline" size={20} color={colors.accent.green} />
               <Text style={styles.emailText}>{userEmail ?? 'Signed in'}</Text>
             </View>
             <Pressable style={styles.actionBtn} onPress={handleSignOut}>
-              <Ionicons name="log-out-outline" size={18} color="#EF4444" />
-              <Text style={[styles.actionBtnText, { color: '#EF4444' }]}>Sign Out</Text>
+              <Ionicons name="log-out-outline" size={18} color={colors.accent.red} />
+              <Text style={[styles.actionBtnText, { color: colors.accent.red }]}>Sign Out</Text>
             </Pressable>
           </>
         ) : (
           <Pressable style={[styles.actionBtn, styles.primaryBtn]} onPress={handleSignIn}>
-            <Ionicons name="logo-google" size={18} color="#FFF" />
-            <Text style={[styles.actionBtnText, { color: '#FFF' }]}>Sign in with Google</Text>
+            <Ionicons name="logo-google" size={18} color={colors.text.inverse} />
+            <Text style={[styles.actionBtnText, { color: colors.text.inverse }]}>Sign in with Google</Text>
           </Pressable>
         )}
       </View>
@@ -372,7 +377,7 @@ export default function SyncSettingsScreen() {
           <Switch
             value={wifiOnly}
             onValueChange={setWifiOnly}
-            trackColor={{ true: '#16A34A' }}
+            trackColor={{ true: colors.accent.green }}
           />
         </View>
         <View style={styles.toggleRow}>
@@ -385,7 +390,7 @@ export default function SyncSettingsScreen() {
           <Switch
             value={autoResolve}
             onValueChange={setAutoResolve}
-            trackColor={{ true: '#16A34A' }}
+            trackColor={{ true: colors.accent.green }}
           />
         </View>
       </View>
@@ -394,24 +399,24 @@ export default function SyncSettingsScreen() {
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Manual Actions</Text>
         {syncing || uploading || restoring ? (
-          <ActivityIndicator size="small" color="#16A34A" style={{ paddingVertical: 16 }} />
+          <ActivityIndicator size="small" color={colors.accent.green} style={{ paddingVertical: 16 }} />
         ) : (
           <>
             <Pressable style={styles.actionBtn} onPress={handleSyncNow} disabled={!signedIn}>
-              <Ionicons name="sync-outline" size={18} color={signedIn ? '#16A34A' : '#D1D5DB'} />
-              <Text style={[styles.actionBtnText, !signedIn && { color: '#D1D5DB' }]}>
+              <Ionicons name="sync-outline" size={18} color={signedIn ? colors.accent.green : colors.border.default} />
+              <Text style={[styles.actionBtnText, !signedIn && { color: colors.border.default }]}>
                 Sync Now
               </Text>
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={handleUploadFull} disabled={!signedIn}>
-              <Ionicons name="cloud-upload-outline" size={18} color={signedIn ? '#3B82F6' : '#D1D5DB'} />
-              <Text style={[styles.actionBtnText, { color: signedIn ? '#3B82F6' : '#D1D5DB' }]}>
+              <Ionicons name="cloud-upload-outline" size={18} color={signedIn ? colors.accent.blue : colors.border.default} />
+              <Text style={[styles.actionBtnText, { color: signedIn ? colors.accent.blue : colors.border.default }]}>
                 Upload Full Backup
               </Text>
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={handleRestore} disabled={!signedIn}>
-              <Ionicons name="cloud-download-outline" size={18} color={signedIn ? '#7C3AED' : '#D1D5DB'} />
-              <Text style={[styles.actionBtnText, { color: signedIn ? '#7C3AED' : '#D1D5DB' }]}>
+              <Ionicons name="cloud-download-outline" size={18} color={signedIn ? colors.accent.purple : colors.border.default} />
+              <Text style={[styles.actionBtnText, { color: signedIn ? colors.accent.purple : colors.border.default }]}>
                 Restore from Drive
               </Text>
             </Pressable>
@@ -431,11 +436,11 @@ export default function SyncSettingsScreen() {
             </View>
           </View>
           <Pressable
-            style={[styles.actionBtn, { borderColor: '#F59E0B' }]}
+            style={[styles.actionBtn, { borderColor: colors.accent.amber }]}
             onPress={() => setConflictModalVisible(true)}
           >
-            <Ionicons name="warning-outline" size={18} color="#F59E0B" />
-            <Text style={[styles.actionBtnText, { color: '#F59E0B' }]}>Review Conflicts</Text>
+            <Ionicons name="warning-outline" size={18} color={colors.accent.amber} />
+            <Text style={[styles.actionBtnText, { color: colors.accent.amber }]}>Review Conflicts</Text>
           </Pressable>
         </View>
       )}
@@ -453,7 +458,7 @@ export default function SyncSettingsScreen() {
           <Switch
             value={customFolder}
             onValueChange={handleCustomFolderToggle}
-            trackColor={{ true: '#7C3AED' }}
+            trackColor={{ true: colors.accent.purple }}
             disabled={!signedIn}
           />
         </View>
@@ -472,7 +477,7 @@ export default function SyncSettingsScreen() {
           <Switch
             value={ftpEnabled}
             onValueChange={handleFtpToggle}
-            trackColor={{ true: '#16A34A' }}
+            trackColor={{ true: colors.accent.green }}
           />
         </View>
 
@@ -542,17 +547,17 @@ export default function SyncSettingsScreen() {
 
             {/* Actions */}
             {testingFtp || savingFtp ? (
-              <ActivityIndicator size="small" color="#16A34A" style={{ paddingVertical: 16 }} />
+              <ActivityIndicator size="small" color={colors.accent.green} style={{ paddingVertical: 16 }} />
             ) : (
               <>
                 <Pressable style={styles.actionBtn} onPress={handleTestFtp}>
-                  <Ionicons name="flash-outline" size={18} color="#F59E0B" />
-                  <Text style={[styles.actionBtnText, { color: '#F59E0B' }]}>
+                  <Ionicons name="flash-outline" size={18} color={colors.accent.amber} />
+                  <Text style={[styles.actionBtnText, { color: colors.accent.amber }]}>
                     Test Connection
                   </Text>
                 </Pressable>
                 <Pressable style={styles.actionBtn} onPress={handleSaveFtp}>
-                  <Ionicons name="save-outline" size={18} color="#16A34A" />
+                  <Ionicons name="save-outline" size={18} color={colors.accent.green} />
                   <Text style={styles.actionBtnText}>Save Credentials</Text>
                 </Pressable>
               </>
@@ -571,13 +576,14 @@ export default function SyncSettingsScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.primary },
   content: { paddingTop: 60, paddingHorizontal: 16 },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827', marginBottom: 20 },
+  title: { fontSize: 28, fontWeight: '800', color: colors.text.primary, marginBottom: 20 },
 
   card: {
-    backgroundColor: '#FFF',
+    backgroundColor: colors.background.elevated,
     borderRadius: 16,
     padding: 16,
     marginBottom: 16,
@@ -587,7 +593,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 3,
   },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 12 },
+  cardTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 12 },
 
   row: {
     flexDirection: 'row',
@@ -596,8 +602,8 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     gap: 8,
   },
-  rowLabel: { fontSize: 15, color: '#374151' },
-  rowValue: { fontSize: 15, color: '#6B7280' },
+  rowLabel: { fontSize: 15, color: colors.text.secondary },
+  rowValue: { fontSize: 15, color: colors.text.tertiary },
 
   toggleRow: {
     flexDirection: 'row',
@@ -605,12 +611,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: 12,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.background.surface,
   },
 
-  hint: { fontSize: 12, color: '#9CA3AF', marginTop: 2 },
+  hint: { fontSize: 12, color: colors.text.tertiary, marginTop: 2 },
 
-  emailText: { fontSize: 15, color: '#374151', marginLeft: 8 },
+  emailText: { fontSize: 15, color: colors.text.secondary, marginLeft: 8 },
 
   actionBtn: {
     flexDirection: 'row',
@@ -618,9 +624,9 @@ const styles = StyleSheet.create({
     gap: 8,
     paddingVertical: 14,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F3F4F6',
+    borderBottomColor: colors.background.surface,
   },
-  actionBtnText: { fontSize: 15, fontWeight: '500', color: '#16A34A' },
+  actionBtnText: { fontSize: 15, fontWeight: '500', color: colors.accent.green },
 
   primaryBtn: {
     backgroundColor: '#4285F4',
@@ -642,13 +648,14 @@ const styles = StyleSheet.create({
 
   input: {
     borderWidth: 1,
-    borderColor: '#E5E7EB',
+    borderColor: colors.border.subtle,
     borderRadius: 10,
     paddingHorizontal: 14,
     paddingVertical: 10,
     fontSize: 15,
-    color: '#111827',
-    backgroundColor: '#F9FAFB',
+    color: colors.text.primary,
+    backgroundColor: colors.background.surface,
     marginTop: 8,
   },
 });
+}

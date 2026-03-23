@@ -5,7 +5,7 @@
  * and manual weight entry form. Optional Health Connect sync.
  */
 
-import React, { useEffect, useState } from 'react';
+import React, {useEffect, useState, useMemo} from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -25,6 +25,8 @@ import {
   initHealthConnect,
   requestWeightPermission,
 } from '../services/health/healthConnectService';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 const TREND_ICONS: Record<string, string> = {
   up: '\u2191',    // arrow up
@@ -32,13 +34,19 @@ const TREND_ICONS: Record<string, string> = {
   stable: '\u2192', // arrow right
 };
 
-const TREND_COLORS: Record<string, string> = {
-  up: '#EF4444',
-  down: '#16A34A',
-  stable: '#6B7280',
-};
+function getTrendColors(colors: ThemeColors): Record<string, string> {
+  return {
+    up: colors.accent.red,
+    down: colors.accent.green,
+    stable: colors.text.tertiary,
+  };
+}
 
 export default function WeightTrendScreen() {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+  const TREND_COLORS = useMemo(() => getTrendColors(colors), [colors]);
+
   const navigation = useNavigation();
   const { entries, isLoading, loadEntries, addManualWeight, syncFromHealthConnect } =
     useWeightStore();
@@ -208,7 +216,7 @@ export default function WeightTrendScreen() {
               disabled={syncing}
             >
               {syncing ? (
-                <ActivityIndicator size="small" color="#FFFFFF" />
+                <ActivityIndicator size="small" color={colors.text.inverse} />
               ) : (
                 <Text style={styles.syncBtnText}>Sync from Health Connect</Text>
               )}
@@ -221,7 +229,7 @@ export default function WeightTrendScreen() {
           <View style={styles.historyCard}>
             <Text style={styles.sectionTitle}>History</Text>
             {isLoading ? (
-              <ActivityIndicator size="small" color="#16A34A" />
+              <ActivityIndicator size="small" color={colors.accent.green} />
             ) : (
               [...entries].reverse().map((entry, idx) => {
                 const smoothedIdx = entries.length - 1 - idx;
@@ -268,6 +276,8 @@ function SimpleChart({
   smoothed: number[];
   dates: string[];
 }) {
+  const { colors } = useTheme();
+  const chartStyles = useMemo(() => createChartStyles(colors), [colors]);
   const CHART_HEIGHT = 160;
   const CHART_PADDING = 16;
 
@@ -317,7 +327,7 @@ function SimpleChart({
             {
               left: 30 + i * pointWidth - 1,
               top: yPos(val) - 4,
-              backgroundColor: '#16A34A',
+              backgroundColor: colors.accent.green,
             },
           ]}
         />
@@ -330,7 +340,7 @@ function SimpleChart({
           <Text style={chartStyles.legendText}>Raw</Text>
         </View>
         <View style={chartStyles.legendItem}>
-          <View style={[chartStyles.legendDot, { backgroundColor: '#16A34A' }]} />
+          <View style={[chartStyles.legendDot, { backgroundColor: colors.accent.green }]} />
           <Text style={chartStyles.legendText}>EMA</Text>
         </View>
       </View>
@@ -338,11 +348,12 @@ function SimpleChart({
   );
 }
 
-const chartStyles = StyleSheet.create({
+function createChartStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   container: {
     position: 'relative',
     marginTop: 8,
-    backgroundColor: '#F9FAFB',
+    backgroundColor: colors.background.surface,
     borderRadius: 12,
     overflow: 'hidden',
   },
@@ -350,7 +361,7 @@ const chartStyles = StyleSheet.create({
     position: 'absolute',
     left: 4,
     fontSize: 10,
-    color: '#9CA3AF',
+    color: colors.text.tertiary,
   },
   dot: {
     position: 'absolute',
@@ -383,95 +394,98 @@ const chartStyles = StyleSheet.create({
   },
   legendText: {
     fontSize: 10,
-    color: '#6B7280',
+    color: colors.text.tertiary,
   },
 });
+}
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background.primary },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: '#FFFFFF', paddingHorizontal: 16, paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#E5E7EB',
+    backgroundColor: colors.background.elevated, paddingHorizontal: 16, paddingVertical: 14,
+    borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.border.subtle,
   },
   headerBack: { padding: 4, width: 36 },
-  headerBackText: { fontSize: 22, color: '#9CA3AF', fontWeight: '600' },
-  headerTitle: { fontSize: 17, fontWeight: '700', color: '#111827' },
+  headerBackText: { fontSize: 22, color: colors.text.tertiary, fontWeight: '600' },
+  headerTitle: { fontSize: 17, fontWeight: '700', color: colors.text.primary },
   headerRight: { width: 36 },
   scrollView: { flex: 1 },
   scrollContent: { padding: 16 },
 
   summaryCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 20, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 20, marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
   summaryRow: {
     flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
   },
-  summaryLabel: { fontSize: 13, color: '#6B7280', marginBottom: 4 },
-  summaryWeight: { fontSize: 32, fontWeight: '800', color: '#111827' },
-  summarySmoothed: { fontSize: 13, color: '#6B7280', marginTop: 8 },
+  summaryLabel: { fontSize: 13, color: colors.text.tertiary, marginBottom: 4 },
+  summaryWeight: { fontSize: 32, fontWeight: '800', color: colors.text.primary },
+  summarySmoothed: { fontSize: 13, color: colors.text.tertiary, marginTop: 8 },
   trendBadge: { flexDirection: 'row', alignItems: 'center', gap: 6 },
   trendArrow: { fontSize: 24, fontWeight: '800' },
   trendLabel: { fontSize: 14, fontWeight: '600' },
 
   emptyCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 32, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 32, marginBottom: 16,
     alignItems: 'center',
   },
   emptyIcon: { fontSize: 40, marginBottom: 12 },
-  emptyTitle: { fontSize: 18, fontWeight: '700', color: '#111827', marginBottom: 8 },
-  emptySubtitle: { fontSize: 14, color: '#6B7280', textAlign: 'center', lineHeight: 20 },
+  emptyTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary, marginBottom: 8 },
+  emptySubtitle: { fontSize: 14, color: colors.text.tertiary, textAlign: 'center', lineHeight: 20 },
 
   chartCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
 
-  sectionTitle: { fontSize: 15, fontWeight: '600', color: '#374151', marginBottom: 8 },
+  sectionTitle: { fontSize: 15, fontWeight: '600', color: colors.text.secondary, marginBottom: 8 },
 
   entryCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16, marginBottom: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
   entryRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   dateInput: {
-    flex: 1, backgroundColor: '#F3F4F6', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827',
+    flex: 1, backgroundColor: colors.background.surface, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.text.primary,
   },
   weightInputField: {
-    width: 80, backgroundColor: '#F3F4F6', borderRadius: 8,
-    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: '#111827',
+    width: 80, backgroundColor: colors.background.surface, borderRadius: 8,
+    paddingHorizontal: 12, paddingVertical: 10, fontSize: 14, color: colors.text.primary,
     textAlign: 'center',
   },
   addBtn: {
-    backgroundColor: '#16A34A', borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10,
+    backgroundColor: colors.accent.green, borderRadius: 8, paddingHorizontal: 16, paddingVertical: 10,
   },
-  addBtnText: { fontSize: 14, fontWeight: '600', color: '#FFFFFF' },
+  addBtnText: { fontSize: 14, fontWeight: '600', color: colors.text.inverse },
 
   syncCard: {
     marginBottom: 16,
   },
   syncBtn: {
-    backgroundColor: '#3B82F6', borderRadius: 14, paddingVertical: 14, alignItems: 'center',
+    backgroundColor: colors.accent.blue, borderRadius: 14, paddingVertical: 14, alignItems: 'center',
   },
-  syncBtnText: { color: '#FFFFFF', fontSize: 15, fontWeight: '600' },
+  syncBtnText: { color: colors.text.inverse, fontSize: 15, fontWeight: '600' },
 
   historyCard: {
-    backgroundColor: '#FFFFFF', borderRadius: 16, padding: 16,
+    backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
     shadowRadius: 8, elevation: 3,
   },
   historyRow: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
+    paddingVertical: 10, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
   },
-  historyDate: { fontSize: 14, color: '#374151', fontWeight: '500', width: 100 },
+  historyDate: { fontSize: 14, color: colors.text.secondary, fontWeight: '500', width: 100 },
   historyValues: { flex: 1, alignItems: 'flex-end' },
-  historyRaw: { fontSize: 15, fontWeight: '700', color: '#111827' },
-  historySmoothed: { fontSize: 12, color: '#6B7280', marginTop: 2 },
-  historySource: { fontSize: 11, color: '#9CA3AF', width: 50, textAlign: 'right' },
+  historyRaw: { fontSize: 15, fontWeight: '700', color: colors.text.primary },
+  historySmoothed: { fontSize: 12, color: colors.text.tertiary, marginTop: 2 },
+  historySource: { fontSize: 11, color: colors.text.tertiary, width: 50, textAlign: 'right' },
 });
+}
