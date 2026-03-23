@@ -13,12 +13,13 @@ export type RootStackParamList = {
   GalleryScan: undefined;
   ScaleInput: { photoUri?: string; onResult?: (netWeight: number) => void };
   WeightTrend: undefined;
+  AddFood: { mealType?: string };
 };
 
 export type MainTabParamList = {
-  Home: undefined;
-  Detect: undefined;
-  Diary: undefined;
+  Today: undefined;
+  Add: undefined;
+  Insights: undefined;
   Profile: undefined;
 };
 
