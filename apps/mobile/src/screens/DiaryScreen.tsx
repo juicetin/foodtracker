@@ -34,7 +34,10 @@ import {
 } from '../services/diary/diaryQueries';
 import type { DiaryEntry } from '../services/diary/diaryQueries';
 import { TIME_PERIOD_ORDER } from '../services/diary/timePeriods';
-import { StickyMacroHeader, WeekOverviewBar, TimePeriodSection, SearchBar } from '../components/diary';
+import { StickyMacroHeader } from '../components/diary/StickyMacroHeader';
+import { WeekOverviewBar } from '../components/diary/WeekOverviewBar';
+import { TimePeriodSection } from '../components/diary/TimePeriodSection';
+import { SearchBar } from '../components/diary/SearchBar';
 
 // ---------------------------------------------------------------------------
 // Helpers

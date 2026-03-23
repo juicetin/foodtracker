@@ -1,5 +1,6 @@
-export { StickyMacroHeader } from './StickyMacroHeader';
+export { MacroSummaryHeader } from './MacroSummaryHeader';
+export { DateNavigator } from './DateNavigator';
+export { MealGroupSection } from './MealGroupSection';
+export { MealGroupHeader } from './MealGroupHeader';
+export { FoodItemCard } from './FoodItemCard';
 export { WeekOverviewBar } from './WeekOverviewBar';
-export { TimePeriodSection } from './TimePeriodSection';
-export { ExpandableEntryCard } from './ExpandableEntryCard';
-export { SearchBar } from './SearchBar';
