@@ -32,17 +32,16 @@ Declared values (must be multiples of 4):
 | Token | Value | Usage |
 |-------|-------|-------|
 | xs | 4px | Icon gaps, inline badge padding, separator margins |
-| sm | 8px | Compact element spacing, pill padding vertical |
-| md | 12px | List item internal padding, search row padding |
-| lg | 16px | Default screen padding horizontal, card padding, section spacing |
-| xl | 20px | Card internal padding (macro card), hero section padding |
-| 2xl | 24px | Section breaks between meal groups |
-| 3xl | 48px | Bottom sheet handle area, FAB touch target size |
+| sm | 8px | Compact element spacing, pill padding vertical, list item internal padding, search row padding |
+| md | 16px | Default screen padding horizontal, card padding, section spacing, card internal padding (macro card) |
+| lg | 24px | Section breaks between meal groups, hero section padding |
+| xl | 32px | Layout gaps between major screen regions |
+| 2xl | 48px | Bottom sheet handle area, FAB touch target size |
+| 3xl | 64px | Bottom tab bar height including safe area inset |
 
 Exceptions:
 - Touch targets: 44px minimum height for all tappable rows (accessibility)
 - FAB: 56px diameter (Material Design 3 standard for center FAB)
-- Bottom tab bar: 64px height including safe area inset
 - Context menu items: 48px row height for comfortable touch
 
 ---
@@ -51,14 +50,12 @@ Exceptions:
 
 | Role | Size | Weight | Line Height | Usage |
 |------|------|--------|-------------|-------|
-| Caption | 10px | 500 | 1.4 | Badge labels, macro unit labels, source attribution |
-| Small | 12px | 500 | 1.4 | Secondary metadata (time, brand), ingredient detail macros |
-| Body | 14px | 400 | 1.5 | Default text, ingredient names, context menu items, tab labels |
+| Body | 14px | 400 | 1.5 | Default text, ingredient names, context menu items, tab labels, secondary metadata (time, brand), ingredient detail macros. Use #9CA3AF muted color at this size for caption-level content (badge labels, macro unit labels, source attribution). |
 | Label | 16px | 600 | 1.4 | Food item names, macro values, section headers, button labels |
-| Heading | 20px | 800 | 1.2 | Date title in diary header, screen titles |
-| Display | 32px | 800 | 1.1 | Remaining calories number in macro summary header |
+| Heading | 20px | 600 | 1.2 | Date title in diary header, screen titles |
+| Display | 32px | 600 | 1.1 | Remaining calories number in macro summary header |
 
-Note: This is 6 sizes, not 3-4. The existing codebase already uses all 6 consistently across screens. Reducing would break visual hierarchy. The 4 core sizes are Body (14), Label (16), Heading (20), Display (32). Caption (10) and Small (12) are supporting sizes for dense data display (nutrition values, badges).
+Note: Caption-level content (badge labels, macro unit labels, source attribution) and secondary metadata (time, brand) use Body (14px) at regular weight (400) with muted text color (#9CA3AF) instead of separate smaller sizes. This maintains readability while preserving visual hierarchy through color contrast rather than size reduction.
 
 ---
 
@@ -79,7 +76,7 @@ Note: This is 6 sizes, not 3-4. The existing codebase already uses all 6 consist
 | Primary text | #111827 | Food names, calorie numbers, headings, button labels |
 | Secondary text | #374151 | Ingredient names, macro labels, form labels |
 | Tertiary text | #6B7280 | Meal group subtotals, section headers, placeholder text |
-| Muted text | #9CA3AF | Timestamps, metadata, disabled text, captions |
+| Muted text | #9CA3AF | Timestamps, metadata, disabled text, captions, badge labels, macro unit labels |
 
 ### Semantic Colors
 
@@ -88,13 +85,13 @@ Note: This is 6 sizes, not 3-4. The existing codebase already uses all 6 consist
 | Accent / Primary action | #16A34A (green-600) | Log Meal button, Add Food FAB, active tab indicator, today highlight in week bar, positive streaks, "Remaining" label |
 | Protein | #3B82F6 (blue-500) | Protein macro value, protein progress bar fill, protein pill background #EFF6FF |
 | Carbs | #D97706 (amber-600) | Carbs macro value, carbs progress bar fill, carbs pill background #FFFBEB |
-| Fat | #16A34A (green-600) | Fat macro value, fat progress bar fill, fat pill background #F0FDF4 |
+| Fat | #059669 (emerald-600) | Fat macro value, fat progress bar fill, fat pill background #ECFDF5 |
 | Destructive | #EF4444 (red-500) | Delete action in context menu, over-goal calorie indicator only |
 | Recipe badge | #7C3AED (violet-600) | Recipe source badge text, recipe tab highlight |
 
-Accent reserved for: Log Meal primary CTA, Add Food FAB, active bottom tab indicator, week bar today dot, confirmation buttons. Never used for: text links (use blue #3B82F6), warnings, informational banners.
+Accent reserved for: Log Meal primary CTA, Add Food FAB, active bottom tab indicator, week bar today dot, confirmation buttons. Never used for: text links (use blue #3B82F6), warnings, informational banners, macro values.
 
-Adherence-neutral constraint: No red/amber/green traffic-light system for goal progress. All macro progress bars use their own semantic color (blue/amber/green) regardless of goal adherence. The only red element is destructive actions (delete) and the over-goal calorie indicator (which is factual, not judgmental).
+Adherence-neutral constraint: No red/amber/green traffic-light system for goal progress. All macro progress bars use their own semantic color (blue/amber/emerald) regardless of goal adherence. The only red element is destructive actions (delete) and the over-goal calorie indicator (which is factual, not judgmental).
 
 ---
 
@@ -105,7 +102,7 @@ Adherence-neutral constraint: No red/amber/green traffic-light system for goal p
 | Element | Copy |
 |---------|------|
 | Log meal button (scan results) | "Log Meal" |
-| Add food FAB (bottom nav) | "+" (icon only, no label) |
+| Add food FAB (bottom nav) | "+" (icon only), `accessibilityLabel="Add food"` |
 | Add food in meal group | "+ Add Food" |
 | Save as favorite (context menu) | "Save as Favorite" |
 | Copy to day (context menu) | "Copy to Another Day" |
