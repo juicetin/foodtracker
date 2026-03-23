@@ -5,8 +5,10 @@
  * for protein, carbs, and fat. Red text when over goal.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface MacroTotals {
   calories: number;
@@ -21,13 +23,15 @@ interface MacroSummaryHeaderProps {
 }
 
 export function MacroSummaryHeader({ totals, goals }: MacroSummaryHeaderProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const remainingCal = goals.calories - totals.calories;
   const isOverGoal = remainingCal < 0;
 
   return (
     <View style={styles.container}>
       {/* Remaining calories */}
-      <Text style={[styles.calorieNumber, isOverGoal && styles.calorieOver]}>
+      <Text style={[styles.calorieNumber, isOverGoal && { color: colors.accent.red }]}>
         {Math.round(remainingCal)}
       </Text>
       <Text style={styles.remainingLabel}>Remaining</Text>
@@ -38,22 +42,25 @@ export function MacroSummaryHeader({ totals, goals }: MacroSummaryHeaderProps) {
           label="Protein"
           current={totals.protein}
           goal={goals.protein}
-          fillColor="#3B82F6"
-          trackColor="#EFF6FF"
+          fillColor={colors.accent.blue}
+          trackColor={colors.accentTint.blue}
+          colors={colors}
         />
         <MacroBar
           label="Carbs"
           current={totals.carbs}
           goal={goals.carbs}
-          fillColor="#D97706"
-          trackColor="#FFFBEB"
+          fillColor={colors.accent.amber}
+          trackColor={colors.accentTint.amber}
+          colors={colors}
         />
         <MacroBar
           label="Fat"
           current={totals.fat}
           goal={goals.fat}
-          fillColor="#059669"
-          trackColor="#ECFDF5"
+          fillColor={colors.accent.green}
+          trackColor={colors.accentTint.green}
+          colors={colors}
         />
       </View>
     </View>
@@ -66,27 +73,29 @@ function MacroBar({
   goal,
   fillColor,
   trackColor,
+  colors,
 }: {
   label: string;
   current: number;
   goal: number;
   fillColor: string;
   trackColor: string;
+  colors: ThemeColors;
 }) {
   const pct = goal > 0 ? Math.min(1, current / goal) : 0;
 
   return (
-    <View style={styles.barRow}>
-      <View style={styles.barLabelRow}>
-        <Text style={styles.barLabel}>{label}</Text>
-        <Text style={styles.barValue}>
+    <View style={barStyles.barRow}>
+      <View style={barStyles.barLabelRow}>
+        <Text style={[barStyles.barLabel, { color: colors.text.secondary }]}>{label}</Text>
+        <Text style={[barStyles.barValue, { color: colors.text.tertiary }]}>
           {Math.round(current)}g / {Math.round(goal)}g
         </Text>
       </View>
-      <View style={[styles.barTrack, { backgroundColor: trackColor }]}>
+      <View style={[barStyles.barTrack, { backgroundColor: trackColor }]}>
         <View
           style={[
-            styles.barFill,
+            barStyles.barFill,
             {
               backgroundColor: fillColor,
               width: `${pct * 100}%`,
@@ -98,31 +107,7 @@ function MacroBar({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#FFFFFF',
-    padding: 16,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#E5E7EB',
-  },
-  calorieNumber: {
-    fontSize: 32,
-    fontWeight: '600',
-    color: '#111827',
-    textAlign: 'center',
-  },
-  calorieOver: {
-    color: '#EF4444',
-  },
-  remainingLabel: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    marginBottom: 16,
-  },
-  barsContainer: {
-    gap: 12,
-  },
+const barStyles = StyleSheet.create({
   barRow: {
     gap: 4,
   },
@@ -134,11 +119,9 @@ const styles = StyleSheet.create({
   barLabel: {
     fontSize: 14,
     fontWeight: '500',
-    color: '#374151',
   },
   barValue: {
     fontSize: 14,
-    color: '#6B7280',
   },
   barTrack: {
     height: 8,
@@ -150,3 +133,29 @@ const styles = StyleSheet.create({
     borderRadius: 4,
   },
 });
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background.elevated,
+      padding: 16,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border.subtle,
+    },
+    calorieNumber: {
+      fontSize: 32,
+      fontWeight: '600',
+      color: colors.text.primary,
+      textAlign: 'center',
+    },
+    remainingLabel: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+      textAlign: 'center',
+      marginBottom: 16,
+    },
+    barsContainer: {
+      gap: 12,
+    },
+  });
+}

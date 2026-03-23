@@ -18,6 +18,7 @@ import Animated, {
   FadeIn,
   FadeOut,
 } from 'react-native-reanimated';
+import { useTheme } from '../../theme/ThemeProvider';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -40,6 +41,7 @@ export function ShimmerPlaceholder({
   style,
   borderRadius = 6,
 }: ShimmerPlaceholderProps) {
+  const { colors } = useTheme();
   const opacity = useSharedValue(1);
 
   // Start infinite pulse on mount
@@ -64,7 +66,7 @@ export function ShimmerPlaceholder({
           width,
           height,
           borderRadius,
-          backgroundColor: '#E0E0E0',
+          backgroundColor: colors.shimmer.base,
         },
         animatedStyle,
         style,

@@ -8,6 +8,8 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, Pressable, Modal, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { dateToStr, getTodayDateStr } from '../../services/diary/diaryQueries';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface CalendarPickerProps {
   visible: boolean;
@@ -28,6 +30,9 @@ export function CalendarPicker({
   onSelect,
   onDismiss,
 }: CalendarPickerProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   const [displayMonth, setDisplayMonth] = useState(() => {
     const d = new Date(selectedDate + 'T12:00:00');
     return new Date(d.getFullYear(), d.getMonth(), 1);
@@ -94,11 +99,11 @@ export function CalendarPicker({
           {/* Month header */}
           <View style={styles.monthHeader}>
             <Pressable onPress={goToPrevMonth} style={styles.monthArrow}>
-              <Ionicons name="chevron-back" size={20} color="#374151" />
+              <Ionicons name="chevron-back" size={20} color={colors.text.secondary} />
             </Pressable>
             <Text style={styles.monthLabel}>{monthLabel}</Text>
             <Pressable onPress={goToNextMonth} style={styles.monthArrow}>
-              <Ionicons name="chevron-forward" size={20} color="#374151" />
+              <Ionicons name="chevron-forward" size={20} color={colors.text.secondary} />
             </Pressable>
           </View>
 
@@ -145,87 +150,89 @@ export function CalendarPicker({
   );
 }
 
-const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.3)',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  modal: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    elevation: 8,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    width: 320,
-  },
-  monthHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  monthArrow: {
-    minWidth: 36,
-    minHeight: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  monthLabel: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  dayLabelsRow: {
-    flexDirection: 'row',
-    marginBottom: 4,
-  },
-  dayLabelCell: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: 4,
-  },
-  dayLabelText: {
-    fontSize: 12,
-    color: '#9CA3AF',
-    fontWeight: '500',
-  },
-  grid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  dayCell: {
-    width: '14.28%',
-    alignItems: 'center',
-    paddingVertical: 2,
-  },
-  dayCellInner: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dayCellSelected: {
-    backgroundColor: '#16A34A',
-  },
-  dayText: {
-    fontSize: 14,
-    color: '#111827',
-  },
-  dayTextOtherMonth: {
-    color: '#D1D5DB',
-  },
-  dayTextToday: {
-    color: '#16A34A',
-    textDecorationLine: 'underline',
-  },
-  dayTextSelected: {
-    color: '#FFFFFF',
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    backdrop: {
+      flex: 1,
+      backgroundColor: colors.overlay,
+      justifyContent: 'center',
+      alignItems: 'center',
+    },
+    modal: {
+      backgroundColor: colors.background.elevated,
+      borderRadius: 16,
+      padding: 16,
+      elevation: 8,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 4 },
+      shadowOpacity: 0.15,
+      shadowRadius: 12,
+      width: 320,
+    },
+    monthHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      marginBottom: 12,
+    },
+    monthArrow: {
+      minWidth: 36,
+      minHeight: 36,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    monthLabel: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    dayLabelsRow: {
+      flexDirection: 'row',
+      marginBottom: 4,
+    },
+    dayLabelCell: {
+      flex: 1,
+      alignItems: 'center',
+      paddingVertical: 4,
+    },
+    dayLabelText: {
+      fontSize: 12,
+      color: colors.text.tertiary,
+      fontWeight: '500',
+    },
+    grid: {
+      flexDirection: 'row',
+      flexWrap: 'wrap',
+    },
+    dayCell: {
+      width: '14.28%',
+      alignItems: 'center',
+      paddingVertical: 2,
+    },
+    dayCellInner: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dayCellSelected: {
+      backgroundColor: colors.accent.green,
+    },
+    dayText: {
+      fontSize: 14,
+      color: colors.text.primary,
+    },
+    dayTextOtherMonth: {
+      color: colors.border.default,
+    },
+    dayTextToday: {
+      color: colors.accent.green,
+      textDecorationLine: 'underline',
+    },
+    dayTextSelected: {
+      color: colors.text.inverse,
+      fontWeight: '600',
+    },
+  });
+}

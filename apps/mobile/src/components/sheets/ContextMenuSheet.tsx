@@ -11,6 +11,8 @@ import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/botto
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import type { DiaryEntry } from '../../services/diary/diaryQueries';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -46,6 +48,8 @@ const MENU_ITEMS: Array<{
 // ---------------------------------------------------------------------------
 
 export function ContextMenuSheet({ entry, onDismiss, onAction }: ContextMenuSheetProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['35%'], []);
 
@@ -96,8 +100,8 @@ export function ContextMenuSheet({ entry, onDismiss, onAction }: ContextMenuShee
       enablePanDownToClose
       onChange={handleChange}
       backdropComponent={renderBackdrop}
-      backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={{ backgroundColor: colors.background.elevated }}
+      handleIndicatorStyle={{ backgroundColor: colors.border.default }}
     >
       <BottomSheetView style={styles.content}>
         {/* Title */}
@@ -116,9 +120,9 @@ export function ContextMenuSheet({ entry, onDismiss, onAction }: ContextMenuShee
             <Ionicons
               name={item.icon}
               size={22}
-              color={item.destructive ? '#EF4444' : '#374151'}
+              color={item.destructive ? colors.accent.red : colors.text.secondary}
             />
-            <Text style={[styles.menuLabel, item.destructive && styles.menuLabelDestructive]}>
+            <Text style={[styles.menuLabel, item.destructive && { color: colors.accent.red }]}>
               {item.label}
             </Text>
           </Pressable>
@@ -132,42 +136,33 @@ export function ContextMenuSheet({ entry, onDismiss, onAction }: ContextMenuShee
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  sheetBackground: {
-    backgroundColor: '#FFFFFF',
-  },
-  handleIndicator: {
-    backgroundColor: '#D1D5DB',
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
-  },
-
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  titleDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E5E7EB',
-    marginBottom: 4,
-  },
-
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 48,
-    paddingHorizontal: 0,
-    gap: 12,
-  },
-  menuLabel: {
-    fontSize: 14,
-    color: '#374151',
-  },
-  menuLabelDestructive: {
-    color: '#EF4444',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    content: {
+      paddingHorizontal: 16,
+      paddingTop: 4,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+      marginBottom: 8,
+    },
+    titleDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.border.subtle,
+      marginBottom: 4,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 48,
+      paddingHorizontal: 0,
+      gap: 12,
+    },
+    menuLabel: {
+      fontSize: 14,
+      color: colors.text.secondary,
+    },
+  });
+}

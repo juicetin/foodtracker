@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -7,6 +7,8 @@ import {
   TextInput,
 } from 'react-native';
 import type { ScannedIngredient } from '../../types';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface Props {
   ingredient: ScannedIngredient;
@@ -17,6 +19,8 @@ interface Props {
 }
 
 export default function IngredientRow({ ingredient, onNameTap, onWeightChange, onRemove }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [editingWeight, setEditingWeight] = useState(false);
   const [weightValue, setWeightValue] = useState(String(Math.round(ingredient.amount_g)));
 
@@ -82,71 +86,73 @@ export default function IngredientRow({ ingredient, onNameTap, onWeightChange, o
   );
 }
 
-const styles = StyleSheet.create({
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-  },
-  left: {
-    flex: 1,
-    marginRight: 12,
-  },
-  name: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#1A1A1A',
-  },
-  tapHint: {
-    fontSize: 10,
-    color: '#BBB',
-    marginTop: 1,
-  },
-  kcal: {
-    fontSize: 12,
-    color: '#888',
-    marginTop: 2,
-  },
-  right: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  weightChip: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
-  },
-  weightChipModified: {
-    backgroundColor: '#FFF7ED',
-    borderColor: '#FED7AA',
-  },
-  weightText: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#16A34A',
-  },
-  weightInput: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#16A34A',
-    borderBottomWidth: 1,
-    borderBottomColor: '#16A34A',
-    minWidth: 50,
-    textAlign: 'right',
-    paddingVertical: 0,
-  },
-  removeBtn: {
-    width: 20,
-    alignItems: 'center',
-  },
-  removeBtnText: {
-    fontSize: 12,
-    color: '#CCC',
-    fontWeight: '600',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    row: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      paddingVertical: 8,
+      paddingHorizontal: 16,
+    },
+    left: {
+      flex: 1,
+      marginRight: 12,
+    },
+    name: {
+      fontSize: 14,
+      fontWeight: '500',
+      color: colors.text.primary,
+    },
+    tapHint: {
+      fontSize: 10,
+      color: colors.text.tertiary,
+      marginTop: 1,
+    },
+    kcal: {
+      fontSize: 12,
+      color: colors.text.tertiary,
+      marginTop: 2,
+    },
+    right: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 8,
+    },
+    weightChip: {
+      backgroundColor: colors.accentTint.green,
+      borderRadius: 8,
+      paddingHorizontal: 10,
+      paddingVertical: 4,
+      borderWidth: 1,
+      borderColor: colors.accent.green,
+    },
+    weightChipModified: {
+      backgroundColor: colors.accentTint.amber,
+      borderColor: colors.accent.amber,
+    },
+    weightText: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.accent.green,
+    },
+    weightInput: {
+      fontSize: 13,
+      fontWeight: '600',
+      color: colors.accent.green,
+      borderBottomWidth: 1,
+      borderBottomColor: colors.accent.green,
+      minWidth: 50,
+      textAlign: 'right',
+      paddingVertical: 0,
+    },
+    removeBtn: {
+      width: 20,
+      alignItems: 'center',
+    },
+    removeBtnText: {
+      fontSize: 12,
+      color: colors.border.default,
+      fontWeight: '600',
+    },
+  });
+}

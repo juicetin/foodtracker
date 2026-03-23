@@ -5,10 +5,12 @@
  * Simple card with photo, name, calories, time, and macro pills.
  */
 
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useMemo, useRef, useState } from 'react';
 import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import type { DiaryEntry } from '../../services/diary/diaryQueries';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface FoodItemCardProps {
   entry: DiaryEntry;
@@ -17,6 +19,8 @@ interface FoodItemCardProps {
 }
 
 export function FoodItemCard({ entry, onPress, onLongPress }: FoodItemCardProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [photoError, setPhotoError] = useState(false);
   const longPressedRef = useRef(false);
 
@@ -77,18 +81,18 @@ export function FoodItemCard({ entry, onPress, onLongPress }: FoodItemCardProps)
 
         {/* Macro pills */}
         <View style={styles.macroPills}>
-          <View style={[styles.pill, { backgroundColor: '#EFF6FF' }]}>
-            <Text style={[styles.pillText, { color: '#3B82F6' }]}>
+          <View style={[styles.pill, { backgroundColor: colors.accentTint.blue }]}>
+            <Text style={[styles.pillText, { color: colors.accent.blue }]}>
               P {Math.round(entry.totalProtein)}g
             </Text>
           </View>
-          <View style={[styles.pill, { backgroundColor: '#FFFBEB' }]}>
-            <Text style={[styles.pillText, { color: '#D97706' }]}>
+          <View style={[styles.pill, { backgroundColor: colors.accentTint.amber }]}>
+            <Text style={[styles.pillText, { color: colors.accent.amber }]}>
               C {Math.round(entry.totalCarbs)}g
             </Text>
           </View>
-          <View style={[styles.pill, { backgroundColor: '#ECFDF5' }]}>
-            <Text style={[styles.pillText, { color: '#059669' }]}>
+          <View style={[styles.pill, { backgroundColor: colors.accentTint.green }]}>
+            <Text style={[styles.pillText, { color: colors.accent.green }]}>
               F {Math.round(entry.totalFat)}g
             </Text>
           </View>
@@ -98,75 +102,77 @@ export function FoodItemCard({ entry, onPress, onLongPress }: FoodItemCardProps)
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    backgroundColor: '#FFFFFF',
-    padding: 12,
-    marginHorizontal: 16,
-    marginBottom: 4,
-    borderRadius: 12,
-    elevation: 1,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-  },
-  photo: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    marginRight: 12,
-  },
-  photoPlaceholder: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    marginRight: 12,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  placeholderEmoji: {
-    fontSize: 20,
-  },
-  contentBlock: {
-    flex: 1,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  dishName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    flex: 1,
-    marginRight: 8,
-  },
-  calorieText: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  timeText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginTop: 2,
-  },
-  macroPills: {
-    flexDirection: 'row',
-    gap: 6,
-    marginTop: 6,
-  },
-  pill: {
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: 8,
-  },
-  pillText: {
-    fontSize: 14,
-    fontWeight: '500',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      backgroundColor: colors.background.elevated,
+      padding: 12,
+      marginHorizontal: 16,
+      marginBottom: 4,
+      borderRadius: 12,
+      elevation: 1,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 1 },
+      shadowOpacity: 0.05,
+      shadowRadius: 2,
+    },
+    photo: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+      marginRight: 12,
+    },
+    photoPlaceholder: {
+      width: 40,
+      height: 40,
+      borderRadius: 8,
+      marginRight: 12,
+      backgroundColor: colors.background.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    placeholderEmoji: {
+      fontSize: 20,
+    },
+    contentBlock: {
+      flex: 1,
+    },
+    topRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+    },
+    dishName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+      flex: 1,
+      marginRight: 8,
+    },
+    calorieText: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    timeText: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+      marginTop: 2,
+    },
+    macroPills: {
+      flexDirection: 'row',
+      gap: 6,
+      marginTop: 6,
+    },
+    pill: {
+      paddingHorizontal: 8,
+      paddingVertical: 2,
+      borderRadius: 8,
+    },
+    pillText: {
+      fontSize: 14,
+      fontWeight: '500',
+    },
+  });
+}

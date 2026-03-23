@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   View,
   Text,
@@ -8,6 +8,8 @@ import {
 } from 'react-native';
 import type { ScannedDish, ScannedIngredient } from '../../types';
 import IngredientRow from './IngredientRow';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface Props {
   dish: ScannedDish;
@@ -26,7 +28,7 @@ const SCALE_STEP = 0.25;
 
 function formatScale(s: number): string {
   const rounded = Math.round(s * 100) / 100;
-  return rounded % 1 === 0 ? `${rounded}×` : `${rounded.toFixed(2)}×`;
+  return rounded % 1 === 0 ? `${rounded}x` : `${rounded.toFixed(2)}x`;
 }
 
 export default function DishCard({
@@ -38,6 +40,8 @@ export default function DishCard({
   onRemoveIngredient,
   onRemove,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(dish.name);
 
@@ -160,9 +164,9 @@ export default function DishCard({
           <Text style={styles.caloriesLabel}>kcal</Text>
         </View>
         <View style={styles.macroChips}>
-          <MacroChip value={totals.protein} label="P" color="#3B82F6" bg="#EFF6FF" />
-          <MacroChip value={totals.carbs}   label="C" color="#D97706" bg="#FFFBEB" />
-          <MacroChip value={totals.fat}     label="F" color="#16A34A" bg="#F0FDF4" />
+          <MacroChip value={totals.protein} label="P" color={colors.accent.blue} bg={colors.accentTint.blue} />
+          <MacroChip value={totals.carbs}   label="C" color={colors.accent.amber} bg={colors.accentTint.amber} />
+          <MacroChip value={totals.fat}     label="F" color={colors.accent.green} bg={colors.accentTint.green} />
         </View>
       </View>
     </View>
@@ -173,161 +177,14 @@ function MacroChip({ value, label, color, bg }: {
   value: number; label: string; color: string; bg: string;
 }) {
   return (
-    <View style={[styles.macroChip, { backgroundColor: bg }]}>
-      <Text style={[styles.macroNum, { color }]}>{Math.round(value)}g</Text>
-      <Text style={[styles.macroLabel, { color }]}> {label}</Text>
+    <View style={[chipStyles.macroChip, { backgroundColor: bg }]}>
+      <Text style={[chipStyles.macroNum, { color }]}>{Math.round(value)}g</Text>
+      <Text style={[chipStyles.macroLabel, { color }]}> {label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    marginHorizontal: 16,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-    overflow: 'hidden',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingTop: 14,
-    paddingBottom: 8,
-    backgroundColor: '#F9FAFB',
-  },
-  headerLeft: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginRight: 8,
-  },
-  dishName: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  nameInput: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#111827',
-    borderBottomWidth: 1.5,
-    borderBottomColor: '#16A34A',
-    paddingVertical: 0,
-    minWidth: 120,
-  },
-  cuisinePill: {
-    backgroundColor: '#DCFCE7',
-    borderRadius: 20,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  cuisineText: {
-    fontSize: 12,
-    fontWeight: '500',
-    color: '#16A34A',
-  },
-  removeBtn: {
-    padding: 4,
-  },
-  removeBtnText: {
-    fontSize: 14,
-    color: '#D1D5DB',
-    fontWeight: '600',
-  },
-  scaleRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    backgroundColor: '#F9FAFB',
-  },
-  scaleLabel: {
-    fontSize: 13,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  scaleControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  scaleBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    borderWidth: 1.5,
-    borderColor: '#16A34A',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  scaleBtnDisabled: {
-    borderColor: '#E5E7EB',
-    backgroundColor: '#F9FAFB',
-  },
-  scaleBtnText: {
-    fontSize: 18,
-    color: '#16A34A',
-    fontWeight: '600',
-    lineHeight: 20,
-  },
-  scaleBtnTextDisabled: {
-    color: '#D1D5DB',
-  },
-  scaleValue: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#111827',
-    minWidth: 40,
-    textAlign: 'center',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#F3F4F6',
-    marginHorizontal: 16,
-  },
-  emptyText: {
-    fontSize: 13,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    paddingVertical: 12,
-  },
-  nutritionRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-  },
-  caloriesBlock: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 3,
-  },
-  caloriesNum: {
-    fontSize: 22,
-    fontWeight: '800',
-    color: '#111827',
-  },
-  caloriesLabel: {
-    fontSize: 13,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  macroChips: {
-    flexDirection: 'row',
-    gap: 6,
-  },
+const chipStyles = StyleSheet.create({
   macroChip: {
     flexDirection: 'row',
     borderRadius: 8,
@@ -344,3 +201,155 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
 });
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    card: {
+      backgroundColor: colors.background.elevated,
+      borderRadius: 16,
+      marginHorizontal: 16,
+      marginBottom: 12,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 3,
+      overflow: 'hidden',
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingTop: 14,
+      paddingBottom: 8,
+      backgroundColor: colors.background.surface,
+    },
+    headerLeft: {
+      flex: 1,
+      flexDirection: 'row',
+      alignItems: 'center',
+      flexWrap: 'wrap',
+      gap: 8,
+      marginRight: 8,
+    },
+    dishName: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text.primary,
+    },
+    nameInput: {
+      fontSize: 16,
+      fontWeight: '700',
+      color: colors.text.primary,
+      borderBottomWidth: 1.5,
+      borderBottomColor: colors.accent.green,
+      paddingVertical: 0,
+      minWidth: 120,
+    },
+    cuisinePill: {
+      backgroundColor: colors.accentTint.green,
+      borderRadius: 20,
+      paddingHorizontal: 10,
+      paddingVertical: 3,
+    },
+    cuisineText: {
+      fontSize: 12,
+      fontWeight: '500',
+      color: colors.accent.green,
+    },
+    removeBtn: {
+      padding: 4,
+    },
+    removeBtnText: {
+      fontSize: 14,
+      color: colors.border.default,
+      fontWeight: '600',
+    },
+    scaleRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+      backgroundColor: colors.background.surface,
+    },
+    scaleLabel: {
+      fontSize: 13,
+      color: colors.text.tertiary,
+      fontWeight: '500',
+    },
+    scaleControls: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      gap: 12,
+    },
+    scaleBtn: {
+      width: 32,
+      height: 32,
+      borderRadius: 16,
+      backgroundColor: colors.background.elevated,
+      borderWidth: 1.5,
+      borderColor: colors.accent.green,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    scaleBtnDisabled: {
+      borderColor: colors.border.subtle,
+      backgroundColor: colors.background.surface,
+    },
+    scaleBtnText: {
+      fontSize: 18,
+      color: colors.accent.green,
+      fontWeight: '600',
+      lineHeight: 20,
+    },
+    scaleBtnTextDisabled: {
+      color: colors.border.default,
+    },
+    scaleValue: {
+      fontSize: 15,
+      fontWeight: '700',
+      color: colors.text.primary,
+      minWidth: 40,
+      textAlign: 'center',
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.background.surface,
+      marginHorizontal: 16,
+    },
+    emptyText: {
+      fontSize: 13,
+      color: colors.text.tertiary,
+      textAlign: 'center',
+      paddingVertical: 12,
+    },
+    nutritionRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+    },
+    caloriesBlock: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 3,
+    },
+    caloriesNum: {
+      fontSize: 22,
+      fontWeight: '800',
+      color: colors.text.primary,
+    },
+    caloriesLabel: {
+      fontSize: 13,
+      color: colors.text.tertiary,
+      fontWeight: '500',
+    },
+    macroChips: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+  });
+}

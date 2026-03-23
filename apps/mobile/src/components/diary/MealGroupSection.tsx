@@ -5,7 +5,7 @@
  * Animated expand/collapse via Reanimated.
  */
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import Animated, { useAnimatedStyle, useSharedValue, withTiming } from 'react-native-reanimated';
 import { type MealGroup } from '../../services/diary/mealGroups';
@@ -13,6 +13,8 @@ import { computeMealGroupTotals } from '../../services/diary/mealGroups';
 import type { DiaryEntry } from '../../services/diary/diaryQueries';
 import { MealGroupHeader } from './MealGroupHeader';
 import { FoodItemCard } from './FoodItemCard';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface MealGroupSectionProps {
   mealGroup: MealGroup;
@@ -31,6 +33,8 @@ export function MealGroupSection({
   onItemLongPress,
   onHeaderLongPress,
 }: MealGroupSectionProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [expanded, setExpanded] = useState(true);
   const animProgress = useSharedValue(1);
 
@@ -82,18 +86,20 @@ export function MealGroupSection({
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    marginBottom: 24,
-  },
-  addFoodEmpty: {
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    alignItems: 'center',
-  },
-  addFoodText: {
-    fontSize: 14,
-    color: '#16A34A',
-    fontWeight: '500',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      marginBottom: 24,
+    },
+    addFoodEmpty: {
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      alignItems: 'center',
+    },
+    addFoodText: {
+      fontSize: 14,
+      color: colors.accent.green,
+      fontWeight: '500',
+    },
+  });
+}

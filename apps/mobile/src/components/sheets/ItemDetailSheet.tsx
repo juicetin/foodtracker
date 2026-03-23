@@ -12,6 +12,8 @@ import BottomSheet, { BottomSheetScrollView, BottomSheetBackdrop } from '@gorhom
 import { Ionicons } from '@expo/vector-icons';
 import { opsqlite } from '../../../db/client';
 import { isFavourited, addFavourite, removeFavourite } from '../../services/favourites';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -123,6 +125,8 @@ function loadEntryDetail(entryId: string): EntryDetail | null {
 // ---------------------------------------------------------------------------
 
 export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDetailSheetProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['50%', '90%'], []);
 
@@ -208,8 +212,8 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
       enablePanDownToClose
       onChange={handleChange}
       backdropComponent={renderBackdrop}
-      backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={{ backgroundColor: colors.background.elevated }}
+      handleIndicatorStyle={{ backgroundColor: colors.border.default }}
     >
       <BottomSheetScrollView contentContainerStyle={styles.content}>
         {entry && (
@@ -224,14 +228,14 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
                   <Ionicons
                     name={isFaved ? 'heart' : 'heart-outline'}
                     size={22}
-                    color={isFaved ? '#EF4444' : '#6B7280'}
+                    color={isFaved ? colors.accent.red : colors.text.tertiary}
                   />
                 </Pressable>
                 <Pressable onPress={() => onEdit(entry.id)} hitSlop={8}>
-                  <Ionicons name="create-outline" size={22} color="#3B82F6" />
+                  <Ionicons name="create-outline" size={22} color={colors.accent.blue} />
                 </Pressable>
                 <Pressable onPress={() => onDelete(entry.id)} hitSlop={8}>
-                  <Ionicons name="trash-outline" size={22} color="#EF4444" />
+                  <Ionicons name="trash-outline" size={22} color={colors.accent.red} />
                 </Pressable>
               </View>
             </View>
@@ -244,14 +248,14 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
               <Text style={styles.totalCal}>{Math.round(entry.totalCalories)}</Text>
               <Text style={styles.totalCalUnit}>kcal</Text>
               <View style={styles.macroPills}>
-                <View style={[styles.pill, { backgroundColor: '#EFF6FF' }]}>
-                  <Text style={[styles.pillText, { color: '#3B82F6' }]}>P {Math.round(entry.totalProtein)}g</Text>
+                <View style={[styles.pill, { backgroundColor: colors.accentTint.blue }]}>
+                  <Text style={[styles.pillText, { color: colors.accent.blue }]}>P {Math.round(entry.totalProtein)}g</Text>
                 </View>
-                <View style={[styles.pill, { backgroundColor: '#FFFBEB' }]}>
-                  <Text style={[styles.pillText, { color: '#D97706' }]}>C {Math.round(entry.totalCarbs)}g</Text>
+                <View style={[styles.pill, { backgroundColor: colors.accentTint.amber }]}>
+                  <Text style={[styles.pillText, { color: colors.accent.amber }]}>C {Math.round(entry.totalCarbs)}g</Text>
                 </View>
-                <View style={[styles.pill, { backgroundColor: '#F0FDF4' }]}>
-                  <Text style={[styles.pillText, { color: '#059669' }]}>F {Math.round(entry.totalFat)}g</Text>
+                <View style={[styles.pill, { backgroundColor: colors.accentTint.green }]}>
+                  <Text style={[styles.pillText, { color: colors.accent.green }]}>F {Math.round(entry.totalFat)}g</Text>
                 </View>
               </View>
             </View>
@@ -281,7 +285,7 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
 
             {/* + Add Ingredient button */}
             <Pressable style={styles.addIngredientBtn} onPress={() => onEdit(entry.id)}>
-              <Ionicons name="add-circle-outline" size={18} color="#16A34A" />
+              <Ionicons name="add-circle-outline" size={18} color={colors.accent.green} />
               <Text style={styles.addIngredientText}>+ Add Ingredient</Text>
             </Pressable>
 
@@ -293,7 +297,7 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
                   <Ionicons
                     name={microExpanded ? 'chevron-up' : 'chevron-down'}
                     size={18}
-                    color="#374151"
+                    color={colors.text.secondary}
                   />
                 </Pressable>
                 {microExpanded && (
@@ -322,7 +326,7 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
                   <Ionicons
                     name={sourceExpanded ? 'chevron-up' : 'chevron-down'}
                     size={18}
-                    color="#374151"
+                    color={colors.text.secondary}
                   />
                 </Pressable>
                 {sourceExpanded && (
@@ -342,7 +346,7 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
                   <Ionicons
                     name={photoExpanded ? 'chevron-up' : 'chevron-down'}
                     size={18}
-                    color="#374151"
+                    color={colors.text.secondary}
                   />
                 </Pressable>
                 {photoExpanded && (
@@ -369,169 +373,155 @@ export function ItemDetailSheet({ entryId, onDismiss, onEdit, onDelete }: ItemDe
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  sheetBackground: {
-    backgroundColor: '#FFFFFF',
-  },
-  handleIndicator: {
-    backgroundColor: '#D1D5DB',
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 8,
-  },
-
-  headerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 4,
-  },
-  dishName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    flex: 1,
-    marginRight: 12,
-  },
-  headerIcons: {
-    flexDirection: 'row',
-    gap: 16,
-    alignItems: 'center',
-  },
-
-  timeText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    marginBottom: 12,
-  },
-
-  macroRow: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    marginBottom: 16,
-    gap: 4,
-  },
-  totalCal: {
-    fontSize: 32,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  totalCalUnit: {
-    fontSize: 14,
-    color: '#6B7280',
-    marginRight: 12,
-  },
-  macroPills: {
-    flexDirection: 'row',
-    gap: 6,
-  },
-  pill: {
-    borderRadius: 8,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-  },
-  pillText: {
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  dishSection: {
-    marginBottom: 8,
-  },
-  dishSectionName: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-    marginBottom: 8,
-  },
-
-  ingRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: 8,
-  },
-  ingLeft: {
-    flex: 1,
-  },
-  ingName: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-  },
-  ingAmount: {
-    fontSize: 14,
-    color: '#374151',
-    marginTop: 2,
-  },
-  ingMacros: {
-    fontSize: 14,
-    color: '#9CA3AF',
-  },
-  divider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E5E7EB',
-  },
-
-  addIngredientBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 14,
-    marginTop: 4,
-  },
-  addIngredientText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#16A34A',
-  },
-
-  expandableSection: {
-    marginTop: 12,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: '#E5E7EB',
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: 12,
-  },
-  sectionHeaderText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#374151',
-  },
-  sectionContent: {
-    paddingBottom: 8,
-  },
-
-  microRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 4,
-  },
-  microLabel: {
-    fontSize: 14,
-    color: '#6B7280',
-  },
-  microValue: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#111827',
-  },
-
-  sourceText: {
-    fontSize: 14,
-    color: '#6B7280',
-    paddingVertical: 2,
-  },
-
-  entryPhoto: {
-    width: '100%',
-    height: 200,
-    borderRadius: 12,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    content: {
+      paddingHorizontal: 16,
+      paddingTop: 8,
+    },
+    headerRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 4,
+    },
+    dishName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+      flex: 1,
+      marginRight: 12,
+    },
+    headerIcons: {
+      flexDirection: 'row',
+      gap: 16,
+      alignItems: 'center',
+    },
+    timeText: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+      marginBottom: 12,
+    },
+    macroRow: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      marginBottom: 16,
+      gap: 4,
+    },
+    totalCal: {
+      fontSize: 32,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    totalCalUnit: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+      marginRight: 12,
+    },
+    macroPills: {
+      flexDirection: 'row',
+      gap: 6,
+    },
+    pill: {
+      borderRadius: 8,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
+    },
+    pillText: {
+      fontSize: 13,
+      fontWeight: '600',
+    },
+    dishSection: {
+      marginBottom: 8,
+    },
+    dishSectionName: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text.secondary,
+      marginBottom: 8,
+    },
+    ingRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingVertical: 8,
+    },
+    ingLeft: {
+      flex: 1,
+    },
+    ingName: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    ingAmount: {
+      fontSize: 14,
+      color: colors.text.secondary,
+      marginTop: 2,
+    },
+    ingMacros: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+    },
+    divider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.border.subtle,
+    },
+    addIngredientBtn: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'center',
+      gap: 6,
+      paddingVertical: 14,
+      marginTop: 4,
+    },
+    addIngredientText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.accent.green,
+    },
+    expandableSection: {
+      marginTop: 12,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.border.subtle,
+    },
+    sectionHeader: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingVertical: 12,
+    },
+    sectionHeaderText: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text.secondary,
+    },
+    sectionContent: {
+      paddingBottom: 8,
+    },
+    microRow: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      paddingVertical: 4,
+    },
+    microLabel: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+    },
+    microValue: {
+      fontSize: 14,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+    sourceText: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+      paddingVertical: 2,
+    },
+    entryPhoto: {
+      width: '100%',
+      height: 200,
+      borderRadius: 12,
+    },
+  });
+}

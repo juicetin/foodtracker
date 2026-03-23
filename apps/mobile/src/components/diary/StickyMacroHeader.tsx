@@ -1,14 +1,16 @@
 /**
- * StickyMacroHeader — pinned daily macro summary with consumed/remaining toggle.
+ * StickyMacroHeader -- pinned daily macro summary with consumed/remaining toggle.
  *
  * Reads diaryDisplayMode from preferences store. Shows total or remaining macros
  * (goals minus consumed, clamped to zero).
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { usePreferencesStore } from '../../store/usePreferencesStore';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface MacroTotals {
   calories: number;
@@ -23,6 +25,8 @@ interface StickyMacroHeaderProps {
 }
 
 export function StickyMacroHeader({ totals, goals }: StickyMacroHeaderProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const diaryDisplayMode = usePreferencesStore((s) => s.diaryDisplayMode);
   const setDiaryDisplayMode = usePreferencesStore((s) => s.setDiaryDisplayMode);
 
@@ -55,7 +59,7 @@ export function StickyMacroHeader({ totals, goals }: StickyMacroHeaderProps) {
         </View>
         <View style={styles.toggleBlock}>
           <Pressable onPress={toggleMode} style={styles.toggleButton} testID="macro-toggle">
-            <Ionicons name="swap-horizontal-outline" size={20} color="#6B7280" />
+            <Ionicons name="swap-horizontal-outline" size={20} color={colors.text.tertiary} />
           </Pressable>
           <Text style={styles.modeLabel}>{isConsumed ? 'Consumed' : 'Remaining'}</Text>
         </View>
@@ -63,9 +67,9 @@ export function StickyMacroHeader({ totals, goals }: StickyMacroHeaderProps) {
 
       {/* Bottom row: P/C/F pills */}
       <View style={styles.macroRow}>
-        <MacroPill value={displayProtein} label="Protein" color="#3B82F6" bgColor="#EFF6FF" />
-        <MacroPill value={displayCarbs} label="Carbs" color="#D97706" bgColor="#FFFBEB" />
-        <MacroPill value={displayFat} label="Fat" color="#16A34A" bgColor="#F0FDF4" />
+        <MacroPill value={displayProtein} label="Protein" color={colors.accent.blue} bgColor={colors.accentTint.blue} colors={colors} />
+        <MacroPill value={displayCarbs} label="Carbs" color={colors.accent.amber} bgColor={colors.accentTint.amber} colors={colors} />
+        <MacroPill value={displayFat} label="Fat" color={colors.accent.green} bgColor={colors.accentTint.green} colors={colors} />
       </View>
     </View>
   );
@@ -76,73 +80,23 @@ function MacroPill({
   label,
   color,
   bgColor,
+  colors,
 }: {
   value: number;
   label: string;
   color: string;
   bgColor: string;
+  colors: ThemeColors;
 }) {
   return (
-    <View style={[styles.macroPill, { backgroundColor: bgColor }]}>
-      <Text style={[styles.macroPillNum, { color }]}>{Math.round(value)}g</Text>
-      <Text style={styles.macroPillLabel}>{label}</Text>
+    <View style={[pillStyles.macroPill, { backgroundColor: bgColor }]}>
+      <Text style={[pillStyles.macroPillNum, { color }]}>{Math.round(value)}g</Text>
+      <Text style={[pillStyles.macroPillLabel, { color: colors.text.tertiary }]}>{label}</Text>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    padding: 16,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  topRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 12,
-  },
-  calorieBlock: {
-    flexDirection: 'row',
-    alignItems: 'baseline',
-    gap: 4,
-  },
-  calorieNumber: {
-    fontSize: 32,
-    fontWeight: '800',
-    color: '#111827',
-  },
-  calorieLabel: {
-    fontSize: 16,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  toggleBlock: {
-    alignItems: 'center',
-  },
-  toggleButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: '#F3F4F6',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modeLabel: {
-    fontSize: 10,
-    color: '#9CA3AF',
-    fontWeight: '500',
-    marginTop: 4,
-  },
-  macroRow: {
-    flexDirection: 'row',
-    gap: 8,
-  },
+const pillStyles = StyleSheet.create({
   macroPill: {
     flex: 1,
     borderRadius: 10,
@@ -155,8 +109,64 @@ const styles = StyleSheet.create({
   },
   macroPillLabel: {
     fontSize: 11,
-    color: '#9CA3AF',
     fontWeight: '500',
     marginTop: 2,
   },
 });
+
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      backgroundColor: colors.background.elevated,
+      borderRadius: 16,
+      padding: 16,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.06,
+      shadowRadius: 8,
+      elevation: 3,
+    },
+    topRow: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      marginBottom: 12,
+    },
+    calorieBlock: {
+      flexDirection: 'row',
+      alignItems: 'baseline',
+      gap: 4,
+    },
+    calorieNumber: {
+      fontSize: 32,
+      fontWeight: '800',
+      color: colors.text.primary,
+    },
+    calorieLabel: {
+      fontSize: 16,
+      color: colors.text.tertiary,
+      fontWeight: '500',
+    },
+    toggleBlock: {
+      alignItems: 'center',
+    },
+    toggleButton: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      backgroundColor: colors.background.surface,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    modeLabel: {
+      fontSize: 10,
+      color: colors.text.tertiary,
+      fontWeight: '500',
+      marginTop: 4,
+    },
+    macroRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+  });
+}

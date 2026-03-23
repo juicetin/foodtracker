@@ -1,9 +1,11 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import Animated, {
   SlideInDown,
   SlideOutDown,
 } from 'react-native-reanimated';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -42,6 +44,8 @@ export function UndoToast({
   visible,
   onDismiss,
 }: UndoToastProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
@@ -89,42 +93,44 @@ export function UndoToast({
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  container: {
-    position: 'absolute',
-    bottom: 90, // Above the FAB
-    left: 16,
-    right: 16,
-    zIndex: 100,
-  },
-  content: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#323232',
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 16,
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 3,
-  },
-  message: {
-    color: '#fff',
-    fontSize: 14,
-    flex: 1,
-    marginRight: 12,
-  },
-  undoButton: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-  },
-  undoText: {
-    color: '#8BC34A',
-    fontSize: 14,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      position: 'absolute',
+      bottom: 90, // Above the FAB
+      left: 16,
+      right: 16,
+      zIndex: 100,
+    },
+    content: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      backgroundColor: colors.background.elevated,
+      borderRadius: 8,
+      paddingVertical: 12,
+      paddingHorizontal: 16,
+      elevation: 4,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 2 },
+      shadowOpacity: 0.2,
+      shadowRadius: 3,
+    },
+    message: {
+      color: colors.text.primary,
+      fontSize: 14,
+      flex: 1,
+      marginRight: 12,
+    },
+    undoButton: {
+      paddingHorizontal: 12,
+      paddingVertical: 4,
+    },
+    undoText: {
+      color: colors.accent.green,
+      fontSize: 14,
+      fontWeight: '700',
+      textTransform: 'uppercase',
+    },
+  });
+}

@@ -1,12 +1,12 @@
 /**
- * Ingredient search modal — shown when user taps an ingredient name.
+ * Ingredient search modal -- shown when user taps an ingredient name.
  *
  * Queries the KG for dishes and recipe ingredients matching the search text.
  * Shows closest matches first, filters as user types.
  * Falls back to free-text entry if KG is unavailable.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   FlatList,
   KeyboardAvoidingView,
@@ -20,6 +20,8 @@ import {
 } from 'react-native';
 import { getKnowledgeGraphService } from '../../services/knowledge-graph';
 import { searchProducts } from '../../services/openfoodfacts/openFoodFactsService';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 export interface IngredientSearchResult {
   name: string;
@@ -48,6 +50,8 @@ export default function IngredientSearchSheet({
   onSelect,
   onDismiss,
 }: Props) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const [query, setQuery] = useState(initialQuery);
   const [results, setResults] = useState<IngredientSearchResult[]>([]);
   const [loading, setLoading] = useState(false);
@@ -151,7 +155,7 @@ export default function IngredientSearchSheet({
               onChangeText={handleTextChange}
               onSubmitEditing={handleSubmitCustom}
               placeholder="Search ingredients..."
-              placeholderTextColor="#9CA3AF"
+              placeholderTextColor={colors.input.placeholder}
               returnKeyType="done"
               autoCorrect={false}
               autoCapitalize="none"
@@ -199,98 +203,100 @@ export default function IngredientSearchSheet({
   );
 }
 
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  backdrop: {
-    flex: 1,
-  },
-  sheet: {
-    backgroundColor: '#FFFFFF',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    maxHeight: '75%',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -4 },
-    shadowOpacity: 0.1,
-    shadowRadius: 12,
-    elevation: 10,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F3F4F6',
-  },
-  headerTitle: {
-    fontSize: 17,
-    fontWeight: '700',
-    color: '#111827',
-  },
-  headerClose: {
-    fontSize: 15,
-    color: '#6B7280',
-    fontWeight: '500',
-  },
-  searchRow: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    gap: 8,
-  },
-  searchInput: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    fontSize: 16,
-    color: '#111827',
-  },
-  useCustomBtn: {
-    backgroundColor: '#F0FDF4',
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    alignSelf: 'flex-start',
-  },
-  useCustomText: {
-    fontSize: 13,
-    color: '#16A34A',
-    fontWeight: '600',
-  },
-  list: {
-    paddingBottom: 40,
-  },
-  resultRow: {
-    paddingHorizontal: 20,
-    paddingVertical: 14,
-    borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: '#F9FAFB',
-  },
-  resultText: {
-    fontSize: 15,
-    color: '#111827',
-  },
-  sourceTag: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#9CA3AF',
-    backgroundColor: '#F3F4F6',
-    borderRadius: 4,
-    paddingHorizontal: 5,
-    paddingVertical: 2,
-    marginLeft: 8,
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#9CA3AF',
-    textAlign: 'center',
-    paddingVertical: 24,
-    paddingHorizontal: 20,
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    overlay: {
+      flex: 1,
+      justifyContent: 'flex-end',
+    },
+    backdrop: {
+      flex: 1,
+    },
+    sheet: {
+      backgroundColor: colors.background.elevated,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
+      maxHeight: '75%',
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: -4 },
+      shadowOpacity: 0.1,
+      shadowRadius: 12,
+      elevation: 10,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      paddingHorizontal: 20,
+      paddingTop: 16,
+      paddingBottom: 12,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border.subtle,
+    },
+    headerTitle: {
+      fontSize: 17,
+      fontWeight: '700',
+      color: colors.text.primary,
+    },
+    headerClose: {
+      fontSize: 15,
+      color: colors.text.tertiary,
+      fontWeight: '500',
+    },
+    searchRow: {
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      gap: 8,
+    },
+    searchInput: {
+      backgroundColor: colors.input.background,
+      borderRadius: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 12,
+      fontSize: 16,
+      color: colors.text.primary,
+    },
+    useCustomBtn: {
+      backgroundColor: colors.accentTint.green,
+      borderRadius: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 8,
+      alignSelf: 'flex-start',
+    },
+    useCustomText: {
+      fontSize: 13,
+      color: colors.accent.green,
+      fontWeight: '600',
+    },
+    list: {
+      paddingBottom: 40,
+    },
+    resultRow: {
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      borderBottomWidth: StyleSheet.hairlineWidth,
+      borderBottomColor: colors.border.subtle,
+    },
+    resultText: {
+      fontSize: 15,
+      color: colors.text.primary,
+    },
+    sourceTag: {
+      fontSize: 10,
+      fontWeight: '700',
+      color: colors.text.tertiary,
+      backgroundColor: colors.background.surface,
+      borderRadius: 4,
+      paddingHorizontal: 5,
+      paddingVertical: 2,
+      marginLeft: 8,
+    },
+    emptyText: {
+      fontSize: 14,
+      color: colors.text.tertiary,
+      textAlign: 'center',
+      paddingVertical: 24,
+      paddingHorizontal: 20,
+    },
+  });
+}

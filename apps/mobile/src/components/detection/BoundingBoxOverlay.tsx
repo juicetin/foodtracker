@@ -33,6 +33,10 @@ interface BoundingBoxOverlayProps {
  *
  * Uses View-based absolute positioning (react-native-svg is not installed).
  * Normalised bbox coordinates (0-1) are scaled to display dimensions.
+ *
+ * Note: Colors in this component come from confidence level (green/yellow/red)
+ * which are semantically correct for both light and dark modes. The label/dismiss
+ * text is white-on-colored-background, so no theme migration needed for those.
  */
 export function BoundingBoxOverlay({
   items,

@@ -11,6 +11,8 @@ import BottomSheet, { BottomSheetView, BottomSheetBackdrop } from '@gorhom/botto
 import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { MEAL_GROUP_CONFIG, type MealGroup } from '../../services/diary/mealGroups';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Types
@@ -35,6 +37,8 @@ export function MealGroupMenuSheet({
   onDismiss,
   onAction,
 }: MealGroupMenuSheetProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const bottomSheetRef = useRef<BottomSheet>(null);
   const snapPoints = useMemo(() => ['28%'], []);
 
@@ -101,8 +105,8 @@ export function MealGroupMenuSheet({
       enablePanDownToClose
       onChange={handleChange}
       backdropComponent={renderBackdrop}
-      backgroundStyle={styles.sheetBackground}
-      handleIndicatorStyle={styles.handleIndicator}
+      backgroundStyle={{ backgroundColor: colors.background.elevated }}
+      handleIndicatorStyle={{ backgroundColor: colors.border.default }}
     >
       <BottomSheetView style={styles.content}>
         {/* Title */}
@@ -116,7 +120,7 @@ export function MealGroupMenuSheet({
             style={styles.menuItem}
             onPress={() => handlePress(item.action)}
           >
-            <Ionicons name={item.icon} size={22} color="#374151" />
+            <Ionicons name={item.icon} size={22} color={colors.text.secondary} />
             <Text style={styles.menuLabel}>{item.label}</Text>
           </Pressable>
         ))}
@@ -129,39 +133,33 @@ export function MealGroupMenuSheet({
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  sheetBackground: {
-    backgroundColor: '#FFFFFF',
-  },
-  handleIndicator: {
-    backgroundColor: '#D1D5DB',
-  },
-  content: {
-    paddingHorizontal: 16,
-    paddingTop: 4,
-  },
-
-  title: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    marginBottom: 8,
-  },
-  titleDivider: {
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: '#E5E7EB',
-    marginBottom: 4,
-  },
-
-  menuItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    height: 48,
-    paddingHorizontal: 0,
-    gap: 12,
-  },
-  menuLabel: {
-    fontSize: 14,
-    color: '#374151',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    content: {
+      paddingHorizontal: 16,
+      paddingTop: 4,
+    },
+    title: {
+      fontSize: 16,
+      fontWeight: '600',
+      color: colors.text.primary,
+      marginBottom: 8,
+    },
+    titleDivider: {
+      height: StyleSheet.hairlineWidth,
+      backgroundColor: colors.border.subtle,
+      marginBottom: 4,
+    },
+    menuItem: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      height: 48,
+      paddingHorizontal: 0,
+      gap: 12,
+    },
+    menuLabel: {
+      fontSize: 14,
+      color: colors.text.secondary,
+    },
+  });
+}

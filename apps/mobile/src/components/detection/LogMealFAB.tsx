@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 // ---------------------------------------------------------------------------
 // Props
@@ -21,6 +23,8 @@ interface LogMealFABProps {
  * bottom-right with item count badge."
  */
 export function LogMealFAB({ itemCount, onPress }: LogMealFABProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
   const isDisabled = itemCount === 0;
 
   return (
@@ -46,49 +50,52 @@ export function LogMealFAB({ itemCount, onPress }: LogMealFABProps) {
 // Styles
 // ---------------------------------------------------------------------------
 
-const styles = StyleSheet.create({
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 24,
-    height: 56,
-    paddingHorizontal: 24,
-    borderRadius: 28,
-    backgroundColor: '#22C55E',
-    alignItems: 'center',
-    justifyContent: 'center',
-    elevation: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 3 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-  },
-  fabDisabled: {
-    backgroundColor: '#A5D6A7',
-  },
-  fabText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  fabTextDisabled: {
-    color: 'rgba(255,255,255,0.6)',
-  },
-  badge: {
-    position: 'absolute',
-    top: -4,
-    right: -4,
-    minWidth: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: '#EF4444',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 4,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 11,
-    fontWeight: '700',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    fab: {
+      position: 'absolute',
+      bottom: 24,
+      right: 24,
+      height: 56,
+      paddingHorizontal: 24,
+      borderRadius: 28,
+      backgroundColor: colors.accent.green,
+      alignItems: 'center',
+      justifyContent: 'center',
+      elevation: 6,
+      shadowColor: '#000',
+      shadowOffset: { width: 0, height: 3 },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+    },
+    fabDisabled: {
+      opacity: 0.5,
+    },
+    fabText: {
+      color: colors.text.inverse,
+      fontSize: 16,
+      fontWeight: '700',
+    },
+    fabTextDisabled: {
+      color: colors.text.inverse,
+      opacity: 0.6,
+    },
+    badge: {
+      position: 'absolute',
+      top: -4,
+      right: -4,
+      minWidth: 22,
+      height: 22,
+      borderRadius: 11,
+      backgroundColor: colors.accent.red,
+      alignItems: 'center',
+      justifyContent: 'center',
+      paddingHorizontal: 4,
+    },
+    badgeText: {
+      color: '#fff',
+      fontSize: 11,
+      fontWeight: '700',
+    },
+  });
+}

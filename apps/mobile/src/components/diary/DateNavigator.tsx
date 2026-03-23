@@ -2,10 +2,12 @@
  * DateNavigator -- left/right arrows with date label, tap opens calendar.
  */
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { formatDateLabel } from '../../services/diary/diaryQueries';
+import { useTheme } from '../../theme/ThemeProvider';
+import type { ThemeColors } from '../../theme/colors';
 
 interface DateNavigatorProps {
   dateStr: string;
@@ -22,6 +24,9 @@ export function DateNavigator({
   onNext,
   onDateTap,
 }: DateNavigatorProps) {
+  const { colors } = useTheme();
+  const styles = useMemo(() => createStyles(colors), [colors]);
+
   return (
     <View style={styles.container}>
       <Pressable
@@ -29,7 +34,7 @@ export function DateNavigator({
         style={styles.arrowButton}
         hitSlop={8}
       >
-        <Ionicons name="chevron-back" size={24} color="#374151" />
+        <Ionicons name="chevron-back" size={24} color={colors.text.secondary} />
       </Pressable>
 
       <Pressable onPress={onDateTap} style={styles.dateLabelBtn}>
@@ -44,33 +49,35 @@ export function DateNavigator({
         disabled={isToday}
         hitSlop={8}
       >
-        <Ionicons name="chevron-forward" size={24} color="#374151" />
+        <Ionicons name="chevron-forward" size={24} color={colors.text.secondary} />
       </Pressable>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-  },
-  arrowButton: {
-    minWidth: 44,
-    minHeight: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  dateLabelBtn: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  dateText: {
-    fontSize: 20,
-    fontWeight: '600',
-    color: '#111827',
-  },
-});
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: {
+      flexDirection: 'row',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      paddingHorizontal: 16,
+      paddingVertical: 8,
+    },
+    arrowButton: {
+      minWidth: 44,
+      minHeight: 44,
+      alignItems: 'center',
+      justifyContent: 'center',
+    },
+    dateLabelBtn: {
+      flex: 1,
+      alignItems: 'center',
+    },
+    dateText: {
+      fontSize: 20,
+      fontWeight: '600',
+      color: colors.text.primary,
+    },
+  });
+}
