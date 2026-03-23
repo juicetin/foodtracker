@@ -5,7 +5,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, RootStackParamList } from '../types';
-import { DiaryScreen, ProfileScreen, InsightsScreen } from '../screens';
+import { DiaryHomeScreen, ProfileScreen, InsightsScreen } from '../screens';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -50,7 +50,7 @@ export default function MainTabNavigator() {
     >
       <Tab.Screen
         name="Today"
-        component={DiaryScreen}
+        component={DiaryHomeScreen}
         options={{
           tabBarLabel: 'Today',
           tabBarIcon: ({ color, size }) => <Ionicons name="today-outline" size={size} color={color} />,
