@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserPreferences, UxMode } from '../types';
+import { UserPreferences, UxMode, ThemePreference } from '../types';
 import { detectLocale } from '../services/packs/localeDetector';
 import { type TimePeriodBoundary, DEFAULT_BOUNDARIES } from '../services/diary/timePeriods';
 
@@ -34,7 +34,7 @@ interface PreferencesState extends UserPreferences {
   setRegion: (region: UserPreferences['region']) => void;
   setUnits: (units: UserPreferences['units']) => void;
   setNutritionGoals: (goals: UserPreferences['nutritionGoals']) => void;
-  setDarkMode: (darkMode: boolean) => void;
+  setThemePreference: (pref: ThemePreference) => void;
   setDiaryDisplayMode: (mode: 'consumed' | 'remaining') => void;
   setTimePeriodBoundaries: (b: TimePeriodBoundary) => void;
   setUxMode: (mode: UxMode) => void;
@@ -56,7 +56,7 @@ export const usePreferencesStore = create<PreferencesState>()(
         carbs: 200,
         fat: 65,
       },
-      darkMode: false,
+      themePreference: 'system' as ThemePreference,
       uxMode: 'confirm-only' as UxMode,
       regionAutoDetected: false,
       diaryDisplayMode: 'consumed',
@@ -70,7 +70,7 @@ export const usePreferencesStore = create<PreferencesState>()(
       setRegion: (region) => set({ region }),
       setUnits: (units) => set({ units }),
       setNutritionGoals: (goals) => set({ nutritionGoals: goals }),
-      setDarkMode: (darkMode) => set({ darkMode }),
+      setThemePreference: (themePreference) => set({ themePreference }),
       setDiaryDisplayMode: (mode) => set({ diaryDisplayMode: mode }),
       setTimePeriodBoundaries: (b) => set({ timePeriodBoundaries: b }),
       setUxMode: (uxMode) => set({ uxMode }),
@@ -92,6 +92,15 @@ export const usePreferencesStore = create<PreferencesState>()(
     {
       name: 'user-preferences',
       storage: createJSONStorage(() => AsyncStorage),
+      version: 1,
+      migrate: (persistedState: any, version: number) => {
+        if (version === 0) {
+          const state = persistedState as any;
+          state.themePreference = state.darkMode ? 'dark' : 'system';
+          delete state.darkMode;
+        }
+        return persistedState;
+      },
     }
   )
 );

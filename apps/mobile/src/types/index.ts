@@ -170,6 +170,9 @@ export interface ScanResult {
 // UX modes for recipe/food logging workflow
 export type UxMode = 'zero-effort' | 'confirm-only' | 'guided-edit';
 
+// Theme preference
+export type ThemePreference = 'system' | 'light' | 'dark';
+
 // User preferences
 export interface UserPreferences {
   region: 'AU' | 'US' | 'CA' | 'UK' | 'FR' | 'global';
@@ -180,6 +183,6 @@ export interface UserPreferences {
     carbs: number;
     fat: number;
   };
-  darkMode: boolean;
+  themePreference: ThemePreference;
   uxMode: UxMode;
 }
