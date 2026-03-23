@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { useNavigation } from '@react-navigation/native';
@@ -6,6 +6,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
 import { MainTabParamList, RootStackParamList } from '../types';
 import { DiaryHomeScreen, ProfileScreen, InsightsScreen } from '../screens';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
 
@@ -16,38 +18,41 @@ function AddPlaceholder() {
 function AddTabButton({ children }: { children: React.ReactNode }) {
   const navigation =
     useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { colors } = useTheme();
 
   return (
     <Pressable
       onPress={() => navigation.navigate('AddFood', {})}
-      style={styles.fabButton}
+      style={fabStyles.fabButton}
     >
-      <View style={styles.fabButtonInner}>
-        <Text style={styles.fabButtonText}>+</Text>
+      <View style={[fabStyles.fabButtonInner, { backgroundColor: colors.accent.green }]}>
+        <Text style={[fabStyles.fabButtonText, { color: colors.text.inverse }]}>+</Text>
       </View>
     </Pressable>
   );
 }
 
 export default function MainTabNavigator() {
+  const { colors } = useTheme();
+
+  const screenOptions = useMemo(() => ({
+    headerShown: false,
+    tabBarActiveTintColor: colors.tabBar.active,
+    tabBarInactiveTintColor: colors.tabBar.inactive,
+    tabBarStyle: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: colors.tabBar.border,
+      backgroundColor: colors.tabBar.background,
+      paddingTop: 4,
+    },
+    tabBarLabelStyle: {
+      fontSize: 11,
+      fontWeight: '600' as const,
+    },
+  }), [colors]);
+
   return (
-    <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: '#16A34A',
-        tabBarInactiveTintColor: '#9CA3AF',
-        tabBarStyle: {
-          borderTopWidth: StyleSheet.hairlineWidth,
-          borderTopColor: '#E5E7EB',
-          backgroundColor: '#FFFFFF',
-          paddingTop: 4,
-        },
-        tabBarLabelStyle: {
-          fontSize: 11,
-          fontWeight: '600',
-        },
-      }}
-    >
+    <Tab.Navigator screenOptions={screenOptions}>
       <Tab.Screen
         name="Today"
         component={DiaryHomeScreen}
@@ -86,7 +91,7 @@ export default function MainTabNavigator() {
   );
 }
 
-const styles = StyleSheet.create({
+const fabStyles = StyleSheet.create({
   fabButton: {
     top: -12,
     justifyContent: 'center',
@@ -97,7 +102,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#16A34A',
     justifyContent: 'center',
     alignItems: 'center',
     elevation: 4,
@@ -107,7 +111,6 @@ const styles = StyleSheet.create({
     shadowRadius: 3,
   },
   fabButtonText: {
-    color: '#fff',
     fontSize: 28,
     fontWeight: '600',
     lineHeight: 30,

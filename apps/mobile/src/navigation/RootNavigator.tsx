@@ -5,13 +5,14 @@ import { RootStackParamList } from '../types';
 import MainTabNavigator from './MainTabNavigator';
 import { DetectionScreen, GeminiNanoTestScreen, EntryDetailScreen, FoodSearchScreen, BarcodeScanScreen, RecipeScreen, QuickAddScreen, ReidentifyMergeScreen, GalleryScanScreen, ScaleInputScreen, WeightTrendScreen, AddFoodScreen } from '../screens';
 import SyncSettingsScreen from '../screens/SyncSettingsScreen';
+import { lightNavTheme, darkNavTheme } from '../theme/navigation';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 
-export default function RootNavigator() {
+export default function RootNavigator({ isDark }: { isDark: boolean }) {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={isDark ? darkNavTheme : lightNavTheme}>
       <Stack.Navigator
         screenOptions={{
           headerShown: false,

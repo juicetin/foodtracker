@@ -2,7 +2,7 @@
  * ProfileScreen — nutrition goals editor, preferences, AI model management.
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   ActivityIndicator,
   Switch,
@@ -18,8 +18,10 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import type { RootStackParamList, UxMode } from '../types';
+import type { RootStackParamList, UxMode, ThemePreference } from '../types';
 import { usePreferencesStore } from '../store/usePreferencesStore';
+import { useTheme } from '../theme/ThemeProvider';
+import type { ThemeColors } from '../theme/colors';
 import * as FileSystem from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import {
@@ -52,9 +54,19 @@ import {
   requestWeightPermission,
 } from '../services/health/healthConnectService';
 
+const THEME_OPTIONS: { value: ThemePreference; label: string; icon: 'phone-portrait-outline' | 'sunny-outline' | 'moon-outline' }[] = [
+  { value: 'system', label: 'System', icon: 'phone-portrait-outline' },
+  { value: 'light', label: 'Light', icon: 'sunny-outline' },
+  { value: 'dark', label: 'Dark', icon: 'moon-outline' },
+];
+
 export default function ProfileScreen() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { nutritionGoals, setNutritionGoals, region, units, setRegion, setUnits, uxMode, setUxMode } = usePreferencesStore();
+  const themePreference = usePreferencesStore((s) => s.themePreference);
+  const setThemePreference = usePreferencesStore((s) => s.setThemePreference);
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   const [editingGoals, setEditingGoals] = useState(false);
   const [calGoal, setCalGoal] = useState(String(nutritionGoals.calories));
@@ -91,24 +103,24 @@ export default function ProfileScreen() {
   };
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <Text style={styles.title}>Profile</Text>
+    <ScrollView style={s.container} contentContainerStyle={s.content}>
+      <Text style={s.title}>Profile</Text>
 
       {/* Goals */}
-      <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Daily Goals</Text>
+      <View style={s.card}>
+        <View style={s.cardHeader}>
+          <Text style={s.cardTitle}>Daily Goals</Text>
           {!editingGoals ? (
             <Pressable onPress={() => setEditingGoals(true)}>
-              <Text style={styles.editBtn}>Edit</Text>
+              <Text style={s.editBtn}>Edit</Text>
             </Pressable>
           ) : (
-            <View style={styles.editActions}>
+            <View style={s.editActions}>
               <Pressable onPress={cancelGoalEdit}>
-                <Text style={styles.cancelBtn}>Cancel</Text>
+                <Text style={s.cancelBtn}>Cancel</Text>
               </Pressable>
               <Pressable onPress={saveGoals}>
-                <Text style={styles.saveBtn}>Save</Text>
+                <Text style={s.saveBtn}>Save</Text>
               </Pressable>
             </View>
           )}
@@ -120,7 +132,8 @@ export default function ProfileScreen() {
           value={calGoal}
           editing={editingGoals}
           onChange={setCalGoal}
-          color="#EF4444"
+          color={colors.accent.red}
+          colors={colors}
         />
         <GoalRow
           label="Protein"
@@ -128,7 +141,8 @@ export default function ProfileScreen() {
           value={proteinGoal}
           editing={editingGoals}
           onChange={setProteinGoal}
-          color="#3B82F6"
+          color={colors.accent.blue}
+          colors={colors}
         />
         <GoalRow
           label="Carbs"
@@ -136,7 +150,8 @@ export default function ProfileScreen() {
           value={carbsGoal}
           editing={editingGoals}
           onChange={setCarbsGoal}
-          color="#D97706"
+          color={colors.accent.amber}
+          colors={colors}
         />
         <GoalRow
           label="Fat"
@@ -144,55 +159,90 @@ export default function ProfileScreen() {
           value={fatGoal}
           editing={editingGoals}
           onChange={setFatGoal}
-          color="#16A34A"
+          color={colors.accent.green}
+          colors={colors}
         />
       </View>
 
       {/* Preferences */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Preferences</Text>
+      <View style={s.card}>
+        <Text style={s.cardTitle}>Preferences</Text>
         <Pressable
-          style={styles.row}
+          style={s.row}
           onPress={() => {
             const regions = Object.keys(regionLabels);
             const currentIdx = regions.indexOf(region);
             const nextIdx = (currentIdx + 1) % regions.length;
-            setRegion(regions[nextIdx]);
+            setRegion(regions[nextIdx] as any);
           }}
         >
-          <Text style={styles.rowLabel}>Region</Text>
+          <Text style={s.rowLabel}>Region</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.rowValue}>{regionLabels[region] ?? region}</Text>
-            <Text style={styles.rowChevron}>{'\u2192'}</Text>
+            <Text style={s.rowValue}>{regionLabels[region] ?? region}</Text>
+            <Text style={s.rowChevron}>{'\u2192'}</Text>
           </View>
         </Pressable>
         <Pressable
-          style={styles.row}
+          style={s.row}
           onPress={() => setUnits(units === 'metric' ? 'imperial' : 'metric')}
         >
-          <Text style={styles.rowLabel}>Units</Text>
+          <Text style={s.rowLabel}>Units</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <Text style={styles.rowValue}>{units === 'metric' ? 'Metric' : 'Imperial'}</Text>
-            <Text style={styles.rowChevron}>{'\u2192'}</Text>
+            <Text style={s.rowValue}>{units === 'metric' ? 'Metric' : 'Imperial'}</Text>
+            <Text style={s.rowChevron}>{'\u2192'}</Text>
           </View>
         </Pressable>
       </View>
 
+      {/* Theme */}
+      <View style={s.card}>
+        <Text style={s.cardTitle}>Theme</Text>
+        <View style={s.themeContainer}>
+          {THEME_OPTIONS.map((opt) => {
+            const selected = themePreference === opt.value;
+            return (
+              <Pressable
+                key={opt.value}
+                style={[
+                  s.themePill,
+                  selected && { backgroundColor: colors.accent.green },
+                ]}
+                onPress={() => setThemePreference(opt.value)}
+              >
+                <Ionicons
+                  name={opt.icon}
+                  size={16}
+                  color={selected ? colors.text.inverse : colors.text.secondary}
+                />
+                <Text
+                  style={[
+                    s.themePillLabel,
+                    selected && { color: colors.text.inverse },
+                  ]}
+                >
+                  {opt.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </View>
+      </View>
+
       {/* Logging Mode */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Logging Mode</Text>
-        <Text style={{ fontSize: 13, color: '#9CA3AF', marginBottom: 12 }}>
+      <View style={s.card}>
+        <Text style={s.cardTitle}>Logging Mode</Text>
+        <Text style={{ fontSize: 13, color: colors.text.tertiary, marginBottom: 12 }}>
           How recipes are logged to your diary
         </Text>
-        <UxModeSelector current={uxMode} onSelect={setUxMode} />
+        <UxModeSelector current={uxMode} onSelect={setUxMode} colors={colors} />
       </View>
 
       {/* Recipes */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Recipes</Text>
-        <Pressable style={styles.row} onPress={() => rootNavigation.navigate('Recipes')}>
-          <Text style={styles.rowLabel}>My Recipes</Text>
-          <Text style={styles.rowChevron}>→</Text>
+      <View style={s.card}>
+        <Text style={s.cardTitle}>Recipes</Text>
+        <Pressable style={s.row} onPress={() => rootNavigation.navigate('Recipes')}>
+          <Text style={s.rowLabel}>My Recipes</Text>
+          <Text style={s.rowChevron}>{'\u2192'}</Text>
         </Pressable>
       </View>
 
@@ -206,11 +256,11 @@ export default function ProfileScreen() {
       <SyncCard />
 
       {/* Gallery Scan */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Gallery Scan</Text>
-        <Pressable style={styles.row} onPress={() => rootNavigation.navigate('GalleryScan')}>
-          <Text style={styles.rowLabel}>Gallery Scan Settings</Text>
-          <Text style={styles.rowChevron}>→</Text>
+      <View style={s.card}>
+        <Text style={s.cardTitle}>Gallery Scan</Text>
+        <Pressable style={s.row} onPress={() => rootNavigation.navigate('GalleryScan')}>
+          <Text style={s.rowLabel}>Gallery Scan Settings</Text>
+          <Text style={s.rowChevron}>{'\u2192'}</Text>
         </Pressable>
       </View>
 
@@ -224,28 +274,28 @@ export default function ProfileScreen() {
       <HealthWeightCard />
 
       {/* AI Models */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>AI Models</Text>
-        <Pressable style={styles.row} onPress={() => rootNavigation.navigate('GeminiNanoTest')}>
-          <Text style={styles.rowLabel}>Gemini Nano Test</Text>
-          <Text style={styles.rowChevron}>→</Text>
+      <View style={s.card}>
+        <Text style={s.cardTitle}>AI Models</Text>
+        <Pressable style={s.row} onPress={() => rootNavigation.navigate('GeminiNanoTest')}>
+          <Text style={s.rowLabel}>Gemini Nano Test</Text>
+          <Text style={s.rowChevron}>{'\u2192'}</Text>
         </Pressable>
       </View>
 
       {/* About */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>About</Text>
+      <View style={s.card}>
+        <Text style={s.cardTitle}>About</Text>
         <Pressable
-          style={styles.row}
+          style={s.row}
           onPress={() => Linking.openURL('https://openfoodfacts.org')}
         >
           <View style={{ flex: 1 }}>
-            <Text style={styles.rowLabel}>Food product data provided by Open Food Facts</Text>
-            <Text style={{ fontSize: 12, color: '#9CA3AF', marginTop: 2 }}>
+            <Text style={s.rowLabel}>Food product data provided by Open Food Facts</Text>
+            <Text style={{ fontSize: 12, color: colors.text.tertiary, marginTop: 2 }}>
               Licensed under the Open Database License (ODbL)
             </Text>
           </View>
-          <Ionicons name="open-outline" size={16} color="#9CA3AF" />
+          <Ionicons name="open-outline" size={16} color={colors.text.tertiary} />
         </Pressable>
       </View>
 
@@ -256,6 +306,8 @@ export default function ProfileScreen() {
 
 function ExportCard() {
   const [exporting, setExporting] = useState(false);
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   async function handleExport(format: 'csv' | 'json') {
     setExporting(true);
@@ -272,10 +324,10 @@ function ExportCard() {
       const ext = format === 'csv' ? 'csv' : 'json';
       const date = new Date().toISOString().split('T')[0];
       const filename = `tastimate-export-${date}.${ext}`;
-      const fileUri = `${FileSystem.documentDirectory}${filename}`;
+      const fileUri = `${(FileSystem as any).documentDirectory}${filename}`;
 
-      await FileSystem.writeAsStringAsync(fileUri, content, {
-        encoding: FileSystem.EncodingType.UTF8,
+      await (FileSystem as any).writeAsStringAsync(fileUri, content, {
+        encoding: (FileSystem as any).EncodingType.UTF8,
       });
 
       const canShare = await Sharing.isAvailableAsync();
@@ -295,19 +347,19 @@ function ExportCard() {
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Export Data</Text>
+    <View style={s.card}>
+      <Text style={s.cardTitle}>Export Data</Text>
       {exporting ? (
-        <ActivityIndicator size="small" color="#16A34A" style={{ paddingVertical: 16 }} />
+        <ActivityIndicator size="small" color={colors.accent.green} style={{ paddingVertical: 16 }} />
       ) : (
         <>
-          <Pressable style={styles.exportBtn} onPress={() => handleExport('csv')}>
-            <Ionicons name="document-text-outline" size={18} color="#16A34A" />
-            <Text style={styles.exportBtnText}>Export as CSV</Text>
+          <Pressable style={s.exportBtn} onPress={() => handleExport('csv')}>
+            <Ionicons name="document-text-outline" size={18} color={colors.accent.green} />
+            <Text style={s.exportBtnText}>Export as CSV</Text>
           </Pressable>
-          <Pressable style={styles.exportBtn} onPress={() => handleExport('json')}>
-            <Ionicons name="code-slash-outline" size={18} color="#3B82F6" />
-            <Text style={[styles.exportBtnText, { color: '#3B82F6' }]}>Export as JSON</Text>
+          <Pressable style={s.exportBtn} onPress={() => handleExport('json')}>
+            <Ionicons name="code-slash-outline" size={18} color={colors.accent.blue} />
+            <Text style={[s.exportBtnText, { color: colors.accent.blue }]}>Export as JSON</Text>
           </Pressable>
         </>
       )}
@@ -336,6 +388,8 @@ function BackupCard() {
   const [backing, setBacking] = useState(false);
   const [backups, setBackups] = useState<BackupMetadata[]>([]);
   const [pendingChanges, setPendingChanges] = useState(0);
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     setBackups(listBackups());
@@ -381,33 +435,33 @@ function BackupCard() {
   const lastBackup = backups.length > 0 ? relativeTime(backups[0]!.createdAt) : 'Never';
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Backups</Text>
+    <View style={s.card}>
+      <Text style={s.cardTitle}>Backups</Text>
 
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Last backup</Text>
-        <Text style={styles.rowValue}>{lastBackup}</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Last backup</Text>
+        <Text style={s.rowValue}>{lastBackup}</Text>
       </View>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Pending changes</Text>
-        <Text style={styles.rowValue}>{pendingChanges}</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Pending changes</Text>
+        <Text style={s.rowValue}>{pendingChanges}</Text>
       </View>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Total backups</Text>
-        <Text style={styles.rowValue}>{backups.length}</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Total backups</Text>
+        <Text style={s.rowValue}>{backups.length}</Text>
       </View>
 
       {backing ? (
-        <ActivityIndicator size="small" color="#16A34A" style={{ paddingVertical: 16 }} />
+        <ActivityIndicator size="small" color={colors.accent.green} style={{ paddingVertical: 16 }} />
       ) : (
         <>
-          <Pressable style={styles.exportBtn} onPress={handleIncremental}>
-            <Ionicons name="cloud-upload-outline" size={18} color="#16A34A" />
-            <Text style={styles.exportBtnText}>Incremental Backup</Text>
+          <Pressable style={s.exportBtn} onPress={handleIncremental}>
+            <Ionicons name="cloud-upload-outline" size={18} color={colors.accent.green} />
+            <Text style={s.exportBtnText}>Incremental Backup</Text>
           </Pressable>
-          <Pressable style={styles.exportBtn} onPress={handleFull}>
-            <Ionicons name="download-outline" size={18} color="#3B82F6" />
-            <Text style={[styles.exportBtnText, { color: '#3B82F6' }]}>Full Backup</Text>
+          <Pressable style={s.exportBtn} onPress={handleFull}>
+            <Ionicons name="download-outline" size={18} color={colors.accent.blue} />
+            <Text style={[s.exportBtnText, { color: colors.accent.blue }]}>Full Backup</Text>
           </Pressable>
         </>
       )}
@@ -418,45 +472,47 @@ function BackupCard() {
 function SyncCard() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { signedIn, userEmail, lastSyncAt, syncStatus } = useSyncStore();
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   function statusColor(): string {
     switch (syncStatus) {
-      case 'syncing': return '#F59E0B';
-      case 'error': return '#EF4444';
-      case 'conflict': return '#F59E0B';
-      default: return '#16A34A';
+      case 'syncing': return colors.accent.amber;
+      case 'error': return colors.accent.red;
+      case 'conflict': return colors.accent.amber;
+      default: return colors.accent.green;
     }
   }
 
   return (
-    <Pressable style={styles.card} onPress={() => rootNavigation.navigate('SyncSettings')}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>Google Drive Sync</Text>
-        <Text style={styles.rowChevron}>&#x2192;</Text>
+    <Pressable style={s.card} onPress={() => rootNavigation.navigate('SyncSettings')}>
+      <View style={s.cardHeader}>
+        <Text style={s.cardTitle}>Google Drive Sync</Text>
+        <Text style={s.rowChevron}>&#x2192;</Text>
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Account</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Account</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
-          <View style={[syncStyles.dot, { backgroundColor: signedIn ? '#16A34A' : '#D1D5DB' }]} />
-          <Text style={styles.rowValue}>{signedIn ? (userEmail ?? 'Connected') : 'Not connected'}</Text>
+          <View style={[syncCardStyles.dot, { backgroundColor: signedIn ? colors.accent.green : colors.border.default }]} />
+          <Text style={s.rowValue}>{signedIn ? (userEmail ?? 'Connected') : 'Not connected'}</Text>
         </View>
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Last synced</Text>
-        <Text style={styles.rowValue}>{lastSyncAt ? relativeTime(lastSyncAt) : 'Never'}</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Last synced</Text>
+        <Text style={s.rowValue}>{lastSyncAt ? relativeTime(lastSyncAt) : 'Never'}</Text>
       </View>
 
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Status</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Status</Text>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6 }}>
           {syncStatus === 'syncing' ? (
-            <ActivityIndicator size="small" color="#F59E0B" />
+            <ActivityIndicator size="small" color={colors.accent.amber} />
           ) : (
-            <View style={[syncStyles.dot, { backgroundColor: statusColor() }]} />
+            <View style={[syncCardStyles.dot, { backgroundColor: statusColor() }]} />
           )}
-          <Text style={styles.rowValue}>
+          <Text style={s.rowValue}>
             {syncStatus === 'idle' ? 'Up to date' : syncStatus === 'syncing' ? 'Syncing...' : syncStatus === 'error' ? 'Error' : 'Conflicts'}
           </Text>
         </View>
@@ -465,7 +521,7 @@ function SyncCard() {
   );
 }
 
-const syncStyles = StyleSheet.create({
+const syncCardStyles = StyleSheet.create({
   dot: { width: 8, height: 8, borderRadius: 4 },
 });
 
@@ -478,6 +534,8 @@ function NotificationsCard() {
     setNotificationTime,
     nutritionGoals,
   } = usePreferencesStore();
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   const [hourStr, setHourStr] = useState(String(notificationHour));
   const [minuteStr, setMinuteStr] = useState(String(notificationMinute).padStart(2, '0'));
@@ -512,32 +570,52 @@ function NotificationsCard() {
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Notifications</Text>
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Daily Summary</Text>
+    <View style={s.card}>
+      <Text style={s.cardTitle}>Notifications</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Daily Summary</Text>
         <Switch
           value={notificationsEnabled}
           onValueChange={handleToggle}
-          trackColor={{ true: '#16A34A', false: '#D1D5DB' }}
-          thumbColor="#FFFFFF"
+          trackColor={{ true: colors.accent.green, false: colors.border.default }}
+          thumbColor={colors.background.elevated}
         />
       </View>
       {notificationsEnabled && (
-        <View style={[styles.row, { gap: 8 }]}>
-          <Text style={styles.rowLabel}>Time</Text>
+        <View style={[s.row, { gap: 8 }]}>
+          <Text style={s.rowLabel}>Time</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <TextInput
-              style={notifStyles.timeInput}
+              style={{
+                backgroundColor: colors.input.background,
+                borderRadius: 8,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.text.primary,
+                width: 44,
+                textAlign: 'center',
+              }}
               value={hourStr}
               onChangeText={setHourStr}
               onBlur={handleTimeChange}
               keyboardType="number-pad"
               maxLength={2}
             />
-            <Text style={{ fontSize: 16, fontWeight: '700', color: '#374151' }}>:</Text>
+            <Text style={{ fontSize: 16, fontWeight: '700', color: colors.text.secondary }}>:</Text>
             <TextInput
-              style={notifStyles.timeInput}
+              style={{
+                backgroundColor: colors.input.background,
+                borderRadius: 8,
+                paddingHorizontal: 10,
+                paddingVertical: 6,
+                fontSize: 16,
+                fontWeight: '600',
+                color: colors.text.primary,
+                width: 44,
+                textAlign: 'center',
+              }}
               value={minuteStr}
               onChangeText={setMinuteStr}
               onBlur={handleTimeChange}
@@ -551,23 +629,11 @@ function NotificationsCard() {
   );
 }
 
-const notifStyles = StyleSheet.create({
-  timeInput: {
-    backgroundColor: '#F3F4F6',
-    borderRadius: 8,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#111827',
-    width: 44,
-    textAlign: 'center',
-  },
-});
-
 function ContainerWeightsCard() {
   const rootNavigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const [containers, setContainers] = useState<Container[]>([]);
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
 
   useEffect(() => {
     loadContainers();
@@ -601,26 +667,26 @@ function ContainerWeightsCard() {
   }
 
   return (
-    <View style={styles.card}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.cardTitle}>Container Weights</Text>
+    <View style={s.card}>
+      <View style={s.cardHeader}>
+        <Text style={s.cardTitle}>Container Weights</Text>
         <Pressable onPress={() => rootNavigation.navigate('ScaleInput', {})}>
-          <Text style={styles.editBtn}>Manage</Text>
+          <Text style={s.editBtn}>Manage</Text>
         </Pressable>
       </View>
       {containers.length === 0 ? (
-        <Text style={{ fontSize: 13, color: '#9CA3AF', paddingVertical: 8 }}>
+        <Text style={{ fontSize: 13, color: colors.text.tertiary, paddingVertical: 8 }}>
           No containers saved. Add containers from the Scale Input screen.
         </Text>
       ) : (
         containers.map((c) => (
           <Pressable
             key={c.id}
-            style={styles.row}
+            style={s.row}
             onLongPress={() => handleDelete(c.id, c.name)}
           >
-            <Text style={styles.rowLabel}>{c.name}</Text>
-            <Text style={styles.rowValue}>
+            <Text style={s.rowLabel}>{c.name}</Text>
+            <Text style={s.rowValue}>
               {c.weightGrams}g {c.timesUsed > 0 ? `(used ${c.timesUsed}x)` : ''}
             </Text>
           </Pressable>
@@ -636,6 +702,8 @@ function HealthWeightCard() {
     healthConnectEnabled,
     setHealthConnectEnabled,
   } = usePreferencesStore();
+  const { colors } = useTheme();
+  const s = useMemo(() => createStyles(colors), [colors]);
   const [hcAvailable, setHcAvailable] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -670,35 +738,35 @@ function HealthWeightCard() {
   }
 
   return (
-    <View style={styles.card}>
-      <Text style={styles.cardTitle}>Health & Weight</Text>
+    <View style={s.card}>
+      <Text style={s.cardTitle}>Health & Weight</Text>
 
-      <View style={styles.row}>
-        <Text style={styles.rowLabel}>Health Connect</Text>
+      <View style={s.row}>
+        <Text style={s.rowLabel}>Health Connect</Text>
         {hcAvailable === false ? (
-          <Text style={{ fontSize: 13, color: '#EF4444' }}>Not available</Text>
+          <Text style={{ fontSize: 13, color: colors.accent.red }}>Not available</Text>
         ) : (
           <Switch
             value={healthConnectEnabled}
             onValueChange={handleToggle}
-            trackColor={{ true: '#16A34A', false: '#D1D5DB' }}
-            thumbColor="#FFFFFF"
+            trackColor={{ true: colors.accent.green, false: colors.border.default }}
+            thumbColor={colors.background.elevated}
           />
         )}
       </View>
 
       {hcAvailable === false && (
-        <Text style={{ fontSize: 12, color: '#9CA3AF', paddingBottom: 8 }}>
+        <Text style={{ fontSize: 12, color: colors.text.tertiary, paddingBottom: 8 }}>
           Install Google Health Connect from the Play Store (required for Android &lt; 14).
         </Text>
       )}
 
       <Pressable
-        style={styles.row}
+        style={s.row}
         onPress={() => rootNavigation.navigate('WeightTrend')}
       >
-        <Text style={styles.rowLabel}>View Weight Trend</Text>
-        <Text style={styles.rowChevron}>{'\u2192'}</Text>
+        <Text style={s.rowLabel}>View Weight Trend</Text>
+        <Text style={s.rowChevron}>{'\u2192'}</Text>
       </Pressable>
     </View>
   );
@@ -710,23 +778,24 @@ const UX_MODE_OPTIONS: { mode: UxMode; label: string; desc: string }[] = [
   { mode: 'guided-edit', label: 'Guided', desc: 'Step-by-step editing' },
 ];
 
-function UxModeSelector({ current, onSelect }: { current: UxMode; onSelect: (m: UxMode) => void }) {
+function UxModeSelector({ current, onSelect, colors }: { current: UxMode; onSelect: (m: UxMode) => void; colors: ThemeColors }) {
+  const s = useMemo(() => createStyles(colors), [colors]);
   return (
-    <View style={styles.uxModeContainer}>
+    <View style={s.uxModeContainer}>
       {UX_MODE_OPTIONS.map(({ mode, label, desc }) => {
         const selected = current === mode;
         return (
           <Pressable
             key={mode}
-            style={[styles.uxModeOption, selected && styles.uxModeOptionSelected]}
+            style={[s.uxModeOption, selected && s.uxModeOptionSelected]}
             onPress={() => onSelect(mode)}
           >
-            <View style={[styles.uxModeRadio, selected && styles.uxModeRadioSelected]}>
-              {selected && <View style={styles.uxModeRadioDot} />}
+            <View style={[s.uxModeRadio, selected && s.uxModeRadioSelected]}>
+              {selected && <View style={s.uxModeRadioDot} />}
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={[styles.uxModeLabel, selected && styles.uxModeLabelSelected]}>{label}</Text>
-              <Text style={styles.uxModeDesc}>{desc}</Text>
+              <Text style={[s.uxModeLabel, selected && s.uxModeLabelSelected]}>{label}</Text>
+              <Text style={s.uxModeDesc}>{desc}</Text>
             </View>
           </Pressable>
         );
@@ -735,101 +804,113 @@ function UxModeSelector({ current, onSelect }: { current: UxMode; onSelect: (m: 
   );
 }
 
-function GoalRow({ label, unit, value, editing, onChange, color }: {
+function GoalRow({ label, unit, value, editing, onChange, color, colors }: {
   label: string; unit: string; value: string; editing: boolean;
-  onChange: (v: string) => void; color: string;
+  onChange: (v: string) => void; color: string; colors: ThemeColors;
 }) {
+  const s = useMemo(() => createStyles(colors), [colors]);
   return (
-    <View style={styles.goalRow}>
-      <View style={styles.goalLabelRow}>
-        <View style={[styles.goalDot, { backgroundColor: color }]} />
-        <Text style={styles.goalLabel}>{label}</Text>
+    <View style={s.goalRow}>
+      <View style={s.goalLabelRow}>
+        <View style={[s.goalDot, { backgroundColor: color }]} />
+        <Text style={s.goalLabel}>{label}</Text>
       </View>
       {editing ? (
-        <View style={styles.goalInputRow}>
+        <View style={s.goalInputRow}>
           <TextInput
-            style={styles.goalInput}
+            style={s.goalInput}
             value={value}
             onChangeText={onChange}
             keyboardType="number-pad"
             selectTextOnFocus
           />
-          <Text style={styles.goalUnit}>{unit}</Text>
+          <Text style={s.goalUnit}>{unit}</Text>
         </View>
       ) : (
-        <Text style={styles.goalValue}>{value} {unit}</Text>
+        <Text style={s.goalValue}>{value} {unit}</Text>
       )}
     </View>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F5F5F5' },
-  content: { paddingTop: 60, paddingHorizontal: 16 },
-  title: { fontSize: 28, fontWeight: '800', color: '#111827', marginBottom: 20 },
+function createStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    container: { flex: 1, backgroundColor: colors.background.primary },
+    content: { paddingTop: 60, paddingHorizontal: 16 },
+    title: { fontSize: 28, fontWeight: '800', color: colors.text.primary, marginBottom: 20 },
 
-  card: {
-    backgroundColor: '#FFF', borderRadius: 16, padding: 16, marginBottom: 16,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
-    shadowRadius: 8, elevation: 3,
-  },
-  cardHeader: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12,
-  },
-  cardTitle: { fontSize: 18, fontWeight: '700', color: '#111827' },
-  editBtn: { fontSize: 15, fontWeight: '600', color: '#3B82F6' },
-  editActions: { flexDirection: 'row', gap: 16 },
-  cancelBtn: { fontSize: 15, fontWeight: '500', color: '#6B7280' },
-  saveBtn: { fontSize: 15, fontWeight: '700', color: '#16A34A' },
+    card: {
+      backgroundColor: colors.background.elevated, borderRadius: 16, padding: 16, marginBottom: 16,
+      shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05,
+      shadowRadius: 8, elevation: 3,
+    },
+    cardHeader: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12,
+    },
+    cardTitle: { fontSize: 18, fontWeight: '700', color: colors.text.primary },
+    editBtn: { fontSize: 15, fontWeight: '600', color: colors.accent.blue },
+    editActions: { flexDirection: 'row', gap: 16 },
+    cancelBtn: { fontSize: 15, fontWeight: '500', color: colors.text.tertiary },
+    saveBtn: { fontSize: 15, fontWeight: '700', color: colors.accent.green },
 
-  goalRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
-  },
-  goalLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  goalDot: { width: 10, height: 10, borderRadius: 5 },
-  goalLabel: { fontSize: 15, fontWeight: '500', color: '#374151' },
-  goalValue: { fontSize: 15, fontWeight: '600', color: '#111827' },
-  goalInputRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  goalInput: {
-    backgroundColor: '#F3F4F6', borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
-    fontSize: 15, fontWeight: '600', color: '#111827', minWidth: 70, textAlign: 'right',
-  },
-  goalUnit: { fontSize: 13, color: '#6B7280' },
+    goalRow: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      paddingVertical: 12, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
+    },
+    goalLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
+    goalDot: { width: 10, height: 10, borderRadius: 5 },
+    goalLabel: { fontSize: 15, fontWeight: '500', color: colors.text.secondary },
+    goalValue: { fontSize: 15, fontWeight: '600', color: colors.text.primary },
+    goalInputRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+    goalInput: {
+      backgroundColor: colors.input.background, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6,
+      fontSize: 15, fontWeight: '600', color: colors.text.primary, minWidth: 70, textAlign: 'right',
+    },
+    goalUnit: { fontSize: 13, color: colors.text.tertiary },
 
-  row: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
-  },
-  rowLabel: { fontSize: 15, color: '#374151' },
-  rowValue: { fontSize: 15, color: '#6B7280' },
-  rowChevron: { fontSize: 16, color: '#D1D5DB' },
-  exportBtn: {
-    flexDirection: 'row', alignItems: 'center', gap: 8,
-    paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: '#F3F4F6',
-  },
-  exportBtnText: { fontSize: 15, fontWeight: '500', color: '#16A34A' },
+    row: {
+      flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+      paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
+    },
+    rowLabel: { fontSize: 15, color: colors.text.secondary },
+    rowValue: { fontSize: 15, color: colors.text.tertiary },
+    rowChevron: { fontSize: 16, color: colors.border.default },
+    exportBtn: {
+      flexDirection: 'row', alignItems: 'center', gap: 8,
+      paddingVertical: 14, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: colors.background.surface,
+    },
+    exportBtnText: { fontSize: 15, fontWeight: '500', color: colors.accent.green },
 
-  // UX Mode selector
-  uxModeContainer: { gap: 8 },
-  uxModeOption: {
-    flexDirection: 'row', alignItems: 'center', gap: 12,
-    paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12,
-    borderWidth: 1, borderColor: '#E5E7EB', backgroundColor: '#FAFAFA',
-  },
-  uxModeOptionSelected: {
-    borderColor: '#7C3AED', backgroundColor: '#F5F3FF',
-  },
-  uxModeRadio: {
-    width: 20, height: 20, borderRadius: 10,
-    borderWidth: 2, borderColor: '#D1D5DB',
-    justifyContent: 'center', alignItems: 'center',
-  },
-  uxModeRadioSelected: { borderColor: '#7C3AED' },
-  uxModeRadioDot: {
-    width: 10, height: 10, borderRadius: 5, backgroundColor: '#7C3AED',
-  },
-  uxModeLabel: { fontSize: 15, fontWeight: '600', color: '#374151' },
-  uxModeLabelSelected: { color: '#7C3AED' },
-  uxModeDesc: { fontSize: 12, color: '#9CA3AF', marginTop: 1 },
-});
+    // Theme selector
+    themeContainer: { flexDirection: 'row', gap: 8, marginTop: 8 },
+    themePill: {
+      flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6,
+      paddingVertical: 10, borderRadius: 12,
+      backgroundColor: colors.background.surface,
+    },
+    themePillLabel: { fontSize: 14, fontWeight: '600', color: colors.text.secondary },
+
+    // UX Mode selector
+    uxModeContainer: { gap: 8 },
+    uxModeOption: {
+      flexDirection: 'row', alignItems: 'center', gap: 12,
+      paddingVertical: 12, paddingHorizontal: 12, borderRadius: 12,
+      borderWidth: 1, borderColor: colors.border.subtle, backgroundColor: colors.background.surface,
+    },
+    uxModeOptionSelected: {
+      borderColor: colors.accent.purple, backgroundColor: colors.accentTint.purple,
+    },
+    uxModeRadio: {
+      width: 20, height: 20, borderRadius: 10,
+      borderWidth: 2, borderColor: colors.border.default,
+      justifyContent: 'center', alignItems: 'center',
+    },
+    uxModeRadioSelected: { borderColor: colors.accent.purple },
+    uxModeRadioDot: {
+      width: 10, height: 10, borderRadius: 5, backgroundColor: colors.accent.purple,
+    },
+    uxModeLabel: { fontSize: 15, fontWeight: '600', color: colors.text.secondary },
+    uxModeLabelSelected: { color: colors.accent.purple },
+    uxModeDesc: { fontSize: 12, color: colors.text.tertiary, marginTop: 1 },
+  });
+}

@@ -3,14 +3,16 @@ import './src/services/backup/backupScheduler';
 import './src/services/gallery/galleryScanScheduler';
 
 import { useEffect, useRef } from 'react';
-import { AppState, StyleSheet } from 'react-native';
+import { AppState } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { RootNavigator } from './src/navigation';
 import { usePreferencesStore } from './src/store/usePreferencesStore';
 import { triggerForegroundDrain } from './src/services/gallery/galleryScanScheduler';
+import { ThemeProvider, useTheme } from './src/theme/ThemeProvider';
 
-export default function App() {
+function AppContent() {
+  const { isDark } = useTheme();
   const initRegion = usePreferencesStore((s) => s.initRegionFromLocale);
   useEffect(() => { initRegion(); }, [initRegion]);
 
@@ -30,15 +32,17 @@ export default function App() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={styles.container}>
-      <RootNavigator />
-      <StatusBar style="auto" />
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <RootNavigator isDark={isDark} />
+      <StatusBar style={isDark ? 'light' : 'dark'} />
     </GestureHandlerRootView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-});
+export default function App() {
+  return (
+    <ThemeProvider>
+      <AppContent />
+    </ThemeProvider>
+  );
+}
