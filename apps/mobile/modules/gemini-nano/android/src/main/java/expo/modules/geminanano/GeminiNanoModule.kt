@@ -126,7 +126,11 @@ class GeminiNanoModule : Module() {
 
                 val requestBuilder = GenerateContentRequest.Builder(ImagePart(bitmap), TextPart(prompt))
                 requestBuilder.temperature = 0.2f
-                requestBuilder.maxOutputTokens = 256
+                // ML Kit Prompt API may hard-limit maxOutputTokens to 256 at runtime.
+                // We request 1024 optimistically — if rejected, the API clamps to its max.
+                // Multi-pass identification in geminiNanoService.ts is the robust solution
+                // regardless of this value.
+                requestBuilder.maxOutputTokens = 1024
                 requestBuilder.topK = 10
                 val request = requestBuilder.build()
 

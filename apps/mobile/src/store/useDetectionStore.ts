@@ -12,6 +12,8 @@ interface DetectionState {
   isAnalyzing: boolean;
   mealType: MealType;
   isMock: boolean;
+  /** Reason mock data was used (only set when isMock is true). */
+  mockReason?: 'unavailable' | 'error' | 'empty';
   /** Number of photos still being processed in the background. */
   pendingPhotos: number;
   totalPhotos: number;
@@ -58,6 +60,7 @@ const initialState: DetectionState = {
   isAnalyzing: false,
   mealType: autoDetectMealType(),
   isMock: false,
+  mockReason: undefined,
   pendingPhotos: 0,
   totalPhotos: 0,
 };
@@ -66,7 +69,7 @@ export const useDetectionStore = create<DetectionStore>((set, get) => ({
   ...initialState,
 
   setScanResult: (result) =>
-    set({ photoUri: result.photoUri, dishes: result.dishes, isMock: result.isMock }),
+    set({ photoUri: result.photoUri, dishes: result.dishes, isMock: result.isMock, mockReason: result.mockReason }),
 
   addScanResult: (result) =>
     set((state) => ({

@@ -165,6 +165,8 @@ export interface ScanResult {
   dishes: ScannedDish[];
   /** True when Gemini Nano is unavailable and mock data is used. */
   isMock: boolean;
+  /** Reason mock data was used (only set when isMock is true). */
+  mockReason?: 'unavailable' | 'error' | 'empty';
 }
 
 // UX modes for recipe/food logging workflow

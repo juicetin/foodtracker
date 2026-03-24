@@ -248,24 +248,32 @@ export async function benchmarkUsdaSearch(
  */
 export async function scanFood(photoUri: string): Promise<ScanResult> {
   let isMock = false;
+  let mockReason: 'unavailable' | 'error' | 'empty' | undefined;
   let vlmResult;
 
   try {
     const status = await geminiNanoModule.checkAvailability();
+    if (__DEV__) console.log('[scanFood] availability:', status);
     if (status === 'available') {
       vlmResult = await geminiNanoService.identify(photoUri);
       if (!vlmResult || vlmResult.dishes.length === 0) {
+        if (__DEV__) console.log('[scanFood] Gemini Nano returned empty dishes, using mock');
         isMock = true;
+        mockReason = 'empty';
         vlmResult = getMockScanResult();
       } else {
         _lastVlmSource = 'gemini-nano';
       }
     } else {
+      if (__DEV__) console.log('[scanFood] Gemini Nano unavailable, status:', status);
       isMock = true;
+      mockReason = 'unavailable';
       vlmResult = getMockScanResult();
     }
-  } catch {
+  } catch (err) {
+    console.error('[scanFood] Error during identification:', err);
     isMock = true;
+    mockReason = 'error';
     vlmResult = getMockScanResult();
   }
 
@@ -304,5 +312,5 @@ export async function scanFood(photoUri: string): Promise<ScanResult> {
   // Enrich dishes that have no VLM-provided ingredients with KG data
   const enrichedDishes = await enrichDishesWithKgIngredients(dishes);
 
-  return { photoUri, dishes: enrichedDishes, isMock };
+  return { photoUri, dishes: enrichedDishes, isMock, mockReason };
 }

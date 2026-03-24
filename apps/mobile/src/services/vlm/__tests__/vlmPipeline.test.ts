@@ -3,7 +3,7 @@
  *
  * Verifies Gemini Nano as Tier 0 identification,
  * mock fallback when unavailable, KG nutrition lookup,
- * and model source tracking.
+ * model source tracking, and mockReason differentiation.
  */
 
 import { geminiNanoModule } from 'gemini-nano';
@@ -181,7 +181,7 @@ describe('KG nutrition lookup', () => {
 
     const mockKGService = {
       searchDish: jest.fn().mockResolvedValue(null),
-      // USDA returns null → KG recipe path is used unconditionally
+      // USDA returns null -> KG recipe path is used unconditionally
       lookupUsdaIngredient: jest.fn().mockResolvedValue(null),
       calculateDishNutrition: jest.fn().mockResolvedValue({
         calories: 260,
@@ -249,5 +249,60 @@ describe('getLastVlmSource', () => {
 
   it('returns null before any scan', () => {
     expect(getLastVlmSource()).toBeNull();
+  });
+});
+
+describe('mockReason', () => {
+  it('sets mockReason="unavailable" when not available', async () => {
+    mockGeminiModule.checkAvailability.mockResolvedValue('not_supported');
+
+    const result = await scanFood('file:///test.jpg');
+
+    expect(result.isMock).toBe(true);
+    expect(result.mockReason).toBe('unavailable');
+  });
+
+  it('sets mockReason="error" when identify throws', async () => {
+    mockGeminiModule.checkAvailability.mockResolvedValue('available');
+    mockGeminiService.identify.mockRejectedValue(new Error('AICore crashed'));
+
+    const result = await scanFood('file:///test.jpg');
+
+    expect(result.isMock).toBe(true);
+    expect(result.mockReason).toBe('error');
+  });
+
+  it('sets mockReason="empty" when identify returns empty dishes', async () => {
+    mockGeminiModule.checkAvailability.mockResolvedValue('available');
+    mockGeminiService.identify.mockResolvedValue({ dishes: [] });
+
+    const result = await scanFood('file:///test.jpg');
+
+    expect(result.isMock).toBe(true);
+    expect(result.mockReason).toBe('empty');
+  });
+
+  it('does not set mockReason on successful identification', async () => {
+    mockGeminiModule.checkAvailability.mockResolvedValue('available');
+    mockGeminiService.identify.mockResolvedValue({
+      dishes: [{ name: 'Sushi', cuisine: 'Japanese', ingredients: [{ name: 'rice', amount_g: 100 }] }],
+    });
+
+    const result = await scanFood('file:///test.jpg');
+
+    expect(result.isMock).toBe(false);
+    expect(result.mockReason).toBeUndefined();
+  });
+
+  it('logs errors instead of silently swallowing', async () => {
+    const consoleSpy = jest.spyOn(console, 'error').mockImplementation(() => {});
+    mockGeminiModule.checkAvailability.mockResolvedValue('available');
+    const testError = new Error('AICore crashed');
+    mockGeminiService.identify.mockRejectedValue(testError);
+
+    await scanFood('file:///test.jpg');
+
+    expect(consoleSpy).toHaveBeenCalledWith('[scanFood] Error during identification:', testError);
+    consoleSpy.mockRestore();
   });
 });

@@ -76,6 +76,7 @@ export function DetectionScreen() {
     photoUri,
     dishes,
     isMock,
+    mockReason,
     mealType,
     pendingPhotos,
     totalPhotos,
@@ -352,7 +353,11 @@ export function DetectionScreen() {
         {isMock && (
           <View style={styles.mockBanner}>
             <Text style={styles.mockBannerText}>
-              ⚠️  Demo mode — Gemini Nano not available on this device
+              {mockReason === 'unavailable'
+                ? '\u26A0\uFE0F  Demo mode \u2014 Gemini Nano not available on this device'
+                : mockReason === 'error'
+                ? '\u26A0\uFE0F  Analysis failed \u2014 tap a button below to try again'
+                : '\u26A0\uFE0F  Could not identify food \u2014 using placeholder data'}
             </Text>
           </View>
         )}
