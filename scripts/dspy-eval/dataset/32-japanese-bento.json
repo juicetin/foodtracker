@@ -1,0 +1,16 @@
+{
+  "image": "../../../testassets/real-food/32-japanese-bento.jpg",
+  "dishes": [
+    {
+      "name": "bento box",
+      "cuisine": "Japanese",
+      "ingredients": [
+        { "name": "steamed rice", "amount_g": 200 },
+        { "name": "tonkatsu", "amount_g": 100 },
+        { "name": "tamagoyaki", "amount_g": 40 },
+        { "name": "pickled vegetables", "amount_g": 30 },
+        { "name": "edamame", "amount_g": 30 }
+      ]
+    }
+  ]
+}

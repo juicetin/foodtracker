@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/23-dumplings.jpg",
+  "dishes": [
+    {
+      "name": "pan-fried dumplings",
+      "cuisine": "Chinese",
+      "ingredients": [
+        { "name": "dumpling wrappers", "amount_g": 150 },
+        { "name": "pork filling", "amount_g": 120 },
+        { "name": "cabbage", "amount_g": 40 },
+        { "name": "ginger", "amount_g": 3 },
+        { "name": "soy sauce", "amount_g": 10 },
+        { "name": "sesame oil", "amount_g": 5 },
+        { "name": "vegetable oil", "amount_g": 10 }
+      ]
+    }
+  ]
+}

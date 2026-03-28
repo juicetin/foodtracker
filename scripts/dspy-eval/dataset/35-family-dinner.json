@@ -1,0 +1,36 @@
+{
+  "image": "../../../testassets/real-food/35-family-dinner.jpg",
+  "dishes": [
+    {
+      "name": "roast chicken",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "chicken", "amount_g": 250 }
+      ]
+    },
+    {
+      "name": "green salad",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "mixed greens", "amount_g": 60 },
+        { "name": "dressing", "amount_g": 15 }
+      ]
+    },
+    {
+      "name": "macaroni salad",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "pasta", "amount_g": 150 },
+        { "name": "mayonnaise", "amount_g": 30 }
+      ]
+    },
+    {
+      "name": "glazed carrots",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "carrots", "amount_g": 80 },
+        { "name": "glaze", "amount_g": 10 }
+      ]
+    }
+  ]
+}

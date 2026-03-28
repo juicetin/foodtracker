@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/22-fried-noodles.jpg",
+  "dishes": [
+    {
+      "name": "chow mein",
+      "cuisine": "Chinese",
+      "ingredients": [
+        { "name": "egg noodles", "amount_g": 200 },
+        { "name": "cabbage", "amount_g": 40 },
+        { "name": "carrot", "amount_g": 30 },
+        { "name": "bean sprouts", "amount_g": 30 },
+        { "name": "soy sauce", "amount_g": 15 },
+        { "name": "sesame oil", "amount_g": 5 },
+        { "name": "vegetable oil", "amount_g": 10 }
+      ]
+    }
+  ]
+}

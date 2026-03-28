@@ -1,0 +1,11 @@
+{
+  "version": "v3",
+  "name": "multipass",
+  "date": "2026-03-25",
+  "commit": "df2fc875",
+  "description": "Current production. Same food_prompt as v2 but added multi-pass strategy: discovery pass for dish names, then per-dish detail pass to avoid 256-token truncation.",
+  "deployed": false,
+  "food_prompt": "Identify all food in this image. Return only valid JSON — no extra text:\n{\"dishes\":[{\"name\":string,\"cuisine\":string,\"recipe_name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\nrecipe_name: a concise human-friendly name for the dish as a recipe (e.g. \"Chicken Stir Fry with Vegetables\"). Estimate amount_g using surrounding objects (plates, cutlery, cups, hands) as size references; fall back to a typical restaurant serving size if no reference objects are visible. Be specific with ingredient names (e.g. \"basmati rice\" not \"rice\").",
+  "discovery_prompt": "List the food dishes visible in this image. Return only valid JSON — no extra text:\n{\"dishes\":[\"dish name 1\",\"dish name 2\"]}\nBe specific (e.g. \"pad thai\" not \"noodles\").",
+  "dish_detail_prompt": "For the dish \"{{dish_name}}\" visible in this image, list its ingredients with estimated gram weights. Return only valid JSON — no extra text:\n{\"name\":\"{{dish_name}}\",\"cuisine\":\"string\",\"recipe_name\":\"string\",\"ingredients\":[{\"name\":\"string\",\"amount_g\":number}]}\nEstimate amount_g using surrounding objects as size references; fall back to a typical restaurant serving. Be specific with ingredient names (e.g. \"basmati rice\" not \"rice\")."
+}

@@ -1,0 +1,12 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- DSPy eval: trigger Gemini Nano inference via adb broadcast -->
+  <application>
+    <receiver
+      android:name="expo.modules.geminanano.VlmEvalReceiver"
+      android:exported="true">
+      <intent-filter>
+        <action android:name="com.foodtracker.IDENTIFY_FOOD"/>
+      </intent-filter>
+    </receiver>
+  </application>
+</manifest>

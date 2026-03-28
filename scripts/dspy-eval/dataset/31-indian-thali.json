@@ -1,0 +1,37 @@
+{
+  "image": "../../../testassets/real-food/31-indian-thali.jpg",
+  "dishes": [
+    {
+      "name": "falafel",
+      "cuisine": "Middle Eastern",
+      "ingredients": [
+        { "name": "falafel balls", "amount_g": 120 }
+      ]
+    },
+    {
+      "name": "chicken shawarma bowl",
+      "cuisine": "Middle Eastern",
+      "ingredients": [
+        { "name": "chicken", "amount_g": 80 },
+        { "name": "rice", "amount_g": 150 },
+        { "name": "lettuce", "amount_g": 20 },
+        { "name": "tomato", "amount_g": 20 },
+        { "name": "jalapeño", "amount_g": 10 }
+      ]
+    },
+    {
+      "name": "pita bread",
+      "cuisine": "Middle Eastern",
+      "ingredients": [
+        { "name": "pita", "amount_g": 80 }
+      ]
+    },
+    {
+      "name": "baklava",
+      "cuisine": "Middle Eastern",
+      "ingredients": [
+        { "name": "pastry", "amount_g": 60 }
+      ]
+    }
+  ]
+}

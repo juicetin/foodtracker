@@ -1,0 +1,3 @@
+[submodule "scripts/auto-strat-eval"]
+	path = scripts/auto-strat-eval
+	url = git@github.com:juicetin/auto-strat-eval.git

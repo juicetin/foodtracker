@@ -1,0 +1,15 @@
+{
+  "image": "../../../testassets/real-food/42-cheesecake.jpg",
+  "dishes": [
+    {
+      "name": "cheesecake",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "cream cheese filling", "amount_g": 150 },
+        { "name": "graham cracker crust", "amount_g": 30 },
+        { "name": "sugar", "amount_g": 25 },
+        { "name": "strawberry", "amount_g": 10 }
+      ]
+    }
+  ]
+}

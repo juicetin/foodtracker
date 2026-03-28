@@ -1,0 +1,16 @@
+{
+  "image": "../../../testassets/real-food/19-dim-sum.jpg",
+  "dishes": [
+    {
+      "name": "dim sum assortment",
+      "cuisine": "Chinese",
+      "ingredients": [
+        { "name": "har gow (shrimp dumplings)", "amount_g": 120 },
+        { "name": "siu mai", "amount_g": 120 },
+        { "name": "wrapper dough", "amount_g": 80 },
+        { "name": "shrimp filling", "amount_g": 60 },
+        { "name": "pork filling", "amount_g": 60 }
+      ]
+    }
+  ]
+}

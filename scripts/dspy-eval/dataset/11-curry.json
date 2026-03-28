@@ -1,0 +1,23 @@
+{
+  "image": "../../../testassets/real-food/11-curry.jpg",
+  "dishes": [
+    {
+      "name": "chicken tikka masala",
+      "cuisine": "Indian",
+      "ingredients": [
+        { "name": "chicken", "amount_g": 150 },
+        { "name": "tomato curry sauce", "amount_g": 200 },
+        { "name": "cream", "amount_g": 30 },
+        { "name": "fresh cilantro", "amount_g": 5 },
+        { "name": "spices", "amount_g": 10 }
+      ]
+    },
+    {
+      "name": "naan bread",
+      "cuisine": "Indian",
+      "ingredients": [
+        { "name": "naan bread", "amount_g": 120 }
+      ]
+    }
+  ]
+}

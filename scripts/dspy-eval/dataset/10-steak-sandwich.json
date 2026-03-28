@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/10-grilled-cheese.jpg",
+  "dishes": [
+    {
+      "name": "steak sandwich",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "multigrain bread", "amount_g": 100 },
+        { "name": "sliced beef steak", "amount_g": 100 },
+        { "name": "cheese", "amount_g": 30 },
+        { "name": "arugula", "amount_g": 15 },
+        { "name": "shredded carrot", "amount_g": 20 },
+        { "name": "sauce", "amount_g": 15 }
+      ]
+    }
+  ]
+}

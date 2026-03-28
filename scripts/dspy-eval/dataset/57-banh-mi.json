@@ -1,0 +1,19 @@
+{
+    "image": "../../../testassets/real-food/57-banh-mi.jpg",
+    "dishes": [
+        {
+            "name": "banh mi",
+            "cuisine": "Vietnamese",
+            "ingredients": [
+                {"name": "baguette", "amount_g": 100},
+                {"name": "pork pate", "amount_g": 20},
+                {"name": "cold cuts", "amount_g": 50},
+                {"name": "pickled daikon and carrot", "amount_g": 40},
+                {"name": "cilantro", "amount_g": 5},
+                {"name": "jalapeño", "amount_g": 5},
+                {"name": "cucumber", "amount_g": 15},
+                {"name": "mayonnaise", "amount_g": 10}
+            ]
+        }
+    ]
+}

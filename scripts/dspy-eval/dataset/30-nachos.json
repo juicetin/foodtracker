@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/30-nachos.jpg",
+  "dishes": [
+    {
+      "name": "nachos",
+      "cuisine": "Mexican",
+      "ingredients": [
+        { "name": "tortilla chips", "amount_g": 150 },
+        { "name": "cheese", "amount_g": 60 },
+        { "name": "jalapeños", "amount_g": 20 },
+        { "name": "sour cream", "amount_g": 30 },
+        { "name": "salsa", "amount_g": 30 },
+        { "name": "guacamole", "amount_g": 30 },
+        { "name": "ground beef", "amount_g": 80 }
+      ]
+    }
+  ]
+}

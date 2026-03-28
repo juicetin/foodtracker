@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/46-paella.jpg",
+  "dishes": [
+    {
+      "name": "paella",
+      "cuisine": "Spanish",
+      "ingredients": [
+        { "name": "saffron rice", "amount_g": 250 },
+        { "name": "shrimp", "amount_g": 80 },
+        { "name": "mussels", "amount_g": 60 },
+        { "name": "chorizo", "amount_g": 40 },
+        { "name": "peas", "amount_g": 20 },
+        { "name": "bell pepper", "amount_g": 20 },
+        { "name": "olive oil", "amount_g": 15 }
+      ]
+    }
+  ]
+}

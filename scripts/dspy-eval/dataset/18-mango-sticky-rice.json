@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/18-mango-sticky-rice.jpg",
+  "dishes": [
+    {
+      "name": "berry smoothie bowl",
+      "cuisine": "Western/Health",
+      "ingredients": [
+        { "name": "blended berry base", "amount_g": 200 },
+        { "name": "raspberries", "amount_g": 30 },
+        { "name": "blackberries", "amount_g": 30 },
+        { "name": "mango chunks", "amount_g": 40 },
+        { "name": "almonds", "amount_g": 15 },
+        { "name": "coconut flakes", "amount_g": 10 }
+      ]
+    }
+  ]
+}

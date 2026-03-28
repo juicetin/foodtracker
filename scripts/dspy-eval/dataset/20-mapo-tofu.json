@@ -1,0 +1,14 @@
+{
+  "image": "../../../testassets/real-food/20-mapo-tofu.jpg",
+  "dishes": [
+    {
+      "name": "fried tofu",
+      "cuisine": "Asian",
+      "ingredients": [
+        { "name": "firm tofu", "amount_g": 300 },
+        { "name": "vegetable oil", "amount_g": 30 },
+        { "name": "chili peppers", "amount_g": 10 }
+      ]
+    }
+  ]
+}

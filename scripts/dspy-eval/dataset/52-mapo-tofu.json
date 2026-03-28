@@ -1,0 +1,19 @@
+{
+    "image": "../../../testassets/real-food/52-mapo-tofu.jpg",
+    "dishes": [
+        {
+            "name": "mapo tofu",
+            "cuisine": "Sichuan Chinese",
+            "ingredients": [
+                {"name": "soft tofu", "amount_g": 300},
+                {"name": "ground pork", "amount_g": 60},
+                {"name": "doubanjiang chili bean paste", "amount_g": 20},
+                {"name": "sichuan peppercorns", "amount_g": 3},
+                {"name": "vegetable oil", "amount_g": 20},
+                {"name": "green onion", "amount_g": 5},
+                {"name": "garlic", "amount_g": 5},
+                {"name": "soy sauce", "amount_g": 10}
+            ]
+        }
+    ]
+}

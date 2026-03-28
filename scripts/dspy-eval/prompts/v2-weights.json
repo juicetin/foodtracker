@@ -1,0 +1,11 @@
+{
+  "version": "v2",
+  "name": "weights",
+  "date": "2026-03-21",
+  "commit": "ffa36ef9",
+  "description": "Added gram weight estimation + recipe_name field. Switched from string[] to {name, amount_g} ingredient format.",
+  "deployed": false,
+  "food_prompt": "Identify all food in this image. Return only valid JSON — no extra text:\n{\"dishes\":[{\"name\":string,\"cuisine\":string,\"recipe_name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\nrecipe_name: a concise human-friendly name for the dish as a recipe (e.g. \"Chicken Stir Fry with Vegetables\"). Estimate amount_g using surrounding objects (plates, cutlery, cups, hands) as size references; fall back to a typical restaurant serving size if no reference objects are visible. Be specific with ingredient names (e.g. \"basmati rice\" not \"rice\").",
+  "discovery_prompt": null,
+  "dish_detail_prompt": null
+}

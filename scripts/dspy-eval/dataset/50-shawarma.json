@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/50-shawarma.jpg",
+  "dishes": [
+    {
+      "name": "shawarma plate",
+      "cuisine": "Middle Eastern",
+      "ingredients": [
+        { "name": "chicken shawarma meat", "amount_g": 150 },
+        { "name": "pita bread", "amount_g": 80 },
+        { "name": "tahini sauce", "amount_g": 20 },
+        { "name": "pickled turnip", "amount_g": 20 },
+        { "name": "garlic sauce", "amount_g": 15 },
+        { "name": "lettuce", "amount_g": 15 },
+        { "name": "tomato", "amount_g": 15 }
+      ]
+    }
+  ]
+}

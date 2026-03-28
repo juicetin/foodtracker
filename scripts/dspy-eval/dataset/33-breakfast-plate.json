@@ -1,0 +1,19 @@
+{
+  "image": "../../../testassets/real-food/33-breakfast-plate.jpg",
+  "dishes": [
+    {
+      "name": "full breakfast",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "eggs", "amount_g": 100 },
+        { "name": "bacon", "amount_g": 60 },
+        { "name": "toast", "amount_g": 60 },
+        { "name": "baked beans", "amount_g": 80 },
+        { "name": "sausage", "amount_g": 80 },
+        { "name": "grilled tomato", "amount_g": 40 },
+        { "name": "mushrooms", "amount_g": 30 },
+        { "name": "butter", "amount_g": 10 }
+      ]
+    }
+  ]
+}

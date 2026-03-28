@@ -1,0 +1,29 @@
+{
+  "image": "../../../testassets/real-food/26-korean-bbq.jpg",
+  "dishes": [
+    {
+      "name": "grilled meat",
+      "cuisine": "Korean",
+      "ingredients": [
+        { "name": "beef", "amount_g": 200 },
+        { "name": "marinade", "amount_g": 15 }
+      ]
+    },
+    {
+      "name": "banchan",
+      "cuisine": "Korean",
+      "ingredients": [
+        { "name": "kimchi", "amount_g": 40 },
+        { "name": "pickled radish", "amount_g": 30 },
+        { "name": "bean sprouts", "amount_g": 30 }
+      ]
+    },
+    {
+      "name": "steamed rice",
+      "cuisine": "Korean",
+      "ingredients": [
+        { "name": "white rice", "amount_g": 200 }
+      ]
+    }
+  ]
+}

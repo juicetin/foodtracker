@@ -1,0 +1,16 @@
+{
+  "image": "../../../testassets/real-food/43-fish-and-chips.jpg",
+  "dishes": [
+    {
+      "name": "fish and chips",
+      "cuisine": "British",
+      "ingredients": [
+        { "name": "battered fish fillet", "amount_g": 200 },
+        { "name": "chips", "amount_g": 150 },
+        { "name": "tartar sauce", "amount_g": 20 },
+        { "name": "lemon", "amount_g": 10 },
+        { "name": "vegetable oil", "amount_g": 20 }
+      ]
+    }
+  ]
+}

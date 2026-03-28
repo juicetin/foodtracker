@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/01-fried-rice.jpg",
+  "dishes": [
+    {
+      "name": "fried rice",
+      "cuisine": "Asian",
+      "ingredients": [
+        { "name": "cooked white rice", "amount_g": 250 },
+        { "name": "chicken", "amount_g": 80 },
+        { "name": "soy sauce", "amount_g": 20 },
+        { "name": "green onion", "amount_g": 10 },
+        { "name": "egg", "amount_g": 50 },
+        { "name": "sesame oil", "amount_g": 5 }
+      ]
+    }
+  ]
+}

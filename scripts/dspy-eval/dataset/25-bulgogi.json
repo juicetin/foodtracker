@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/25-bulgogi.jpg",
+  "dishes": [
+    {
+      "name": "bulgogi",
+      "cuisine": "Korean",
+      "ingredients": [
+        { "name": "marinated beef", "amount_g": 150 },
+        { "name": "steamed rice", "amount_g": 200 },
+        { "name": "lettuce", "amount_g": 20 },
+        { "name": "sesame seeds", "amount_g": 3 },
+        { "name": "soy sauce marinade", "amount_g": 15 },
+        { "name": "sesame oil", "amount_g": 5 },
+        { "name": "sugar", "amount_g": 5 }
+      ]
+    }
+  ]
+}

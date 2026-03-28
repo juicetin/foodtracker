@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/45-falafel.jpg",
+  "dishes": [
+    {
+      "name": "falafel plate",
+      "cuisine": "Middle Eastern",
+      "ingredients": [
+        { "name": "falafel balls", "amount_g": 150 },
+        { "name": "hummus", "amount_g": 60 },
+        { "name": "pita bread", "amount_g": 80 },
+        { "name": "tahini", "amount_g": 20 },
+        { "name": "pickled vegetables", "amount_g": 30 },
+        { "name": "lettuce", "amount_g": 20 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "image": "../../../testassets/real-food/17-tom-yum.jpg",
+  "dishes": [
+    {
+      "name": "tom yum goong",
+      "cuisine": "Thai",
+      "ingredients": [
+        { "name": "shrimp", "amount_g": 100 },
+        { "name": "broth", "amount_g": 300 },
+        { "name": "mushrooms", "amount_g": 40 },
+        { "name": "lemongrass", "amount_g": 5 },
+        { "name": "lime juice", "amount_g": 10 },
+        { "name": "chili", "amount_g": 3 },
+        { "name": "galangal", "amount_g": 3 },
+        { "name": "fish sauce", "amount_g": 10 },
+        { "name": "cilantro", "amount_g": 3 }
+      ]
+    }
+  ]
+}

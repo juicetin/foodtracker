@@ -1,0 +1,19 @@
+{
+  "image": "../../../testassets/real-food/04-sushi.jpg",
+  "dishes": [
+    {
+      "name": "salmon cream cheese roll",
+      "cuisine": "Japanese",
+      "ingredients": [
+        { "name": "sushi rice", "amount_g": 180 },
+        { "name": "salmon", "amount_g": 80 },
+        { "name": "cream cheese", "amount_g": 40 },
+        { "name": "cucumber", "amount_g": 30 },
+        { "name": "nori seaweed", "amount_g": 5 },
+        { "name": "sesame seeds", "amount_g": 5 },
+        { "name": "pickled ginger", "amount_g": 15 },
+        { "name": "lemon", "amount_g": 10 }
+      ]
+    }
+  ]
+}

@@ -17,7 +17,7 @@ import {
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { geminiNanoModule, type AvailabilityStatus } from '../../modules/gemini-nano/src/geminiNanoModule';
-import { SPIKE_PROMPT, SPIKE_NUTRITION_PROMPT } from '../services/vlm/geminiNanoService';
+import { FOOD_PROMPT, SPIKE_NUTRITION_PROMPT } from '../services/vlm/geminiNanoService';
 import { useTheme } from '../theme/ThemeProvider';
 import type { ThemeColors } from '../theme/colors';
 
@@ -195,7 +195,7 @@ export default function GeminiNanoTestScreen() {
       <View style={styles.buttonRow}>
         <TouchableOpacity
           style={[styles.runButton, { flex: 1 }, (!photoUri || testState === 'running') && styles.runButtonDisabled]}
-          onPress={() => runTest(SPIKE_PROMPT)}
+          onPress={() => runTest(FOOD_PROMPT)}
           disabled={!photoUri || testState === 'running'}
         >
           {testState === 'running' ? (
@@ -240,7 +240,7 @@ export default function GeminiNanoTestScreen() {
       {/* Prompts shown for reference */}
       <View style={styles.promptBox}>
         <Text style={styles.promptLabel}>Basic Prompt:</Text>
-        <Text style={styles.promptText}>{SPIKE_PROMPT}</Text>
+        <Text style={styles.promptText}>{FOOD_PROMPT}</Text>
       </View>
       <View style={[styles.promptBox, { marginTop: 8, backgroundColor: '#e3f2fd' }]}>
         <Text style={[styles.promptLabel, { color: '#1565c0' }]}>Weighted Ingredients Prompt:</Text>

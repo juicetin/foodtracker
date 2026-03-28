@@ -1,0 +1,19 @@
+{
+  "image": "../../../testassets/real-food/03-ramen.jpg",
+  "dishes": [
+    {
+      "name": "ramen",
+      "cuisine": "Japanese",
+      "ingredients": [
+        { "name": "ramen noodles", "amount_g": 200 },
+        { "name": "pork broth", "amount_g": 350 },
+        { "name": "chashu pork", "amount_g": 80 },
+        { "name": "soft-boiled egg", "amount_g": 50 },
+        { "name": "nori seaweed", "amount_g": 5 },
+        { "name": "bamboo shoots", "amount_g": 30 },
+        { "name": "bean sprouts", "amount_g": 40 },
+        { "name": "green onion", "amount_g": 10 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+    "image": "../../../testassets/real-food/54-burrito-bowl.jpg",
+    "dishes": [
+        {
+            "name": "burrito bowl",
+            "cuisine": "Mexican",
+            "ingredients": [
+                {"name": "cilantro lime rice", "amount_g": 200},
+                {"name": "black beans", "amount_g": 100},
+                {"name": "grilled chicken", "amount_g": 120},
+                {"name": "shredded lettuce", "amount_g": 30},
+                {"name": "cheddar cheese", "amount_g": 30},
+                {"name": "guacamole", "amount_g": 40},
+                {"name": "sour cream", "amount_g": 25},
+                {"name": "pico de gallo", "amount_g": 40},
+                {"name": "corn salsa", "amount_g": 30}
+            ]
+        }
+    ]
+}

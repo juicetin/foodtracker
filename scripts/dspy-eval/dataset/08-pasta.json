@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/08-pasta.jpg",
+  "dishes": [
+    {
+      "name": "spaghetti caprese",
+      "cuisine": "Italian",
+      "ingredients": [
+        { "name": "whole wheat spaghetti", "amount_g": 200 },
+        { "name": "cherry tomatoes", "amount_g": 80 },
+        { "name": "fresh mozzarella", "amount_g": 60 },
+        { "name": "fresh basil", "amount_g": 5 },
+        { "name": "spinach", "amount_g": 30 },
+        { "name": "olive oil", "amount_g": 15 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/07-salad.jpg",
+  "dishes": [
+    {
+      "name": "greek salad",
+      "cuisine": "Mediterranean",
+      "ingredients": [
+        { "name": "frisee lettuce", "amount_g": 60 },
+        { "name": "feta cheese", "amount_g": 50 },
+        { "name": "cherry tomatoes", "amount_g": 40 },
+        { "name": "kalamata olives", "amount_g": 25 },
+        { "name": "red bell pepper", "amount_g": 30 },
+        { "name": "cucumber", "amount_g": 40 },
+        { "name": "olive oil", "amount_g": 10 }
+      ]
+    }
+  ]
+}

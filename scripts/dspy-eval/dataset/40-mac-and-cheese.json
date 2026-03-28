@@ -1,0 +1,16 @@
+{
+  "image": "../../../testassets/real-food/40-mac-and-cheese.jpg",
+  "dishes": [
+    {
+      "name": "mac and cheese",
+      "cuisine": "American",
+      "ingredients": [
+        { "name": "elbow macaroni", "amount_g": 200 },
+        { "name": "cheese sauce", "amount_g": 100 },
+        { "name": "cheddar cheese", "amount_g": 60 },
+        { "name": "butter", "amount_g": 15 },
+        { "name": "milk", "amount_g": 50 }
+      ]
+    }
+  ]
+}

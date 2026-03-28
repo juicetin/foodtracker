@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/05-burger.jpg",
+  "dishes": [
+    {
+      "name": "bacon cheeseburger",
+      "cuisine": "American",
+      "ingredients": [
+        { "name": "beef patty", "amount_g": 200 },
+        { "name": "brioche bun", "amount_g": 80 },
+        { "name": "cheddar cheese", "amount_g": 40 },
+        { "name": "bacon", "amount_g": 30 },
+        { "name": "lettuce", "amount_g": 20 },
+        { "name": "tomato", "amount_g": 40 },
+        { "name": "burger sauce", "amount_g": 20 }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/09-eggs.jpg",
+  "dishes": [
+    {
+      "name": "avocado egg toast",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "dark rye bread", "amount_g": 80 },
+        { "name": "soft-boiled egg", "amount_g": 100 },
+        { "name": "avocado", "amount_g": 80 },
+        { "name": "pine nuts", "amount_g": 15 },
+        { "name": "black pepper", "amount_g": 2 },
+        { "name": "olive oil", "amount_g": 5 }
+      ]
+    }
+  ]
+}

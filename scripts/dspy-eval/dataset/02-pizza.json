@@ -1,0 +1,16 @@
+{
+  "image": "../../../testassets/real-food/02-pizza.jpg",
+  "dishes": [
+    {
+      "name": "pepperoni pizza",
+      "cuisine": "Italian",
+      "ingredients": [
+        { "name": "pizza dough", "amount_g": 300 },
+        { "name": "mozzarella cheese", "amount_g": 200 },
+        { "name": "tomato sauce", "amount_g": 120 },
+        { "name": "pepperoni", "amount_g": 80 },
+        { "name": "olive oil", "amount_g": 10 }
+      ]
+    }
+  ]
+}

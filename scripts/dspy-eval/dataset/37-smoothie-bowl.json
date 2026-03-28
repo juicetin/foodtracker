@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/37-smoothie-bowl.jpg",
+  "dishes": [
+    {
+      "name": "açaí bowl",
+      "cuisine": "Western/Health",
+      "ingredients": [
+        { "name": "açaí blend", "amount_g": 200 },
+        { "name": "granola", "amount_g": 30 },
+        { "name": "banana", "amount_g": 50 },
+        { "name": "berries", "amount_g": 30 },
+        { "name": "coconut flakes", "amount_g": 10 },
+        { "name": "honey", "amount_g": 10 }
+      ]
+    }
+  ]
+}

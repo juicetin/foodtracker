@@ -1,0 +1,21 @@
+{
+    "image": "../../../testassets/real-food/53-kung-pao-chicken.jpg",
+    "dishes": [
+        {
+            "name": "kung pao chicken",
+            "cuisine": "Sichuan Chinese",
+            "ingredients": [
+                {"name": "diced chicken thigh", "amount_g": 150},
+                {"name": "roasted peanuts", "amount_g": 30},
+                {"name": "dried red chili peppers", "amount_g": 10},
+                {"name": "green onion", "amount_g": 15},
+                {"name": "sichuan peppercorns", "amount_g": 2},
+                {"name": "soy sauce", "amount_g": 15},
+                {"name": "rice vinegar", "amount_g": 10},
+                {"name": "vegetable oil", "amount_g": 15},
+                {"name": "sugar", "amount_g": 5},
+                {"name": "garlic", "amount_g": 5}
+            ]
+        }
+    ]
+}

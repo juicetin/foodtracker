@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/38-oatmeal.jpg",
+  "dishes": [
+    {
+      "name": "oatmeal",
+      "cuisine": "Western",
+      "ingredients": [
+        { "name": "oats", "amount_g": 150 },
+        { "name": "milk", "amount_g": 100 },
+        { "name": "blueberries", "amount_g": 30 },
+        { "name": "banana", "amount_g": 40 },
+        { "name": "almonds", "amount_g": 15 },
+        { "name": "honey", "amount_g": 10 }
+      ]
+    }
+  ]
+}

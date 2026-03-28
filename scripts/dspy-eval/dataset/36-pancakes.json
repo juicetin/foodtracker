@@ -1,0 +1,14 @@
+{
+  "image": "../../../testassets/real-food/36-pancakes.jpg",
+  "dishes": [
+    {
+      "name": "pancakes",
+      "cuisine": "American",
+      "ingredients": [
+        { "name": "pancakes", "amount_g": 200 },
+        { "name": "maple syrup", "amount_g": 40 },
+        { "name": "butter", "amount_g": 15 }
+      ]
+    }
+  ]
+}

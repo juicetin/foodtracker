@@ -1,0 +1,2598 @@
+{
+  "v3-multipass": {
+    "composite": 0.413,
+    "dish_name_f1": 0.458,
+    "ingredient_recall": 0.656,
+    "ingredient_precision": 0.581,
+    "weight_mae_score": 0.405,
+    "json_parse_rate": 1.0,
+    "avg_latency": 5.6,
+    "per_example": [
+      {
+        "composite": 0.6174242424242424,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.5,
+        "ingredient_precision": 0.3333333333333333,
+        "weight_mae_score": 0.41666666666666663,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Kimchi Fried Rice",
+            "cuisine": "Korean",
+            "recipe_name": "Kimchi Fried Rice",
+            "ingredients": [
+              {
+                "name": "Rice",
+                "amount_g": 200
+              },
+              {
+                "name": "Kimchi",
+                "amount_g": 50
+              },
+              {
+                "name": "Pork Belly",
+                "amount_g": 50
+              },
+              {
+                "name": "Soy Sauce",
+                "amount_g": 10
+              },
+              {
+                "name": "Gochujang",
+                "amount_g": 5
+              },
+              {
+                "name": "Green Onions",
+                "amount_g": 10
+              },
+              {
+                "name": "Sesame Oil",
+                "amount_g": 5
+              },
+              {
+                "name": "Garlic",
+                "amount_g": 2
+              },
+              {
+                "name": "Ginger",
+                "amount_g": 3
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Kimchi Fried Rice\",\n      \"cuisine\": \"Korean\",\n      \"recipe_name\": \"Kimchi Fried Rice\",\n      \"ingredients\": [\n        {\n          \"name\": \"Rice\",\n          \"amount_g\": 200\n        },\n        {\n          \"name\": \"Kimchi\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Pork Belly\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Soy Sauce\",\n          \"amount_g\": 10\n        },\n        {\n          \"name\": \"Gochujang\",\n",
+        "label_file": "01-fried-rice.json"
+      },
+      {
+        "composite": 0.6133333333333334,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.8,
+        "ingredient_precision": 1.0,
+        "weight_mae_score": 0.5083333333333333,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Pizza",
+            "cuisine": "Italian",
+            "recipe_name": "Pepperoni and Cheese Pizza",
+            "ingredients": [
+              {
+                "name": "Pizza Dough",
+                "amount_g": 300
+              },
+              {
+                "name": "Tomato Sauce",
+                "amount_g": 50
+              },
+              {
+                "name": "Mozzarella Cheese",
+                "amount_g": 100
+              },
+              {
+                "name": "Pepperoni",
+                "amount_g": 50
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Pizza\",\n      \"cuisine\": \"Italian\",\n      \"recipe_name\": \"Pepperoni and Cheese Pizza\",\n      \"ingredients\": [\n        {\n          \"name\": \"Pizza Dough\",\n          \"amount_g\": 300\n        },\n        {\n          \"name\": \"Tomato Sauce\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Mozzarella Cheese\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Pepperoni\",\n          \"amount_g\": 50\n        }\n      ]\n    }\n  ]\n}\n```",
+        "label_file": "02-pizza.json"
+      },
+      {
+        "composite": 0.8085760073260073,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.75,
+        "ingredient_precision": 0.8571428571428571,
+        "weight_mae_score": 0.6342261904761906,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Ramen",
+            "cuisine": "Japanese",
+            "recipe_name": "Tonkotsu Ramen",
+            "ingredients": [
+              {
+                "name": "Ramen noodles",
+                "amount_g": 150,
+                "unit": "g"
+              },
+              {
+                "name": "Pork belly",
+                "amount_g": 100,
+                "unit": "g"
+              },
+              {
+                "name": "Soft-boiled egg",
+                "amount_g": 60,
+                "unit": "g"
+              },
+              {
+                "name": "Bamboo shoots (menma)",
+                "amount_g": 20,
+                "unit": "g"
+              },
+              {
+                "name": "Green onions",
+                "amount_g": 10,
+                "unit": "g"
+              },
+              {
+                "name": "Nori seaweed",
+                "amount_g": 5,
+                "unit": "g"
+              },
+              {
+                "name": "Broth",
+                "amount_g": 300,
+                "unit": "g"
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Ramen\",\n      \"cuisine\": \"Japanese\",\n      \"recipe_name\": \"Tonkotsu Ramen\",\n      \"ingredients\": [\n        {\n          \"name\": \"Ramen noodles\",\n          \"amount_g\": 150,\n          \"unit\": \"g\"\n        },\n        {\n          \"name\": \"Pork belly\",\n          \"amount_g\": 100,\n          \"unit\": \"g\"\n        },\n        {\n          \"name\": \"Soft-boiled egg\",\n          \"amount_g\": 60,\n          \"unit\": \"g\"\n        },\n        {\n          \"name\": \"Bamboo shoots ",
+        "label_file": "03-ramen.json"
+      },
+      {
+        "composite": 0.05590277777777777,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.75,
+        "ingredient_precision": 0.6,
+        "weight_mae_score": 0.48263888888888884,
+        "weight_hallucination_penalty": 0.1,
+        "pred_dishes": [
+          {
+            "name": "Sushi",
+            "cuisine": "Japanese",
+            "recipe_name": "Salmon Avocado Sushi Rolls",
+            "ingredients": [
+              {
+                "name": "Sushi rice",
+                "amount_g": 80
+              },
+              {
+                "name": "Salmon",
+                "amount_g": 50
+              },
+              {
+                "name": "Avocado",
+                "amount_g": 30
+              },
+              {
+                "name": "Cucumber",
+                "amount_g": 15
+              },
+              {
+                "name": "Sesame seeds",
+                "amount_g": 5
+              },
+              {
+                "name": "Soy sauce",
+                "amount_g": 10
+              },
+              {
+                "name": "Wasabi",
+                "amount_g": 2
+              },
+              {
+                "name": "Ginger",
+                "amount_g": 3
+              }
+            ]
+          },
+          {
+            "name": "Lemon",
+            "cuisine": "None",
+            "recipe_name": "Lemon Wedge",
+            "ingredients": [
+              {
+                "name": "Lemon",
+                "amount_g": 15
+              }
+            ]
+          },
+          {
+            "name": "Pickled Ginger",
+            "cuisine": "Japanese",
+            "recipe_name": "Gari",
+            "ingredients": [
+              {
+                "name": "Ginger",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Sushi\",\n      \"cuisine\": \"Japanese\",\n      \"recipe_name\": \"Salmon Avocado Sushi Rolls\",\n      \"ingredients\": [\n        {\n          \"name\": \"Sushi rice\",\n          \"amount_g\": 80\n        },\n        {\n          \"name\": \"Salmon\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Avocado\",\n          \"amount_g\": 30\n        },\n        {\n          \"name\": \"Cucumber\",\n          \"amount_g\": 15\n        },\n        {\n          \"name\": \"Sesame seeds",
+        "label_file": "04-sushi.json"
+      },
+      {
+        "composite": 0.6464285714285714,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.8571428571428571,
+        "ingredient_precision": 0.75,
+        "weight_mae_score": 0.6309523809523809,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Burger",
+            "cuisine": "American",
+            "recipe_name": "Classic Cheeseburger",
+            "ingredients": [
+              {
+                "name": "Beef patty",
+                "amount_g": 150,
+                "unit": "g"
+              },
+              {
+                "name": "Brioche bun",
+                "amount_g": 80,
+                "unit": "g"
+              },
+              {
+                "name": "American cheese",
+                "amount_g": 30,
+                "unit": "g"
+              },
+              {
+                "name": "Bacon",
+                "amount_g": 20,
+                "unit": "g"
+              },
+              {
+                "name": "Tomato",
+                "amount_g": 50,
+                "unit": "g"
+              },
+              {
+                "name": "Lettuce",
+                "amount_g": 30,
+                "unit": "g"
+              },
+              {
+                "name": "Mayonnaise",
+                "amount_g": 10,
+                "unit": "g"
+              },
+              {
+                "name": "Sesame seeds",
+                "amount_g": 5,
+                "unit": "g"
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Burger\",\n      \"cuisine\": \"American\",\n      \"recipe_name\": \"Classic Cheeseburger\",\n      \"ingredients\": [\n        {\n          \"name\": \"Beef patty\",\n          \"amount_g\": 150,\n          \"unit\": \"g\"\n        },\n        {\n          \"name\": \"Brioche bun\",\n          \"amount_g\": 80,\n          \"unit\": \"g\"\n        },\n        {\n          \"name\": \"American cheese\",\n          \"amount_g\": 30,\n          \"unit\": \"g\"\n        },\n        {\n          \"name\": \"Bacon\",\n  ",
+        "label_file": "05-burger.json"
+      },
+      {
+        "composite": 0.5848228663446056,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.7777777777777778,
+        "ingredient_precision": 0.7,
+        "weight_mae_score": 0.5092592592592593,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Quinoa Bowl with Roasted Vegetables",
+            "cuisine": "Mediterranean",
+            "recipe_name": "Rainbow Quinoa Bowl",
+            "ingredients": [
+              {
+                "name": "Quinoa",
+                "amount_g": 100
+              },
+              {
+                "name": "Broccoli",
+                "amount_g": 50
+              },
+              {
+                "name": "Bell Peppers (various colors)",
+                "amount_g": 75
+              },
+              {
+                "name": "Zucchini",
+                "amount_g": 50
+              },
+              {
+                "name": "Brussels sprouts",
+                "amount_g": 50
+              },
+              {
+                "name": "Carrots",
+                "amount_g": 50
+              },
+              {
+                "name": "Cherry Tomatoes",
+                "amount_g": 50
+              },
+              {
+                "name": "Fresh Parsley",
+                "amount_g": 10
+              },
+              {
+                "name": "Ginger",
+                "amount_g": 10
+              },
+              {
+                "name": "Lime",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Quinoa Bowl with Roasted Vegetables\",\n      \"cuisine\": \"Mediterranean\",\n      \"recipe_name\": \"Rainbow Quinoa Bowl\",\n      \"ingredients\": [\n        {\n          \"name\": \"Quinoa\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Broccoli\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Bell Peppers (various colors)\",\n          \"amount_g\": 75\n        },\n        {\n          \"name\": \"Zucchini\",\n          \"amount_g\": 50\n   ",
+        "label_file": "06-veggie-bowl.json"
+      },
+      {
+        "composite": 0.08207545787545788,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.8571428571428571,
+        "ingredient_precision": 0.5454545454545454,
+        "weight_mae_score": 0.6147619047619047,
+        "weight_hallucination_penalty": 0.1,
+        "pred_dishes": [
+          {
+            "name": "Greek Salad",
+            "cuisine": "Greek",
+            "recipe_name": "Greek Salad",
+            "ingredients": [
+              {
+                "name": "Arugula",
+                "amount_g": 50
+              },
+              {
+                "name": "Cucumber",
+                "amount_g": 50
+              },
+              {
+                "name": "Tomatoes",
+                "amount_g": 50
+              },
+              {
+                "name": "Red onion",
+                "amount_g": 10
+              },
+              {
+                "name": "Kalamata olives",
+                "amount_g": 20
+              },
+              {
+                "name": "Feta cheese",
+                "amount_g": 50
+              },
+              {
+                "name": "Olive oil",
+                "amount_g": 10
+              },
+              {
+                "name": "Red wine vinegar",
+                "amount_g": 5
+              },
+              {
+                "name": "Oregano",
+                "amount_g": 1
+              },
+              {
+                "name": "Salt",
+                "amount_g": 0.1
+              },
+              {
+                "name": "Black pepper",
+                "amount_g": 0.1
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Greek Salad\",\n      \"cuisine\": \"Greek\",\n      \"recipe_name\": \"Greek Salad\",\n      \"ingredients\": [\n        {\n          \"name\": \"Arugula\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Cucumber\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Tomatoes\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Red onion\",\n          \"amount_g\": 10\n        },\n        {\n          \"name\": \"Kalamata olives\",\n     ",
+        "label_file": "07-salad.json"
+      },
+      {
+        "composite": 0.4435344827586207,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.5,
+        "ingredient_precision": 0.6,
+        "weight_mae_score": 0.4375,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Spaghetti with Pesto, Cherry Tomatoes, Spinach, and Feta",
+            "cuisine": "Italian",
+            "recipe_name": "Pesto Pasta with Cherry Tomatoes and Spinach",
+            "ingredients": [
+              {
+                "name": "Spaghetti",
+                "amount_g": 200
+              },
+              {
+                "name": "Pesto",
+                "amount_g": 50
+              },
+              {
+                "name": "Cherry Tomatoes",
+                "amount_g": 50
+              },
+              {
+                "name": "Spinach",
+                "amount_g": 30
+              },
+              {
+                "name": "Feta Cheese",
+                "amount_g": 30
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Spaghetti with Pesto, Cherry Tomatoes, Spinach, and Feta\",\n      \"cuisine\": \"Italian\",\n      \"recipe_name\": \"Pesto Pasta with Cherry Tomatoes and Spinach\",\n      \"ingredients\": [\n        { \"name\": \"Spaghetti\", \"amount_g\": 200 },\n        { \"name\": \"Pesto\", \"amount_g\": 50 },\n        { \"name\": \"Cherry Tomatoes\", \"amount_g\": 50 },\n        { \"name\": \"Spinach\", \"amount_g\": 30 },\n        { \"name\": \"Feta Cheese\", \"amount_g\": 30 }\n      ]\n    }\n  ]\n}\n```",
+        "label_file": "08-pasta.json"
+      },
+      {
+        "composite": 0.2915229885057471,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.3333333333333333,
+        "ingredient_precision": 0.4,
+        "weight_mae_score": 0.10416666666666663,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Avocado Toast with Eggs and Almonds",
+            "cuisine": "American",
+            "recipe_name": "Avocado & Egg Toast",
+            "ingredients": [
+              {
+                "name": "Avocado",
+                "amount_g": 150
+              },
+              {
+                "name": "Eggs",
+                "amount_g": 70
+              },
+              {
+                "name": "Whole Wheat Toast",
+                "amount_g": 60
+              },
+              {
+                "name": "Almonds",
+                "amount_g": 20
+              },
+              {
+                "name": "Pepper",
+                "amount_g": 1
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Avocado Toast with Eggs and Almonds\",\n      \"cuisine\": \"American\",\n      \"recipe_name\": \"Avocado & Egg Toast\",\n      \"ingredients\": [\n        {\"name\": \"Avocado\", \"amount_g\": 150},\n        {\"name\": \"Eggs\", \"amount_g\": 70},\n        {\"name\": \"Whole Wheat Toast\", \"amount_g\": 60},\n        {\"name\": \"Almonds\", \"amount_g\": 20},\n        {\"name\": \"Pepper\", \"amount_g\": 1}\n      ]\n    }\n  ]\n}\n```",
+        "label_file": "09-eggs.json"
+      },
+      {
+        "composite": 0.43534482758620696,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.16666666666666666,
+        "ingredient_precision": 0.2,
+        "weight_mae_score": 0.25,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Sandwich",
+            "cuisine": "American",
+            "recipe_name": "Steak and Cheese Sandwich",
+            "ingredients": [
+              {
+                "name": "Sourdough bread",
+                "amount_g": 200
+              },
+              {
+                "name": "Steak",
+                "amount_g": 150
+              },
+              {
+                "name": "Provolone cheese",
+                "amount_g": 50
+              },
+              {
+                "name": "Arugula",
+                "amount_g": 20
+              },
+              {
+                "name": "Carrots",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\": \"Sandwich\", \"cuisine\": \"American\", \"recipe_name\": \"Steak and Cheese Sandwich\", \"ingredients\":[{\"name\": \"Sourdough bread\", \"amount_g\": 200 }, {\"name\": \"Steak\", \"amount_g\": 150 }, {\"name\": \"Provolone cheese\", \"amount_g\": 50 }, {\"name\": \"Arugula\", \"amount_g\": 20 }, {\"name\": \"Carrots\", \"amount_g\": 10 }]}]}\n```",
+        "label_file": "10-steak-sandwich.json"
+      },
+      {
+        "composite": 0.15551282051282053,
+        "json_parsed": true,
+        "dish_name_f1": 0.5,
+        "ingredient_recall": 0.6666666666666666,
+        "ingredient_precision": 0.26666666666666666,
+        "weight_mae_score": 0.19444444444444453,
+        "weight_hallucination_penalty": 0.3,
+        "pred_dishes": [
+          {
+            "name": "Butter Chicken",
+            "cuisine": "Indian",
+            "recipe_name": "Butter Chicken",
+            "ingredients": [
+              {
+                "name": "Chicken",
+                "amount_g": 200
+              },
+              {
+                "name": "Tomato Sauce",
+                "amount_g": 300
+              },
+              {
+                "name": "Butter",
+                "amount_g": 50
+              },
+              {
+                "name": "Cream",
+                "amount_g": 100
+              },
+              {
+                "name": "Ginger-Garlic Paste",
+                "amount_g": 10
+              },
+              {
+                "name": "Garam Masala",
+                "amount_g": 5
+              },
+              {
+                "name": "Kasuri Methi",
+                "amount_g": 5
+              },
+              {
+                "name": "Cilantro",
+                "amount_g": 10
+              },
+              {
+                "name": "Plain Naan",
+                "amount_g": 100
+              }
+            ]
+          },
+          {
+            "name": "Naan Bread",
+            "cuisine": "Indian",
+            "recipe_name": "Naan Bread",
+            "ingredients": [
+              {
+                "name": "All-Purpose Flour",
+                "amount_g": 100
+              },
+              {
+                "name": "Yeast",
+                "amount_g": 5
+              },
+              {
+                "name": "Milk",
+                "amount_g": 100
+              },
+              {
+                "name": "Yogurt",
+                "amount_g": 50
+              },
+              {
+                "name": "Butter",
+                "amount_g": 20
+              },
+              {
+                "name": "Salt",
+                "amount_g": 2
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Butter Chicken\",\n      \"cuisine\": \"Indian\",\n      \"recipe_name\": \"Butter Chicken\",\n      \"ingredients\": [\n        {\n          \"name\": \"Chicken\",\n          \"amount_g\": 200\n        },\n        {\n          \"name\": \"Tomato Sauce\",\n          \"amount_g\": 300\n        },\n        {\n          \"name\": \"Butter\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Cream\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Ginger-Garlic P",
+        "label_file": "11-curry.json"
+      },
+      {
+        "composite": 0.22574451410658303,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.9090909090909091,
+        "ingredient_precision": 0.7142857142857143,
+        "weight_mae_score": 0.0719696969696969,
+        "weight_hallucination_penalty": 0.3,
+        "pred_dishes": [
+          {
+            "name": "Fruit Platter",
+            "cuisine": "American",
+            "recipe_name": "Rainbow Fruit Platter",
+            "ingredients": [
+              {
+                "name": "Pineapple",
+                "amount_g": 400
+              },
+              {
+                "name": "Strawberries",
+                "amount_g": 200
+              },
+              {
+                "name": "Raspberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Blueberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Blackberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Orange",
+                "amount_g": 150
+              },
+              {
+                "name": "Grapefruit",
+                "amount_g": 300
+              },
+              {
+                "name": "Mango",
+                "amount_g": 200
+              },
+              {
+                "name": "Kiwi",
+                "amount_g": 100
+              },
+              {
+                "name": "Lime",
+                "amount_g": 50
+              },
+              {
+                "name": "Peach",
+                "amount_g": 100
+              },
+              {
+                "name": "Apple",
+                "amount_g": 100
+              },
+              {
+                "name": "Cranberries",
+                "amount_g": 50
+              },
+              {
+                "name": "Mint",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Fruit Platter\",\n      \"cuisine\": \"American\",\n      \"recipe_name\": \"Rainbow Fruit Platter\",\n      \"ingredients\": [\n        {\n          \"name\": \"Pineapple\",\n          \"amount_g\": 400\n        },\n        {\n          \"name\": \"Strawberries\",\n          \"amount_g\": 200\n        },\n        {\n          \"name\": \"Raspberries\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Blueberries\",\n          \"amount_g\": 100\n        },\n        {\n          \"n",
+        "label_file": "12-fruit.json"
+      }
+    ]
+  },
+  "v4-step-by-step": {
+    "composite": 0.41,
+    "dish_name_f1": 0.583,
+    "ingredient_recall": 0.608,
+    "ingredient_precision": 0.501,
+    "weight_mae_score": 0.386,
+    "json_parse_rate": 1.0,
+    "avg_latency": 5.5,
+    "per_example": [
+      {
+        "composite": 0.6223958333333333,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.5,
+        "ingredient_precision": 0.375,
+        "weight_mae_score": 0.41666666666666663,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Kimchi Fried Rice",
+            "cuisine": "Korean",
+            "ingredients": [
+              {
+                "name": "Rice",
+                "amount_g": 200
+              },
+              {
+                "name": "Kimchi",
+                "amount_g": 50
+              },
+              {
+                "name": "Pork Belly (Dashi Jowl)",
+                "amount_g": 50
+              },
+              {
+                "name": "Onion",
+                "amount_g": 10
+              },
+              {
+                "name": "Green Onion",
+                "amount_g": 10
+              },
+              {
+                "name": "Soy Sauce",
+                "amount_g": 10
+              },
+              {
+                "name": "Sesame Oil",
+                "amount_g": 5
+              },
+              {
+                "name": "Sugar",
+                "amount_g": 2
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Kimchi Fried Rice\",\n      \"cuisine\": \"Korean\",\n      \"ingredients\": [\n        {\n          \"name\": \"Rice\",\n          \"amount_g\": 200\n        },\n        {\n          \"name\": \"Kimchi\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Pork Belly (Dashi Jowl)\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Onion\",\n          \"amount_g\": 10\n        },\n        {\n          \"name\": \"Green Onion\",\n          \"amount_g\": 10\n      ",
+        "label_file": "01-fried-rice.json"
+      },
+      {
+        "composite": 0.1585,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.8,
+        "ingredient_precision": 0.4,
+        "weight_mae_score": 0.375,
+        "weight_hallucination_penalty": 0.3,
+        "pred_dishes": [
+          {
+            "name": "Pizza",
+            "cuisine": "Italian",
+            "ingredients": [
+              {
+                "name": "Dough",
+                "amount_g": 150,
+                "notes": "Estimated based on the size of the pizza."
+              },
+              {
+                "name": "Tomato Sauce",
+                "amount_g": 30,
+                "notes": "Approximate amount visible."
+              },
+              {
+                "name": "Mozzarella Cheese",
+                "amount_g": 100,
+                "notes": "Estimated based on visual coverage."
+              },
+              {
+                "name": "Pepperoni",
+                "amount_g": 50,
+                "notes": "Estimated amount based on visible slices."
+              },
+              {
+                "name": "Mushrooms",
+                "amount_g": 20,
+                "notes": "Approximate amount visible."
+              },
+              {
+                "name": "Bell Peppers",
+                "amount_g": 10,
+                "notes": "Approximate amount visible."
+              }
+            ]
+          },
+          {
+            "name": "Pizza",
+            "cuisine": "Italian",
+            "ingredients": [
+              {
+                "name": "Dough",
+                "amount_g": 150,
+                "notes": "Estimated based on the size of the pizza."
+              },
+              {
+                "name": "Tomato Sauce",
+                "amount_g": 30,
+                "notes": "Approximate amount visible."
+              },
+              {
+                "name": "Mozzarella Cheese",
+                "amount_g": 100,
+                "notes": "Estimated based on visual coverage."
+              },
+              {
+                "name": "Pepperoni",
+                "amount_g": 50,
+                "notes": "Estimated amount based on visible slices."
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Pizza\",\n      \"cuisine\": \"Italian\",\n      \"ingredients\": [\n        {\n          \"name\": \"Dough\",\n          \"amount_g\": 150,\n          \"notes\": \"Estimated based on the size of the pizza.\"\n        },\n        {\n          \"name\": \"Tomato Sauce\",\n          \"amount_g\": 30,\n          \"notes\": \"Approximate amount visible.\"\n        },\n        {\n          \"name\": \"Mozzarella Cheese\",\n          \"amount_g\": 100,\n          \"notes\": \"Estimated based on visual covera",
+        "label_file": "02-pizza.json"
+      },
+      {
+        "composite": 0.8251831501831501,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.75,
+        "ingredient_precision": 0.8571428571428571,
+        "weight_mae_score": 0.7172619047619048,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Ramen",
+            "cuisine": "Japanese",
+            "ingredients": [
+              {
+                "name": "Noodles",
+                "amount_g": 100
+              },
+              {
+                "name": "Pork Chashu",
+                "amount_g": 80
+              },
+              {
+                "name": "Soft-boiled Egg (Ajitama)",
+                "amount_g": 50
+              },
+              {
+                "name": "Green Onions",
+                "amount_g": 10
+              },
+              {
+                "name": "Bamboo Shoots (Menma)",
+                "amount_g": 20
+              },
+              {
+                "name": "Dried Seaweed (Nori)",
+                "amount_g": 5
+              },
+              {
+                "name": "Broth",
+                "amount_g": 200
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Ramen\",\n      \"cuisine\": \"Japanese\",\n      \"ingredients\": [\n        {\n          \"name\": \"Noodles\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Pork Chashu\",\n          \"amount_g\": 80\n        },\n        {\n          \"name\": \"Soft-boiled Egg (Ajitama)\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Green Onions\",\n          \"amount_g\": 10\n        },\n        {\n          \"name\": \"Bamboo Shoots (Menma)\",\n          \"amo",
+        "label_file": "03-ramen.json"
+      },
+      {
+        "composite": 0.5754807692307691,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.75,
+        "ingredient_precision": 0.8571428571428571,
+        "weight_mae_score": 0.46875,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Sushi Roll",
+            "cuisine": "Japanese",
+            "ingredients": [
+              {
+                "name": "Sushi Rice",
+                "amount_g": 120
+              },
+              {
+                "name": "Salmon",
+                "amount_g": 30
+              },
+              {
+                "name": "Cream Cheese",
+                "amount_g": 15
+              },
+              {
+                "name": "Cucumber",
+                "amount_g": 10
+              },
+              {
+                "name": "Sesame Seeds",
+                "amount_g": 5
+              },
+              {
+                "name": "Seaweed (Nori)",
+                "amount_g": 5
+              }
+            ]
+          },
+          {
+            "name": "Lemon Wedge",
+            "cuisine": "N/A",
+            "ingredients": [
+              {
+                "name": "Lemon",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Sushi Roll\",\n      \"cuisine\": \"Japanese\",\n      \"ingredients\": [\n        {\n          \"name\": \"Sushi Rice\",\n          \"amount_g\": 120\n        },\n        {\n          \"name\": \"Salmon\",\n          \"amount_g\": 30\n        },\n        {\n          \"name\": \"Cream Cheese\",\n          \"amount_g\": 15\n        },\n        {\n          \"name\": \"Cucumber\",\n          \"amount_g\": 10\n        },\n        {\n          \"name\": \"Sesame Seeds\",\n          \"amount_g\": 5\n        },\n  ",
+        "label_file": "04-sushi.json"
+      },
+      {
+        "composite": 0.4653796653796654,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.5714285714285714,
+        "ingredient_precision": 0.4444444444444444,
+        "weight_mae_score": 0.45238095238095233,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Burger",
+            "cuisine": "American",
+            "ingredients": [
+              {
+                "name": "Beef Patty",
+                "amount_g": 150
+              },
+              {
+                "name": "Bun (Top)",
+                "amount_g": 50
+              },
+              {
+                "name": "Bun (Bottom)",
+                "amount_g": 50
+              },
+              {
+                "name": "Lettuce",
+                "amount_g": 20
+              },
+              {
+                "name": "Tomato",
+                "amount_g": 50
+              },
+              {
+                "name": "Bacon",
+                "amount_g": 20
+              },
+              {
+                "name": "Cheese (American)",
+                "amount_g": 30
+              },
+              {
+                "name": "Mayonnaise",
+                "amount_g": 10
+              },
+              {
+                "name": "Sesame Seeds",
+                "amount_g": 5
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Burger\",\n      \"cuisine\": \"American\",\n      \"ingredients\": [\n        {\n          \"name\": \"Beef Patty\",\n          \"amount_g\": 150\n        },\n        {\n          \"name\": \"Bun (Top)\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Bun (Bottom)\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Lettuce\",\n          \"amount_g\": 20\n        },\n        {\n          \"name\": \"Tomato\",\n          \"amount_g\": 50\n        },\n        {",
+        "label_file": "05-burger.json"
+      },
+      {
+        "composite": 0.6638997821350763,
+        "json_parsed": true,
+        "dish_name_f1": 0.5,
+        "ingredient_recall": 0.7777777777777778,
+        "ingredient_precision": 0.4666666666666667,
+        "weight_mae_score": 0.5351851851851852,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Quinoa and Roasted Vegetable Bowl",
+            "cuisine": "Mediterranean/Healthy",
+            "ingredients": [
+              {
+                "name": "Quinoa",
+                "amount_g": 100
+              },
+              {
+                "name": "Broccoli",
+                "amount_g": 80
+              },
+              {
+                "name": "Carrots",
+                "amount_g": 70
+              },
+              {
+                "name": "Zucchini",
+                "amount_g": 60
+              },
+              {
+                "name": "Brussels Sprouts",
+                "amount_g": 50
+              },
+              {
+                "name": "Bell Peppers (Red)",
+                "amount_g": 40
+              },
+              {
+                "name": "Cabbage (Brussels)",
+                "amount_g": 30
+              },
+              {
+                "name": "Lime",
+                "amount_g": 10
+              },
+              {
+                "name": "Fresh Herbs (Parsley, Basil)",
+                "amount_g": 20
+              }
+            ]
+          },
+          {
+            "name": "Side Salad",
+            "cuisine": "Mediterranean/Healthy",
+            "ingredients": [
+              {
+                "name": "Tomatoes (Cherry)",
+                "amount_g": 50
+              },
+              {
+                "name": "Brussels Sprouts",
+                "amount_g": 30
+              },
+              {
+                "name": "Cucumber",
+                "amount_g": 40
+              },
+              {
+                "name": "Lime",
+                "amount_g": 10
+              },
+              {
+                "name": "Fresh Herbs (Parsley)",
+                "amount_g": 10
+              }
+            ]
+          },
+          {
+            "name": "Ginger",
+            "cuisine": "Asian",
+            "ingredients": [
+              {
+                "name": "Ginger",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Quinoa and Roasted Vegetable Bowl\",\n      \"cuisine\": \"Mediterranean/Healthy\",\n      \"ingredients\": [\n        {\n          \"name\": \"Quinoa\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Broccoli\",\n          \"amount_g\": 80\n        },\n        {\n          \"name\": \"Carrots\",\n          \"amount_g\": 70\n        },\n        {\n          \"name\": \"Zucchini\",\n          \"amount_g\": 60\n        },\n        {\n          \"name\": \"Brussels Sprouts\",\n    ",
+        "label_file": "06-veggie-bowl.json"
+      },
+      {
+        "composite": 0.06682368082368083,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.5714285714285714,
+        "ingredient_precision": 0.4444444444444444,
+        "weight_mae_score": 0.4666666666666667,
+        "weight_hallucination_penalty": 0.1,
+        "pred_dishes": [
+          {
+            "name": "Greek Salad",
+            "cuisine": "Greek",
+            "ingredients": [
+              {
+                "name": "Arugula",
+                "amount_g": 50
+              },
+              {
+                "name": "Tomatoes (cherry)",
+                "amount_g": 50
+              },
+              {
+                "name": "Cucumber",
+                "amount_g": 50
+              },
+              {
+                "name": "Red Onion",
+                "amount_g": 10
+              },
+              {
+                "name": "Feta Cheese",
+                "amount_g": 75
+              },
+              {
+                "name": "Kalamata Olives",
+                "amount_g": 15
+              },
+              {
+                "name": "Olive Oil",
+                "amount_g": 5
+              },
+              {
+                "name": "Red Wine Vinegar",
+                "amount_g": 5
+              },
+              {
+                "name": "Oregano",
+                "amount_g": 1
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\": \"Greek Salad\", \"cuisine\": \"Greek\", \"ingredients\": [{\"name\": \"Arugula\", \"amount_g\": 50}, {\"name\": \"Tomatoes (cherry)\", \"amount_g\": 50}, {\"name\": \"Cucumber\", \"amount_g\": 50}, {\"name\": \"Red Onion\", \"amount_g\": 10}, {\"name\": \"Feta Cheese\", \"amount_g\": 75}, {\"name\": \"Kalamata Olives\", \"amount_g\": 15}, {\"name\": \"Olive Oil\", \"amount_g\": 5}, {\"name\": \"Red Wine Vinegar\", \"amount_g\": 5}, {\"name\": \"Oregano\", \"amount_g\": 1}]}]}\n```",
+        "label_file": "07-salad.json"
+      },
+      {
+        "composite": 0.41575670498084294,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.5,
+        "ingredient_precision": 0.6,
+        "weight_mae_score": 0.29861111111111116,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Pasta with Pesto",
+            "cuisine": "Italian",
+            "ingredients": [
+              {
+                "name": "Spaghetti",
+                "amount_g": 100
+              },
+              {
+                "name": "Pesto",
+                "amount_g": 30
+              },
+              {
+                "name": "Cherry Tomatoes",
+                "amount_g": 50
+              },
+              {
+                "name": "Spinach",
+                "amount_g": 20
+              },
+              {
+                "name": "Feta Cheese",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Pasta with Pesto\",\n      \"cuisine\": \"Italian\",\n      \"ingredients\": [\n        {\n          \"name\": \"Spaghetti\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Pesto\",\n          \"amount_g\": 30\n        },\n        {\n          \"name\": \"Cherry Tomatoes\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Spinach\",\n          \"amount_g\": 20\n        },\n        {\n          \"name\": \"Feta Cheese\",\n          \"amount_g\": 10\n        ",
+        "label_file": "08-pasta.json"
+      },
+      {
+        "composite": 0.049499999999999995,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.3333333333333333,
+        "ingredient_precision": 0.3333333333333333,
+        "weight_mae_score": 0.1416666666666666,
+        "weight_hallucination_penalty": 0.1,
+        "pred_dishes": [
+          {
+            "name": "Avocado Toast with Eggs",
+            "cuisine": "Western",
+            "ingredients": [
+              {
+                "name": "Whole Wheat Toast",
+                "amount_g": 60
+              },
+              {
+                "name": "Avocado",
+                "amount_g": 100
+              },
+              {
+                "name": "Eggs",
+                "amount_g": 75
+              },
+              {
+                "name": "Pumpkin Seeds",
+                "amount_g": 10
+              },
+              {
+                "name": "Salt",
+                "amount_g": 0.5
+              },
+              {
+                "name": "Pepper",
+                "amount_g": 0.2
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Avocado Toast with Eggs\",\n      \"cuisine\": \"Western\",\n      \"ingredients\": [\n        {\n          \"name\": \"Whole Wheat Toast\",\n          \"amount_g\": 60\n        },\n        {\n          \"name\": \"Avocado\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Eggs\",\n          \"amount_g\": 75\n        },\n        {\n          \"name\": \"Pumpkin Seeds\",\n          \"amount_g\": 10\n        },\n        {\n          \"name\": \"Salt\",\n          \"amount_g\": 0.5\n  ",
+        "label_file": "09-eggs.json"
+      },
+      {
+        "composite": 0.5277777777777778,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.3333333333333333,
+        "ingredient_precision": 0.3333333333333333,
+        "weight_mae_score": 0.30555555555555547,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Sandwich",
+            "cuisine": "American",
+            "ingredients": [
+              {
+                "name": "Bread",
+                "amount_g": 150
+              },
+              {
+                "name": "Beef",
+                "amount_g": 100
+              },
+              {
+                "name": "Cheese",
+                "amount_g": 50
+              },
+              {
+                "name": "Lettuce",
+                "amount_g": 20
+              },
+              {
+                "name": "Carrots",
+                "amount_g": 10
+              },
+              {
+                "name": "Sauce",
+                "amount_g": 15
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\": \"Sandwich\", \"cuisine\": \"American\", \"ingredients\": [{\"name\": \"Bread\", \"amount_g\": 150}, {\"name\": \"Beef\", \"amount_g\": 100}, {\"name\": \"Cheese\", \"amount_g\": 50}, {\"name\": \"Lettuce\", \"amount_g\": 20}, {\"name\": \"Carrots\", \"amount_g\": 10}, {\"name\": \"Sauce\", \"amount_g\": 15}]}],\"cuisine\": \"American\"}\n```",
+        "label_file": "10-steak-sandwich.json"
+      },
+      {
+        "composite": 0.4729166666666667,
+        "json_parsed": true,
+        "dish_name_f1": 0.5,
+        "ingredient_recall": 0.5,
+        "ingredient_precision": 0.1875,
+        "weight_mae_score": 0.33333333333333337,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Butter Chicken",
+            "cuisine": "Indian",
+            "ingredients": [
+              {
+                "name": "Chicken",
+                "amount_g": 200
+              },
+              {
+                "name": "Tomatoes",
+                "amount_g": 200
+              },
+              {
+                "name": "Butter",
+                "amount_g": 50
+              },
+              {
+                "name": "Cream",
+                "amount_g": 50
+              },
+              {
+                "name": "Garam Masala",
+                "amount_g": 5
+              },
+              {
+                "name": "Ginger-Garlic Paste",
+                "amount_g": 10
+              },
+              {
+                "name": "Yogurt",
+                "amount_g": 50
+              },
+              {
+                "name": "Spices (Turmeric, Chili Powder, Coriander)",
+                "amount_g": 5
+              },
+              {
+                "name": "Fresh Cilantro",
+                "amount_g": 10
+              },
+              {
+                "name": "Onion",
+                "amount_g": 50
+              }
+            ]
+          },
+          {
+            "name": "Naan Bread",
+            "cuisine": "Indian",
+            "ingredients": [
+              {
+                "name": "Flour (All-purpose)",
+                "amount_g": 120
+              },
+              {
+                "name": "Yeast",
+                "amount_g": 5
+              },
+              {
+                "name": "Yogurt",
+                "amount_g": 40
+              },
+              {
+                "name": "Milk",
+                "amount_g": 50
+              },
+              {
+                "name": "Butter",
+                "amount_g": 20
+              },
+              {
+                "name": "Salt",
+                "amount_g": 2
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Butter Chicken\",\n      \"cuisine\": \"Indian\",\n      \"ingredients\": [\n        {\n          \"name\": \"Chicken\",\n          \"amount_g\": 200\n        },\n        {\n          \"name\": \"Tomatoes\",\n          \"amount_g\": 200\n        },\n        {\n          \"name\": \"Butter\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Cream\",\n          \"amount_g\": 50\n        },\n        {\n          \"name\": \"Garam Masala\",\n          \"amount_g\": 5\n        },\n        {",
+        "label_file": "11-curry.json"
+      },
+      {
+        "composite": 0.07615726227795193,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.9090909090909091,
+        "ingredient_precision": 0.7142857142857143,
+        "weight_mae_score": 0.11742424242424232,
+        "weight_hallucination_penalty": 0.1,
+        "pred_dishes": [
+          {
+            "name": "Fruit Platter",
+            "cuisine": "None",
+            "ingredients": [
+              {
+                "name": "Pineapple",
+                "amount_g": 450
+              },
+              {
+                "name": "Strawberries",
+                "amount_g": 200
+              },
+              {
+                "name": "Raspberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Blueberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Blackberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Mango",
+                "amount_g": 200
+              },
+              {
+                "name": "Grapefruit",
+                "amount_g": 150
+              },
+              {
+                "name": "Orange",
+                "amount_g": 150
+              },
+              {
+                "name": "Kiwi",
+                "amount_g": 100
+              },
+              {
+                "name": "Lime",
+                "amount_g": 50
+              },
+              {
+                "name": "Peach",
+                "amount_g": 100
+              },
+              {
+                "name": "Apple",
+                "amount_g": 100
+              },
+              {
+                "name": "Mint",
+                "amount_g": 20
+              },
+              {
+                "name": "Cranberries",
+                "amount_g": 50
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\n  \"dishes\": [\n    {\n      \"name\": \"Fruit Platter\",\n      \"cuisine\": \"None\",\n      \"ingredients\": [\n        {\n          \"name\": \"Pineapple\",\n          \"amount_g\": 450\n        },\n        {\n          \"name\": \"Strawberries\",\n          \"amount_g\": 200\n        },\n        {\n          \"name\": \"Raspberries\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Blueberries\",\n          \"amount_g\": 100\n        },\n        {\n          \"name\": \"Blackberries\",\n          \"amount_g\": 100\n  ",
+        "label_file": "12-fruit.json"
+      }
+    ]
+  },
+  "v5-few-shot": {
+    "composite": 0.612,
+    "dish_name_f1": 0.583,
+    "ingredient_recall": 0.691,
+    "ingredient_precision": 0.713,
+    "weight_mae_score": 0.475,
+    "json_parse_rate": 1.0,
+    "avg_latency": 2.8,
+    "per_example": [
+      {
+        "composite": 0.8439247311827957,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.8333333333333334,
+        "ingredient_precision": 0.7142857142857143,
+        "weight_mae_score": 0.6833333333333333,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Kimchi Fried Rice",
+            "cuisine": "Korean",
+            "ingredients": [
+              {
+                "name": "Cooked white rice",
+                "amount_g": 200
+              },
+              {
+                "name": "Kimchi",
+                "amount_g": 80
+              },
+              {
+                "name": "Pork belly",
+                "amount_g": 60
+              },
+              {
+                "name": "Soy sauce",
+                "amount_g": 10
+              },
+              {
+                "name": "Green onion",
+                "amount_g": 10
+              },
+              {
+                "name": "Egg",
+                "amount_g": 40
+              },
+              {
+                "name": "Sesame oil",
+                "amount_g": 5
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Kimchi Fried Rice\",\"cuisine\":\"Korean\",\"ingredients\":[{\"name\":\"Cooked white rice\",\"amount_g\":200},{\"name\":\"Kimchi\",\"amount_g\":80},{\"name\":\"Pork belly\",\"amount_g\":60},{\"name\":\"Soy sauce\",\"amount_g\":10},{\"name\":\"Green onion\",\"amount_g\":10},{\"name\":\"Egg\",\"amount_g\":40},{\"name\":\"Sesame oil\",\"amount_g\":5}]} ]}\n```",
+        "label_file": "01-fried-rice.json"
+      },
+      {
+        "composite": 0.5883333333333333,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.8,
+        "ingredient_precision": 0.8,
+        "weight_mae_score": 0.44166666666666665,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Pizza",
+            "cuisine": "Italian",
+            "ingredients": [
+              {
+                "name": "Pizza dough",
+                "amount_g": 200
+              },
+              {
+                "name": "Tomato sauce",
+                "amount_g": 50
+              },
+              {
+                "name": "Mozzarella cheese",
+                "amount_g": 100
+              },
+              {
+                "name": "Pepperoni",
+                "amount_g": 50
+              },
+              {
+                "name": "Red peppers",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Pizza\",\"cuisine\":\"Italian\",\"ingredients\":[{\"name\":\"Pizza dough\",\"amount_g\":200},{\"name\":\"Tomato sauce\",\"amount_g\":50},{\"name\":\"Mozzarella cheese\",\"amount_g\":100},{\"name\":\"Pepperoni\",\"amount_g\":50},{\"name\":\"Red peppers\",\"amount_g\":20}]}],\"cuisine\":\"Italian\"}",
+        "label_file": "02-pizza.json"
+      },
+      {
+        "composite": 0.8227443609022556,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.75,
+        "ingredient_precision": 1.0,
+        "weight_mae_score": 0.6696428571428572,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Ramen",
+            "cuisine": "Japanese",
+            "ingredients": [
+              {
+                "name": "Ramen noodles",
+                "amount_g": 150
+              },
+              {
+                "name": "Pork broth",
+                "amount_g": 300
+              },
+              {
+                "name": "Chashu pork",
+                "amount_g": 100
+              },
+              {
+                "name": "Soft-boiled egg",
+                "amount_g": 50
+              },
+              {
+                "name": "Nori seaweed",
+                "amount_g": 5
+              },
+              {
+                "name": "Green onion",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Ramen\",\"cuisine\":\"Japanese\",\"ingredients\":[{\"name\":\"Ramen noodles\",\"amount_g\":150},{\"name\":\"Pork broth\",\"amount_g\":300},{\"name\":\"Chashu pork\",\"amount_g\":100},{\"name\":\"Soft-boiled egg\",\"amount_g\":50},{\"name\":\"Nori seaweed\",\"amount_g\":5},{\"name\":\"Green onion\",\"amount_g\":10}]}]}\n```",
+        "label_file": "03-ramen.json"
+      },
+      {
+        "composite": 0.4938048245614035,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.625,
+        "ingredient_precision": 0.8333333333333334,
+        "weight_mae_score": 0.34895833333333337,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Sushi Roll",
+            "cuisine": "Japanese",
+            "ingredients": [
+              {
+                "name": "Sushi Rice",
+                "amount_g": 60
+              },
+              {
+                "name": "Seaweed (Nori)",
+                "amount_g": 10
+              },
+              {
+                "name": "Cucumber",
+                "amount_g": 10
+              },
+              {
+                "name": "Cream Cheese",
+                "amount_g": 30
+              },
+              {
+                "name": "Salmon",
+                "amount_g": 30
+              },
+              {
+                "name": "Sesame Seeds",
+                "amount_g": 5
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\": \"Sushi Roll\", \"cuisine\": \"Japanese\", \"ingredients\":[{\"name\": \"Sushi Rice\", \"amount_g\": 60},{\"name\": \"Seaweed (Nori)\", \"amount_g\": 10},{\"name\": \"Cucumber\", \"amount_g\": 10},{\"name\": \"Cream Cheese\", \"amount_g\": 30},{\"name\": \"Salmon\", \"amount_g\": 30},{\"name\": \"Sesame Seeds\", \"amount_g\": 5}]}]}\n```",
+        "label_file": "04-sushi.json"
+      },
+      {
+        "composite": 0.7857142857142856,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.7142857142857143,
+        "ingredient_precision": 0.7142857142857143,
+        "weight_mae_score": 0.6428571428571428,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Cheeseburger",
+            "cuisine": "American",
+            "ingredients": [
+              {
+                "name": "Beef patty",
+                "amount_g": 150
+              },
+              {
+                "name": "Sesame bun",
+                "amount_g": 120
+              },
+              {
+                "name": "Cheese",
+                "amount_g": 40
+              },
+              {
+                "name": "Lettuce",
+                "amount_g": 20
+              },
+              {
+                "name": "Tomato",
+                "amount_g": 50
+              },
+              {
+                "name": "Bacon",
+                "amount_g": 30
+              },
+              {
+                "name": "Mayonnaise",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\": \"Cheeseburger\", \"cuisine\": \"American\", \"ingredients\":[{\"name\": \"Beef patty\",\"amount_g\":150},{\"name\": \"Sesame bun\",\"amount_g\":120},{\"name\": \"Cheese\",\"amount_g\":40},{\"name\": \"Lettuce\",\"amount_g\":20},{\"name\": \"Tomato\",\"amount_g\":50},{\"name\": \"Bacon\",\"amount_g\":30},{\"name\": \"Mayonnaise\",\"amount_g\":20}]} ]}\n```",
+        "label_file": "05-burger.json"
+      },
+      {
+        "composite": 0.6737037037037036,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.8888888888888888,
+        "ingredient_precision": 0.8888888888888888,
+        "weight_mae_score": 0.6462962962962963,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Quinoa Bowl",
+            "cuisine": "Mediterranean",
+            "ingredients": [
+              {
+                "name": "Quinoa",
+                "amount_g": 150
+              },
+              {
+                "name": "Broccoli",
+                "amount_g": 80
+              },
+              {
+                "name": "Carrots",
+                "amount_g": 70
+              },
+              {
+                "name": "Zucchini",
+                "amount_g": 60
+              },
+              {
+                "name": "Brussels Sprouts",
+                "amount_g": 50
+              },
+              {
+                "name": "Red Bell Pepper",
+                "amount_g": 40
+              },
+              {
+                "name": "Cherry Tomatoes",
+                "amount_g": 30
+              },
+              {
+                "name": "Lime",
+                "amount_g": 10
+              },
+              {
+                "name": "Ginger",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Quinoa Bowl\",\"cuisine\":\"Mediterranean\",\"ingredients\":[{\"name\":\"Quinoa\",\"amount_g\":150},{\"name\":\"Broccoli\",\"amount_g\":80},{\"name\":\"Carrots\",\"amount_g\":70},{\"name\":\"Zucchini\",\"amount_g\":60},{\"name\":\"Brussels Sprouts\",\"amount_g\":50},{\"name\":\"Red Bell Pepper\",\"amount_g\":40},{\"name\":\"Cherry Tomatoes\",\"amount_g\":30},{\"name\":\"Lime\",\"amount_g\":10},{\"name\":\"Ginger\",\"amount_g\":10}]}\n```",
+        "label_file": "06-veggie-bowl.json"
+      },
+      {
+        "composite": 0.9088235294117647,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.8571428571428571,
+        "ingredient_precision": 1.0,
+        "weight_mae_score": 0.8571428571428572,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Greek Salad",
+            "cuisine": "Mediterranean",
+            "ingredients": [
+              {
+                "name": "Frisee Lettuce",
+                "amount_g": 60
+              },
+              {
+                "name": "Feta Cheese",
+                "amount_g": 50
+              },
+              {
+                "name": "Cherry Tomatoes",
+                "amount_g": 40
+              },
+              {
+                "name": "Kalamata Olives",
+                "amount_g": 25
+              },
+              {
+                "name": "Red Bell Pepper",
+                "amount_g": 30
+              },
+              {
+                "name": "Olive Oil",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Greek Salad\",\"cuisine\":\"Mediterranean\",\"ingredients\":[{\"name\":\"Frisee Lettuce\",\"amount_g\":60},{\"name\":\"Feta Cheese\",\"amount_g\":50},{\"name\":\"Cherry Tomatoes\",\"amount_g\":40},{\"name\":\"Kalamata Olives\",\"amount_g\":25},{\"name\":\"Red Bell Pepper\",\"amount_g\":30},{\"name\":\"Olive Oil\",\"amount_g\":10}]} ]}\n```",
+        "label_file": "07-salad.json"
+      },
+      {
+        "composite": 0.5177681992337164,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.6666666666666666,
+        "ingredient_precision": 0.8,
+        "weight_mae_score": 0.3819444444444444,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Pasta with Pesto",
+            "cuisine": "Italian",
+            "ingredients": [
+              {
+                "name": "Spaghetti",
+                "amount_g": 100
+              },
+              {
+                "name": "Pesto",
+                "amount_g": 30
+              },
+              {
+                "name": "Cherry Tomatoes",
+                "amount_g": 50
+              },
+              {
+                "name": "Mozzarella Cheese",
+                "amount_g": 30
+              },
+              {
+                "name": "Spinach",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Pasta with Pesto\",\"cuisine\":\"Italian\",\"ingredients\":[{\"name\":\"Spaghetti\",\"amount_g\":100},{\"name\":\"Pesto\",\"amount_g\":30},{\"name\":\"Cherry Tomatoes\",\"amount_g\":50},{\"name\":\"Mozzarella Cheese\",\"amount_g\":30},{\"name\":\"Spinach\",\"amount_g\":20}]}],\"total_grams\":380}\n```",
+        "label_file": "08-pasta.json"
+      },
+      {
+        "composite": 0.4915229885057471,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.3333333333333333,
+        "ingredient_precision": 0.4,
+        "weight_mae_score": 0.10416666666666663,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Avocado Toast with Egg",
+            "cuisine": "Western",
+            "ingredients": [
+              {
+                "name": "toast",
+                "amount_g": 60
+              },
+              {
+                "name": "avocado",
+                "amount_g": 150
+              },
+              {
+                "name": "egg",
+                "amount_g": 70
+              },
+              {
+                "name": "pistachios",
+                "amount_g": 10
+              },
+              {
+                "name": "black pepper",
+                "amount_g": 1
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Avocado Toast with Egg\",\"cuisine\":\"Western\",\"ingredients\":[{\"name\":\"toast\",\"amount_g\":60},{\"name\":\"avocado\",\"amount_g\":150},{\"name\":\"egg\",\"amount_g\":70},{\"name\":\"pistachios\",\"amount_g\":10},{\"name\":\"black pepper\",\"amount_g\":1}]} ]}\n```",
+        "label_file": "09-eggs.json"
+      },
+      {
+        "composite": 0.546236559139785,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.3333333333333333,
+        "ingredient_precision": 0.2857142857142857,
+        "weight_mae_score": 0.41666666666666663,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Sandwich",
+            "cuisine": "American",
+            "ingredients": [
+              {
+                "name": "Sourdough bread",
+                "amount_g": 150
+              },
+              {
+                "name": "Beef",
+                "amount_g": 100
+              },
+              {
+                "name": "Cheese",
+                "amount_g": 50
+              },
+              {
+                "name": "Lettuce",
+                "amount_g": 30
+              },
+              {
+                "name": "Carrots",
+                "amount_g": 20
+              },
+              {
+                "name": "Arugula",
+                "amount_g": 20
+              },
+              {
+                "name": "Spicy Mayo",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\": \"Sandwich\", \"cuisine\": \"American\", \"ingredients\":[{\"name\": \"Sourdough bread\",\"amount_g\":150},{\"name\": \"Beef\",\"amount_g\":100},{\"name\": \"Cheese\",\"amount_g\":50},{\"name\": \"Lettuce\",\"amount_g\":30},{\"name\": \"Carrots\",\"amount_g\":20},{\"name\": \"Arugula\",\"amount_g\":20},{\"name\": \"Spicy Mayo\",\"amount_g\":10}]}],\"metadata\": {\"plate_size_cm\": 25, \"cup_size_ml\": 240, \"fist_size_g\": 150}}]}\n```",
+        "label_file": "10-steak-sandwich.json"
+      },
+      {
+        "composite": 0.44999999999999996,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.6666666666666666,
+        "ingredient_precision": 0.36363636363636365,
+        "weight_mae_score": 0.25,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Butter Chicken",
+            "cuisine": "Indian",
+            "ingredients": [
+              {
+                "name": "chicken",
+                "amount_g": 200
+              },
+              {
+                "name": "tomato puree",
+                "amount_g": 100
+              },
+              {
+                "name": "butter",
+                "amount_g": 50
+              },
+              {
+                "name": "cream",
+                "amount_g": 50
+              },
+              {
+                "name": "onion",
+                "amount_g": 40
+              },
+              {
+                "name": "ginger-garlic paste",
+                "amount_g": 10
+              },
+              {
+                "name": "garam masala",
+                "amount_g": 5
+              },
+              {
+                "name": "cumin",
+                "amount_g": 5
+              },
+              {
+                "name": "coriander",
+                "amount_g": 5
+              },
+              {
+                "name": "red chili powder",
+                "amount_g": 20
+              },
+              {
+                "name": "cilantro",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Butter Chicken\",\"cuisine\":\"Indian\",\"ingredients\":[{\"name\":\"chicken\",\"amount_g\":200},{\"name\":\"tomato puree\",\"amount_g\":100},{\"name\":\"butter\",\"amount_g\":50},{\"name\":\"cream\",\"amount_g\":50},{\"name\":\"onion\",\"amount_g\":40},{\"name\":\"ginger-garlic paste\",\"amount_g\":10},{\"name\":\"garam masala\",\"amount_g\":5},{\"name\":\"cumin\",\"amount_g\":5},{\"name\":\"coriander\",\"amount_g\":5},{\"name\":\"red chili powder\",\"amount_g\":20},{\"name\":\"cilantro\",\"amount_g\":10}]}]}\n```",
+        "label_file": "11-curry.json"
+      },
+      {
+        "composite": 0.22664772727272725,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.8181818181818182,
+        "ingredient_precision": 0.75,
+        "weight_mae_score": 0.2575757575757577,
+        "weight_hallucination_penalty": 0.3,
+        "pred_dishes": [
+          {
+            "name": "Fruit Platter",
+            "cuisine": "American",
+            "ingredients": [
+              {
+                "name": "Pineapple",
+                "amount_g": 300
+              },
+              {
+                "name": "Strawberries",
+                "amount_g": 150
+              },
+              {
+                "name": "Raspberries",
+                "amount_g": 75
+              },
+              {
+                "name": "Blueberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Blackberries",
+                "amount_g": 100
+              },
+              {
+                "name": "Orange",
+                "amount_g": 150
+              },
+              {
+                "name": "Grapefruit",
+                "amount_g": 100
+              },
+              {
+                "name": "Mango",
+                "amount_g": 150
+              },
+              {
+                "name": "Kiwi",
+                "amount_g": 75
+              },
+              {
+                "name": "Lime",
+                "amount_g": 50
+              },
+              {
+                "name": "Peach",
+                "amount_g": 100
+              },
+              {
+                "name": "Apple",
+                "amount_g": 100
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Fruit Platter\",\"cuisine\":\"American\",\"ingredients\":[{\"name\":\"Pineapple\",\"amount_g\":300},{\"name\":\"Strawberries\",\"amount_g\":150},{\"name\":\"Raspberries\",\"amount_g\":75},{\"name\":\"Blueberries\",\"amount_g\":100},{\"name\":\"Blackberries\",\"amount_g\":100},{\"name\":\"Orange\",\"amount_g\":150},{\"name\":\"Grapefruit\",\"amount_g\":100},{\"name\":\"Mango\",\"amount_g\":150},{\"name\":\"Kiwi\",\"amount_g\":75},{\"name\":\"Lime\",\"amount_g\":50},{\"name\":\"Peach\",\"amount_g\":100},{\"name\":\"Apple\",\"amount_g\":100}]}\n```",
+        "label_file": "12-fruit.json"
+      }
+    ]
+  },
+  "v6-few-shot-compact": {
+    "composite": 0.495,
+    "dish_name_f1": 0.5,
+    "ingredient_recall": 0.631,
+    "ingredient_precision": 0.588,
+    "weight_mae_score": 0.408,
+    "json_parse_rate": 0.9166666666666666,
+    "avg_latency": 2.8,
+    "per_example": [
+      {
+        "composite": 0.24303124999999998,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.8333333333333334,
+        "ingredient_precision": 0.625,
+        "weight_mae_score": 0.5583333333333333,
+        "weight_hallucination_penalty": 0.3,
+        "pred_dishes": [
+          {
+            "name": "Kimchi Fried Rice",
+            "cuisine": "Korean",
+            "ingredients": [
+              {
+                "name": "Cooked rice",
+                "amount_g": 200
+              },
+              {
+                "name": "Kimchi",
+                "amount_g": 50
+              },
+              {
+                "name": "Pork (diced)",
+                "amount_g": 60
+              },
+              {
+                "name": "Green onions",
+                "amount_g": 15
+              },
+              {
+                "name": "Egg",
+                "amount_g": 40
+              },
+              {
+                "name": "Gochujang",
+                "amount_g": 10
+              },
+              {
+                "name": "Soy sauce",
+                "amount_g": 5
+              },
+              {
+                "name": "Sesame oil",
+                "amount_g": 5
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Kimchi Fried Rice\",\"cuisine\":\"Korean\",\"ingredients\":[{\"name\":\"Cooked rice\",\"amount_g\":200},{\"name\":\"Kimchi\",\"amount_g\":50},{\"name\":\"Pork (diced)\",\"amount_g\":60},{\"name\":\"Green onions\",\"amount_g\":15},{\"name\":\"Egg\",\"amount_g\":40},{\"name\":\"Gochujang\",\"amount_g\":10},{\"name\":\"Soy sauce\",\"amount_g\":5},{\"name\":\"Sesame oil\",\"amount_g\":5}]}\n```",
+        "label_file": "01-fried-rice.json"
+      },
+      {
+        "composite": 0.5983333333333333,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.8,
+        "ingredient_precision": 0.8,
+        "weight_mae_score": 0.4916666666666667,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Pizza",
+            "cuisine": "Italian",
+            "ingredients": [
+              {
+                "name": "pizza dough",
+                "amount_g": 200
+              },
+              {
+                "name": "tomato sauce",
+                "amount_g": 50
+              },
+              {
+                "name": "mozzarella cheese",
+                "amount_g": 150
+              },
+              {
+                "name": "pepperoni",
+                "amount_g": 50
+              },
+              {
+                "name": "bell peppers",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "{\"dishes\":[{\"name\":\"Pizza\",\"cuisine\":\"Italian\",\"ingredients\":[{\"name\":\"pizza dough\",\"amount_g\":200},{\"name\":\"tomato sauce\",\"amount_g\":50},{\"name\":\"mozzarella cheese\",\"amount_g\":150},{\"name\":\"pepperoni\",\"amount_g\":50},{\"name\":\"bell peppers\",\"amount_g\":20}]}\"]}",
+        "label_file": "02-pizza.json"
+      },
+      {
+        "composite": 0.8169093406593406,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.75,
+        "ingredient_precision": 0.8571428571428571,
+        "weight_mae_score": 0.6758928571428571,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Ramen",
+            "cuisine": "Japanese",
+            "ingredients": [
+              {
+                "name": "ramen noodles",
+                "amount_g": 150
+              },
+              {
+                "name": "pork broth",
+                "amount_g": 300
+              },
+              {
+                "name": "chashu pork",
+                "amount_g": 80
+              },
+              {
+                "name": "soft-boiled egg",
+                "amount_g": 60
+              },
+              {
+                "name": "nori seaweed",
+                "amount_g": 5
+              },
+              {
+                "name": "green onion",
+                "amount_g": 10
+              },
+              {
+                "name": "menma",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "{\"dishes\":[{\"name\":\"Ramen\",\"cuisine\":\"Japanese\",\"ingredients\":[{\"name\":\"ramen noodles\",\"amount_g\":150},{\"name\":\"pork broth\",\"amount_g\":300},{\"name\":\"chashu pork\",\"amount_g\":80},{\"name\":\"soft-boiled egg\",\"amount_g\":60},{\"name\":\"nori seaweed\",\"amount_g\":5},{\"name\":\"green onion\",\"amount_g\":10},{\"name\":\"menma\",\"amount_g\":20}]}",
+        "label_file": "03-ramen.json"
+      },
+      {
+        "composite": 0.6454166666666666,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.875,
+        "ingredient_precision": 0.875,
+        "weight_mae_score": 0.5395833333333333,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Sushi Roll",
+            "cuisine": "Japanese",
+            "ingredients": [
+              {
+                "name": "Sushi Rice",
+                "amount_g": 150
+              },
+              {
+                "name": "Nori Seaweed",
+                "amount_g": 2
+              },
+              {
+                "name": "Cream Cheese",
+                "amount_g": 30
+              },
+              {
+                "name": "Salmon",
+                "amount_g": 40
+              },
+              {
+                "name": "Cucumber",
+                "amount_g": 10
+              },
+              {
+                "name": "Sesame Seeds",
+                "amount_g": 5
+              },
+              {
+                "name": "Soy Sauce",
+                "amount_g": 10
+              },
+              {
+                "name": "Lemon",
+                "amount_g": 5
+              }
+            ]
+          }
+        ],
+        "raw_output": "{\"dishes\":[{\"name\":\"Sushi Roll\",\"cuisine\":\"Japanese\",\"ingredients\":[{\"name\":\"Sushi Rice\",\"amount_g\":150},{\"name\":\"Nori Seaweed\",\"amount_g\":2},{\"name\":\"Cream Cheese\",\"amount_g\":30},{\"name\":\"Salmon\",\"amount_g\":40},{\"name\":\"Cucumber\",\"amount_g\":10},{\"name\":\"Sesame Seeds\",\"amount_g\":5},{\"name\":\"Soy Sauce\",\"amount_g\":10},{\"name\":\"Lemon\",\"amount_g\":5}]}",
+        "label_file": "04-sushi.json"
+      },
+      {
+        "composite": 0.5857142857142856,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.7142857142857143,
+        "ingredient_precision": 0.7142857142857143,
+        "weight_mae_score": 0.6428571428571428,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Burger",
+            "cuisine": "American",
+            "ingredients": [
+              {
+                "name": "beef patty",
+                "amount_g": 150
+              },
+              {
+                "name": "sesame bun",
+                "amount_g": 120
+              },
+              {
+                "name": "cheese",
+                "amount_g": 40
+              },
+              {
+                "name": "tomato",
+                "amount_g": 30
+              },
+              {
+                "name": "lettuce",
+                "amount_g": 20
+              },
+              {
+                "name": "bacon",
+                "amount_g": 30
+              },
+              {
+                "name": "mayonnaise",
+                "amount_g": 20
+              }
+            ]
+          }
+        ],
+        "raw_output": "{\"dishes\":[{\"name\":\"Burger\",\"cuisine\":\"American\",\"ingredients\":[{\"name\":\"beef patty\",\"amount_g\":150},{\"name\":\"sesame bun\",\"amount_g\":120},{\"name\":\"cheese\",\"amount_g\":40},{\"name\":\"tomato\",\"amount_g\":30},{\"name\":\"lettuce\",\"amount_g\":20},{\"name\":\"bacon\",\"amount_g\":30},{\"name\":\"mayonnaise\",\"amount_g\":20}]}",
+        "label_file": "05-burger.json"
+      },
+      {
+        "composite": 0.5818518518518518,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.7777777777777778,
+        "ingredient_precision": 0.7777777777777778,
+        "weight_mae_score": 0.4648148148148148,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Buddha Bowl",
+            "cuisine": "Mediterranean",
+            "ingredients": [
+              {
+                "name": "quinoa",
+                "amount_g": 100
+              },
+              {
+                "name": "broccoli",
+                "amount_g": 80
+              },
+              {
+                "name": "sweet potato",
+                "amount_g": 100
+              },
+              {
+                "name": "red bell pepper",
+                "amount_g": 60
+              },
+              {
+                "name": "zucchini",
+                "amount_g": 70
+              },
+              {
+                "name": "Brussels sprouts",
+                "amount_g": 50
+              },
+              {
+                "name": "cherry tomatoes",
+                "amount_g": 30
+              },
+              {
+                "name": "lime",
+                "amount_g": 10
+              },
+              {
+                "name": "ginger",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Buddha Bowl\",\"cuisine\":\"Mediterranean\",\"ingredients\":[{\"name\":\"quinoa\",\"amount_g\":100},{\"name\":\"broccoli\",\"amount_g\":80},{\"name\":\"sweet potato\",\"amount_g\":100},{\"name\":\"red bell pepper\",\"amount_g\":60},{\"name\":\"zucchini\",\"amount_g\":70},{\"name\":\"Brussels sprouts\",\"amount_g\":50},{\"name\":\"cherry tomatoes\",\"amount_g\":30},{\"name\":\"lime\",\"amount_g\":10},{\"name\":\"ginger\",\"amount_g\":10}]}\n```",
+        "label_file": "06-veggie-bowl.json"
+      },
+      {
+        "composite": 0.0,
+        "json_parsed": false,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.0,
+        "ingredient_precision": 0.0,
+        "weight_mae_score": 0.0,
+        "pred_dishes": null,
+        "raw_output": "```json{\"dishes\":[{\"name\":\"greek salad\",\"cuisine\":\"Mediterranean\",\"ingredients\":[{\"name\":\"frisee lettuce\",\"amount_g\":60},{\"name\":\"feta cheese\",\"amount_g\":50},{\"name\":\"cherry tomatoes\",\"amount_g\":40},{\"name\":\"kalamata olives\",\"amount_g\":25},{\"name\":\"red bell pepper\",\"amount_g\":30},{\"name\":\"olive oil\",\"amount_g\":10}]} ]}```",
+        "label_file": "07-salad.json"
+      },
+      {
+        "composite": 0.21458333333333332,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.6666666666666666,
+        "ingredient_precision": 0.6666666666666666,
+        "weight_mae_score": 0.4097222222222222,
+        "weight_hallucination_penalty": 0.3,
+        "pred_dishes": [
+          {
+            "name": "Spaghetti with Pesto",
+            "cuisine": "Italian",
+            "ingredients": [
+              {
+                "name": "spaghetti",
+                "amount_g": 100
+              },
+              {
+                "name": "pesto",
+                "amount_g": 30
+              },
+              {
+                "name": "cherry tomatoes",
+                "amount_g": 50
+              },
+              {
+                "name": "fresh spinach",
+                "amount_g": 20
+              },
+              {
+                "name": "feta cheese",
+                "amount_g": 30
+              },
+              {
+                "name": "olive oil",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "{\"dishes\":[{\"name\":\"Spaghetti with Pesto\",\"cuisine\":\"Italian\",\"ingredients\":[{\"name\":\"spaghetti\",\"amount_g\":100},{\"name\":\"pesto\",\"amount_g\":30},{\"name\":\"cherry tomatoes\",\"amount_g\":50},{\"name\":\"fresh spinach\",\"amount_g\":20},{\"name\":\"feta cheese\",\"amount_g\":30},{\"name\":\"olive oil\",\"amount_g\":10}]}",
+        "label_file": "08-pasta.json"
+      },
+      {
+        "composite": 0.5123563218390805,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.3333333333333333,
+        "ingredient_precision": 0.4,
+        "weight_mae_score": 0.20833333333333337,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Avocado Toast with Eggs",
+            "cuisine": "Western",
+            "ingredients": [
+              {
+                "name": "toast",
+                "amount_g": 60
+              },
+              {
+                "name": "avocado",
+                "amount_g": 100
+              },
+              {
+                "name": "egg",
+                "amount_g": 70
+              },
+              {
+                "name": "pistachios",
+                "amount_g": 10
+              },
+              {
+                "name": "black pepper",
+                "amount_g": 1
+              }
+            ]
+          }
+        ],
+        "raw_output": "{\"dishes\":[{\"name\":\"Avocado Toast with Eggs\",\"cuisine\":\"Western\",\"ingredients\":[{\"name\":\"toast\",\"amount_g\":60},{\"name\":\"avocado\",\"amount_g\":100},{\"name\":\"egg\",\"amount_g\":70},{\"name\":\"pistachios\",\"amount_g\":10},{\"name\":\"black pepper\",\"amount_g\":1}]}",
+        "label_file": "09-eggs.json"
+      },
+      {
+        "composite": 0.5776881720430107,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.5,
+        "ingredient_precision": 0.42857142857142855,
+        "weight_mae_score": 0.16666666666666663,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "sandwich",
+            "cuisine": "American",
+            "ingredients": [
+              {
+                "name": "sourdough bread",
+                "amount_g": 250
+              },
+              {
+                "name": "beef",
+                "amount_g": 150
+              },
+              {
+                "name": "cheese",
+                "amount_g": 80
+              },
+              {
+                "name": "arugula",
+                "amount_g": 30
+              },
+              {
+                "name": "tomato",
+                "amount_g": 20
+              },
+              {
+                "name": "carrot",
+                "amount_g": 20
+              },
+              {
+                "name": "dressing",
+                "amount_g": 10
+              }
+            ]
+          }
+        ],
+        "raw_output": "{\"dishes\":[{\"name\":\"sandwich\",\"cuisine\":\"American\",\"ingredients\":[{\"name\":\"sourdough bread\",\"amount_g\":250},{\"name\":\"beef\",\"amount_g\":150},{\"name\":\"cheese\",\"amount_g\":80},{\"name\":\"arugula\",\"amount_g\":30},{\"name\":\"tomato\",\"amount_g\":20},{\"name\":\"carrot\",\"amount_g\":20},{\"name\":\"dressing\",\"amount_g\":10}]}",
+        "label_file": "10-steak-sandwich.json"
+      },
+      {
+        "composite": 0.3714912280701754,
+        "json_parsed": true,
+        "dish_name_f1": 0.0,
+        "ingredient_recall": 0.5,
+        "ingredient_precision": 0.21428571428571427,
+        "weight_mae_score": 0.29166666666666663,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Butter Chicken",
+            "cuisine": "Indian",
+            "ingredients": [
+              {
+                "name": "chicken",
+                "amount_g": 200
+              },
+              {
+                "name": "tomato puree",
+                "amount_g": 150
+              },
+              {
+                "name": "butter",
+                "amount_g": 50
+              },
+              {
+                "name": "cream",
+                "amount_g": 50
+              },
+              {
+                "name": "onion",
+                "amount_g": 80
+              },
+              {
+                "name": "garlic",
+                "amount_g": 10
+              },
+              {
+                "name": "ginger",
+                "amount_g": 10
+              },
+              {
+                "name": "ghee",
+                "amount_g": 10
+              },
+              {
+                "name": "cumin",
+                "amount_g": 2
+              },
+              {
+                "name": "coriander",
+                "amount_g": 2
+              },
+              {
+                "name": "turmeric",
+                "amount_g": 1
+              },
+              {
+                "name": "paprika",
+                "amount_g": 1
+              },
+              {
+                "name": "red chili powder",
+                "amount_g": 0.5
+              },
+              {
+                "name": "salt",
+                "amount_g": 1
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Butter Chicken\",\"cuisine\":\"Indian\",\"ingredients\":[{\"name\":\"chicken\",\"amount_g\":200},{\"name\":\"tomato puree\",\"amount_g\":150},{\"name\":\"butter\",\"amount_g\":50},{\"name\":\"cream\",\"amount_g\":50},{\"name\":\"onion\",\"amount_g\":80},{\"name\":\"garlic\",\"amount_g\":10},{\"name\":\"ginger\",\"amount_g\":10},{\"name\":\"ghee\",\"amount_g\":10},{\"name\":\"cumin\",\"amount_g\":2},{\"name\":\"coriander\",\"amount_g\":2},{\"name\":\"turmeric\",\"amount_g\":1},{\"name\":\"paprika\",\"amount_g\":1},{\"name\":\"red chili powder\",\"amou",
+        "label_file": "11-curry.json"
+      },
+      {
+        "composite": 0.7893460925039872,
+        "json_parsed": true,
+        "dish_name_f1": 1.0,
+        "ingredient_recall": 0.8181818181818182,
+        "ingredient_precision": 0.6923076923076923,
+        "weight_mae_score": 0.45151515151515154,
+        "weight_hallucination_penalty": 1.0,
+        "pred_dishes": [
+          {
+            "name": "Fruit Platter",
+            "cuisine": "Dessert",
+            "ingredients": [
+              {
+                "name": "Pineapple",
+                "amount_g": 200
+              },
+              {
+                "name": "Strawberries",
+                "amount_g": 150
+              },
+              {
+                "name": "Blueberries",
+                "amount_g": 50
+              },
+              {
+                "name": "Raspberries",
+                "amount_g": 50
+              },
+              {
+                "name": "Blackberries",
+                "amount_g": 60
+              },
+              {
+                "name": "Orange",
+                "amount_g": 100
+              },
+              {
+                "name": "Mango",
+                "amount_g": 150
+              },
+              {
+                "name": "Kiwi",
+                "amount_g": 80
+              },
+              {
+                "name": "Grapefruit",
+                "amount_g": 120
+              },
+              {
+                "name": "Lime",
+                "amount_g": 40
+              },
+              {
+                "name": "Peach",
+                "amount_g": 70
+              },
+              {
+                "name": "Apricot",
+                "amount_g": 60
+              },
+              {
+                "name": "Cantaloupe",
+                "amount_g": 100
+              }
+            ]
+          }
+        ],
+        "raw_output": "```json\n{\"dishes\":[{\"name\":\"Fruit Platter\",\"cuisine\":\"Dessert\",\"ingredients\":[{\"name\":\"Pineapple\",\"amount_g\":200},{\"name\":\"Strawberries\",\"amount_g\":150},{\"name\":\"Blueberries\",\"amount_g\":50},{\"name\":\"Raspberries\",\"amount_g\":50},{\"name\":\"Blackberries\",\"amount_g\":60},{\"name\":\"Orange\",\"amount_g\":100},{\"name\":\"Mango\",\"amount_g\":150},{\"name\":\"Kiwi\",\"amount_g\":80},{\"name\":\"Grapefruit\",\"amount_g\":120},{\"name\":\"Lime\",\"amount_g\":40},{\"name\":\"Peach\",\"amount_g\":70},{\"name\":\"Apricot\",\"amount_g\":60},{\"name\":\"",
+        "label_file": "12-fruit.json"
+      }
+    ]
+  }
+}

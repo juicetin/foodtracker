@@ -1,0 +1,20 @@
+{
+  "version": "v4",
+  "name": "step-by-step",
+  "date": "2026-03-28",
+  "commit": null,
+  "description": "Grid search winner (F2 + reward shaping). Chain-of-thought style with physical weight anchors. Best composite 0.437, recall 0.631, lowest weight hallucination rate.",
+  "deployed": false,
+  "grid_search_scores": {
+    "composite": 0.437,
+    "dish_name_f1": 0.472,
+    "ingredient_recall": 0.631,
+    "ingredient_precision": 0.539,
+    "weight_mae_score": 0.393,
+    "json_parse_rate": 1.0,
+    "avg_latency_s": 5.5
+  },
+  "food_prompt": "Look at this food photo. First identify each dish, then list ingredients with gram estimates.\nReturn only valid JSON:\n{\"dishes\":[{\"name\":string,\"cuisine\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\nFor weights: a standard dinner plate is ~25cm, a cup is ~240ml, a fist-sized portion is ~150g.",
+  "discovery_prompt": "List the food dishes visible in this image. Return only valid JSON — no extra text:\n{\"dishes\":[\"dish name 1\",\"dish name 2\"]}\nBe specific (e.g. \"pad thai\" not \"noodles\").",
+  "dish_detail_prompt": "For the dish \"{{dish_name}}\" visible in this image, list its ingredients with estimated gram weights. Return only valid JSON — no extra text:\n{\"name\":\"{{dish_name}}\",\"cuisine\":\"string\",\"recipe_name\":\"string\",\"ingredients\":[{\"name\":\"string\",\"amount_g\":number}]}\nFor weights: a standard dinner plate is ~25cm, a cup is ~240ml, a fist-sized portion is ~150g. Be specific with ingredient names."
+}

@@ -1,0 +1,13 @@
+{
+  "image": "../../../testassets/real-food/39-croissant.jpg",
+  "dishes": [
+    {
+      "name": "croissant",
+      "cuisine": "French",
+      "ingredients": [
+        { "name": "croissant", "amount_g": 70 },
+        { "name": "butter", "amount_g": 20 }
+      ]
+    }
+  ]
+}

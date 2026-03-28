@@ -1,0 +1,16 @@
+{
+    "image": "../../../testassets/real-food/51-mango-sticky-rice.jpg",
+    "dishes": [
+        {
+            "name": "mango sticky rice",
+            "cuisine": "Thai",
+            "ingredients": [
+                {"name": "glutinous sticky rice", "amount_g": 150},
+                {"name": "ripe mango", "amount_g": 120},
+                {"name": "coconut cream", "amount_g": 40},
+                {"name": "sugar", "amount_g": 15},
+                {"name": "salt", "amount_g": 1}
+            ]
+        }
+    ]
+}

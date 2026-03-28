@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/47-sashimi.jpg",
+  "dishes": [
+    {
+      "name": "sashimi",
+      "cuisine": "Japanese",
+      "ingredients": [
+        { "name": "salmon", "amount_g": 80 },
+        { "name": "tuna", "amount_g": 80 },
+        { "name": "yellowtail", "amount_g": 60 },
+        { "name": "shiso leaf", "amount_g": 3 },
+        { "name": "daikon", "amount_g": 15 },
+        { "name": "wasabi", "amount_g": 5 },
+        { "name": "soy sauce", "amount_g": 10 }
+      ]
+    }
+  ]
+}

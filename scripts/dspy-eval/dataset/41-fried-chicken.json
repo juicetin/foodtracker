@@ -1,0 +1,15 @@
+{
+  "image": "../../../testassets/real-food/41-fried-chicken.jpg",
+  "dishes": [
+    {
+      "name": "fried chicken",
+      "cuisine": "American/Southern",
+      "ingredients": [
+        { "name": "chicken pieces", "amount_g": 250 },
+        { "name": "flour breading", "amount_g": 30 },
+        { "name": "frying oil", "amount_g": 30 },
+        { "name": "lime", "amount_g": 15 }
+      ]
+    }
+  ]
+}

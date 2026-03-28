@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/27-tacos.jpg",
+  "dishes": [
+    {
+      "name": "street tacos",
+      "cuisine": "Mexican",
+      "ingredients": [
+        { "name": "corn tortillas", "amount_g": 90 },
+        { "name": "carne asada", "amount_g": 120 },
+        { "name": "cilantro", "amount_g": 5 },
+        { "name": "onion", "amount_g": 20 },
+        { "name": "lime", "amount_g": 10 },
+        { "name": "salsa", "amount_g": 15 }
+      ]
+    }
+  ]
+}

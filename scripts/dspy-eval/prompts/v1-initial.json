@@ -1,0 +1,11 @@
+{
+  "version": "v1",
+  "name": "initial",
+  "date": "2026-03-18",
+  "commit": "4bec4070",
+  "description": "First Gemini Nano prompt — basic food identification with ingredients list (no weights)",
+  "deployed": false,
+  "food_prompt": "Identify the food items in this image. Return JSON with this exact shape: { \"dishes\": [{ \"name\": string, \"cuisine\": string, \"ingredients\": string[] }] }. Only include dishes you can see. Be specific (e.g. \"pad thai\" not \"noodles\").",
+  "discovery_prompt": null,
+  "dish_detail_prompt": null
+}

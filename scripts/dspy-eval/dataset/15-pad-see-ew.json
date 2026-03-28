@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/15-pad-see-ew.jpg",
+  "dishes": [
+    {
+      "name": "pad see ew",
+      "cuisine": "Thai",
+      "ingredients": [
+        { "name": "wide rice noodles", "amount_g": 250 },
+        { "name": "Chinese broccoli", "amount_g": 80 },
+        { "name": "egg", "amount_g": 50 },
+        { "name": "dark soy sauce", "amount_g": 15 },
+        { "name": "garlic", "amount_g": 5 },
+        { "name": "vegetable oil", "amount_g": 10 }
+      ]
+    }
+  ]
+}

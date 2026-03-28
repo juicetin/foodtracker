@@ -1,0 +1,30 @@
+{
+  "image": "../../../testassets/real-food/34-tapas.jpg",
+  "dishes": [
+    {
+      "name": "patatas bravas",
+      "cuisine": "Spanish",
+      "ingredients": [
+        { "name": "potatoes", "amount_g": 150 },
+        { "name": "bravas sauce", "amount_g": 30 },
+        { "name": "aioli", "amount_g": 15 }
+      ]
+    },
+    {
+      "name": "pan con tomate",
+      "cuisine": "Spanish",
+      "ingredients": [
+        { "name": "bread", "amount_g": 80 },
+        { "name": "tomato", "amount_g": 30 },
+        { "name": "olive oil", "amount_g": 10 }
+      ]
+    },
+    {
+      "name": "croquettes",
+      "cuisine": "Spanish",
+      "ingredients": [
+        { "name": "croquettes", "amount_g": 100 }
+      ]
+    }
+  ]
+}

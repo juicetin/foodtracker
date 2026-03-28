@@ -1,0 +1,18 @@
+{
+  "image": "../../../testassets/real-food/28-burrito-bowl.jpg",
+  "dishes": [
+    {
+      "name": "rice and beans",
+      "cuisine": "Latin American",
+      "ingredients": [
+        { "name": "white rice", "amount_g": 200 },
+        { "name": "kidney beans", "amount_g": 150 },
+        { "name": "tomato", "amount_g": 20 },
+        { "name": "onion", "amount_g": 15 },
+        { "name": "radish", "amount_g": 10 },
+        { "name": "bell pepper", "amount_g": 15 },
+        { "name": "bean sauce", "amount_g": 30 }
+      ]
+    }
+  ]
+}

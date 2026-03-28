@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/29-enchiladas.jpg",
+  "dishes": [
+    {
+      "name": "enchiladas",
+      "cuisine": "Mexican",
+      "ingredients": [
+        { "name": "corn tortillas", "amount_g": 120 },
+        { "name": "chicken", "amount_g": 100 },
+        { "name": "enchilada sauce", "amount_g": 80 },
+        { "name": "cheese", "amount_g": 40 },
+        { "name": "sour cream", "amount_g": 20 },
+        { "name": "cilantro", "amount_g": 3 }
+      ]
+    }
+  ]
+}

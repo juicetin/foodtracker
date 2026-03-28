@@ -1,0 +1,22 @@
+{
+  "image": "../../../testassets/real-food/12-fruit.jpg",
+  "dishes": [
+    {
+      "name": "fruit platter",
+      "cuisine": "Mixed",
+      "ingredients": [
+        { "name": "grapefruit", "amount_g": 100 },
+        { "name": "orange", "amount_g": 80 },
+        { "name": "kiwi", "amount_g": 60 },
+        { "name": "mango", "amount_g": 100 },
+        { "name": "strawberries", "amount_g": 60 },
+        { "name": "blueberries", "amount_g": 30 },
+        { "name": "raspberries", "amount_g": 40 },
+        { "name": "blackberries", "amount_g": 40 },
+        { "name": "lime", "amount_g": 30 },
+        { "name": "lemon", "amount_g": 30 },
+        { "name": "pineapple", "amount_g": 80 }
+      ]
+    }
+  ]
+}

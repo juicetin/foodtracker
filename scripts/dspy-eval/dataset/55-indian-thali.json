@@ -1,0 +1,69 @@
+{
+    "image": "../../../testassets/real-food/55-indian-thali.jpg",
+    "dishes": [
+        {
+            "name": "steamed basmati rice",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "basmati rice", "amount_g": 180}
+            ]
+        },
+        {
+            "name": "sambar",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "toor dal", "amount_g": 80},
+                {"name": "mixed vegetables", "amount_g": 60},
+                {"name": "tamarind", "amount_g": 10},
+                {"name": "sambar powder", "amount_g": 5}
+            ]
+        },
+        {
+            "name": "vegetable curry",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "potato", "amount_g": 60},
+                {"name": "coconut milk", "amount_g": 40},
+                {"name": "curry leaves", "amount_g": 2},
+                {"name": "vegetable oil", "amount_g": 10}
+            ]
+        },
+        {
+            "name": "bhindi masala",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "okra", "amount_g": 80},
+                {"name": "onion", "amount_g": 20},
+                {"name": "spices", "amount_g": 5},
+                {"name": "vegetable oil", "amount_g": 10}
+            ]
+        },
+        {
+            "name": "raita",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "yogurt", "amount_g": 60},
+                {"name": "cucumber", "amount_g": 10},
+                {"name": "mustard seeds", "amount_g": 1}
+            ]
+        },
+        {
+            "name": "naan bread",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "naan", "amount_g": 80},
+                {"name": "butter", "amount_g": 5}
+            ]
+        },
+        {
+            "name": "kosambari salad",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "moong dal", "amount_g": 30},
+                {"name": "carrot", "amount_g": 10},
+                {"name": "cucumber", "amount_g": 10},
+                {"name": "lemon juice", "amount_g": 5}
+            ]
+        }
+    ]
+}

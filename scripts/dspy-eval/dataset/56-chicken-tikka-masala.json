@@ -1,0 +1,19 @@
+{
+    "image": "../../../testassets/real-food/56-chicken-tikka-masala.jpg",
+    "dishes": [
+        {
+            "name": "chicken tikka masala",
+            "cuisine": "Indian",
+            "ingredients": [
+                {"name": "chicken tikka pieces", "amount_g": 180},
+                {"name": "tomato-cream masala sauce", "amount_g": 150},
+                {"name": "heavy cream", "amount_g": 40},
+                {"name": "butter", "amount_g": 15},
+                {"name": "onion", "amount_g": 30},
+                {"name": "ginger garlic paste", "amount_g": 10},
+                {"name": "garam masala", "amount_g": 3},
+                {"name": "cilantro", "amount_g": 3}
+            ]
+        }
+    ]
+}

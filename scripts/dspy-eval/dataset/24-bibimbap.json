@@ -1,0 +1,21 @@
+{
+  "image": "../../../testassets/real-food/24-bibimbap.jpg",
+  "dishes": [
+    {
+      "name": "bibimbap",
+      "cuisine": "Korean",
+      "ingredients": [
+        { "name": "steamed rice", "amount_g": 200 },
+        { "name": "spinach", "amount_g": 30 },
+        { "name": "carrot", "amount_g": 30 },
+        { "name": "zucchini", "amount_g": 30 },
+        { "name": "bean sprouts", "amount_g": 30 },
+        { "name": "mushroom", "amount_g": 30 },
+        { "name": "egg", "amount_g": 50 },
+        { "name": "gochujang", "amount_g": 20 },
+        { "name": "sesame oil", "amount_g": 10 },
+        { "name": "beef", "amount_g": 60 }
+      ]
+    }
+  ]
+}

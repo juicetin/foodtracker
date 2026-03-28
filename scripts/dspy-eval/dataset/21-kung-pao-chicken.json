@@ -1,0 +1,22 @@
+{
+  "image": "../../../testassets/real-food/21-kung-pao-chicken.jpg",
+  "dishes": [
+    {
+      "name": "fried chicken",
+      "cuisine": "Asian",
+      "ingredients": [
+        { "name": "chicken pieces", "amount_g": 300 },
+        { "name": "flour coating", "amount_g": 30 },
+        { "name": "frying oil", "amount_g": 40 }
+      ]
+    },
+    {
+      "name": "steamed rice",
+      "cuisine": "Asian",
+      "ingredients": [
+        { "name": "white rice", "amount_g": 200 },
+        { "name": "cucumber", "amount_g": 20 }
+      ]
+    }
+  ]
+}

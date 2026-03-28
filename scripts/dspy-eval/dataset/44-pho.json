@@ -1,0 +1,19 @@
+{
+  "image": "../../../testassets/real-food/44-pho.jpg",
+  "dishes": [
+    {
+      "name": "pho bo",
+      "cuisine": "Vietnamese",
+      "ingredients": [
+        { "name": "rice noodles", "amount_g": 200 },
+        { "name": "beef broth", "amount_g": 350 },
+        { "name": "beef slices", "amount_g": 80 },
+        { "name": "bean sprouts", "amount_g": 30 },
+        { "name": "thai basil", "amount_g": 5 },
+        { "name": "lime", "amount_g": 10 },
+        { "name": "hoisin sauce", "amount_g": 10 },
+        { "name": "sriracha", "amount_g": 5 }
+      ]
+    }
+  ]
+}

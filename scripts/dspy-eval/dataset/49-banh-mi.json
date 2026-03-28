@@ -1,0 +1,17 @@
+{
+  "image": "../../../testassets/real-food/49-banh-mi.jpg",
+  "dishes": [
+    {
+      "name": "baguette sandwich",
+      "cuisine": "French/Western",
+      "ingredients": [
+        { "name": "baguette", "amount_g": 120 },
+        { "name": "ham", "amount_g": 60 },
+        { "name": "cheese", "amount_g": 30 },
+        { "name": "lettuce", "amount_g": 10 },
+        { "name": "tomato", "amount_g": 15 },
+        { "name": "butter", "amount_g": 10 }
+      ]
+    }
+  ]
+}

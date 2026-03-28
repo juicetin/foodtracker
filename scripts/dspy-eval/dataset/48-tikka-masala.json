@@ -1,0 +1,33 @@
+{
+  "image": "../../../testassets/real-food/48-tikka-masala.jpg",
+  "dishes": [
+    {
+      "name": "idli",
+      "cuisine": "South Indian",
+      "ingredients": [
+        { "name": "rice-lentil cakes", "amount_g": 200 }
+      ]
+    },
+    {
+      "name": "medu vada",
+      "cuisine": "South Indian",
+      "ingredients": [
+        { "name": "fried lentil donuts", "amount_g": 80 }
+      ]
+    },
+    {
+      "name": "sambar",
+      "cuisine": "South Indian",
+      "ingredients": [
+        { "name": "lentil-vegetable stew", "amount_g": 150 }
+      ]
+    },
+    {
+      "name": "coconut chutney",
+      "cuisine": "South Indian",
+      "ingredients": [
+        { "name": "coconut chutney", "amount_g": 30 }
+      ]
+    }
+  ]
+}

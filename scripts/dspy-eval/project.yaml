@@ -1,0 +1,26 @@
+# auto-strat-eval project config for Tastimate food tracking
+#
+# Points the auto-strat-eval framework at our food-specific
+# dataset, metric, and prompt versions.
+
+goal: ../auto-strat-eval/goal.md
+
+dataset:
+  labels_dir: ./dataset
+  image_root: ../../testassets/real-food
+  image_key: image
+  ground_truth_key: dishes
+
+backend:
+  type: chrome
+  chrome_bin: /usr/bin/google-chrome-canary
+  profile_dir: ~/media/chrome-nano-canary-profile
+
+metric:
+  module: ./food_metric_bridge.py
+
+prompts:
+  dir: ./prompts
+  prompt_key: food_prompt
+
+strategy_dir: ../auto-strat-eval/strategy
