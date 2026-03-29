@@ -1,0 +1,10 @@
+{
+  "version": "v35",
+  "name": "compact-examples",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S5: Fewer ingredients per example (4 instead of 5-6) to reduce input tokens. Short names + calibrated meat weights. Less input = more attention for the actual image.",
+  "deployed": false,
+  "grid_search_scores": {},
+  "food_prompt": "JSON format: {\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\n\nExamples:\nFried rice → {\"dishes\":[{\"name\":\"fried rice\",\"ingredients\":[{\"name\":\"rice\",\"amount_g\":200},{\"name\":\"chicken\",\"amount_g\":120},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"soy sauce\",\"amount_g\":20}]}]}\nRamen → {\"dishes\":[{\"name\":\"ramen\",\"ingredients\":[{\"name\":\"noodles\",\"amount_g\":200},{\"name\":\"broth\",\"amount_g\":300},{\"name\":\"pork\",\"amount_g\":120},{\"name\":\"egg\",\"amount_g\":50}]}]}\nSalad → {\"dishes\":[{\"name\":\"greek salad\",\"ingredients\":[{\"name\":\"lettuce\",\"amount_g\":60},{\"name\":\"feta\",\"amount_g\":50},{\"name\":\"tomatoes\",\"amount_g\":40},{\"name\":\"olive oil\",\"amount_g\":15}]}]}\n\nLook at this food photo. Identify each dish and list ingredients with gram estimates. Return only valid JSON."
+}

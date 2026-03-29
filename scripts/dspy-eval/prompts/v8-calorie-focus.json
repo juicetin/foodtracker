@@ -1,0 +1,10 @@
+{
+  "version": "v8",
+  "name": "calorie-focus",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S1: Explicitly ask for calorically significant ingredients only. Drop cuisine. Align with declarative goal: we need calorie accuracy, not completeness of garnishes.",
+  "deployed": false,
+  "grid_search_scores": {},
+  "food_prompt": "Look at this food photo. Identify each dish and list the 5-6 most calorically significant ingredients with gram estimates.\nReturn only valid JSON:\n{\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\nFocus on proteins, fats, starches, and sauces — skip garnishes and herbs.\nFor weights: a standard dinner plate is ~25cm, a cup is ~240ml, a fist-sized portion is ~150g.\n\nExamples:\nFried rice → {\"dishes\":[{\"name\":\"fried rice\",\"ingredients\":[{\"name\":\"cooked white rice\",\"amount_g\":250},{\"name\":\"chicken\",\"amount_g\":80},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"soy sauce\",\"amount_g\":20},{\"name\":\"sesame oil\",\"amount_g\":5}]}]}\nRamen → {\"dishes\":[{\"name\":\"ramen\",\"ingredients\":[{\"name\":\"ramen noodles\",\"amount_g\":200},{\"name\":\"pork broth\",\"amount_g\":350},{\"name\":\"chashu pork\",\"amount_g\":80},{\"name\":\"soft-boiled egg\",\"amount_g\":50}]}]}\nSalad → {\"dishes\":[{\"name\":\"greek salad\",\"ingredients\":[{\"name\":\"frisee lettuce\",\"amount_g\":60},{\"name\":\"feta cheese\",\"amount_g\":50},{\"name\":\"cherry tomatoes\",\"amount_g\":40},{\"name\":\"olive oil\",\"amount_g\":10}]}]}"
+}

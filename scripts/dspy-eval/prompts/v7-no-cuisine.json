@@ -1,0 +1,10 @@
+{
+  "version": "v7",
+  "name": "no-cuisine",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S1: Drop cuisine field to save output tokens (~8-10 tokens per dish). Same few-shot examples but without cuisine. More room for ingredients within 256 tokens.",
+  "deployed": false,
+  "grid_search_scores": {},
+  "food_prompt": "Look at this food photo. First identify each dish, then list ingredients with gram estimates.\nReturn only valid JSON:\n{\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\nFor weights: a standard dinner plate is ~25cm, a cup is ~240ml, a fist-sized portion is ~150g.\n\nExamples:\nFried rice → {\"dishes\":[{\"name\":\"fried rice\",\"ingredients\":[{\"name\":\"cooked white rice\",\"amount_g\":250},{\"name\":\"chicken\",\"amount_g\":80},{\"name\":\"soy sauce\",\"amount_g\":20},{\"name\":\"green onion\",\"amount_g\":10},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"sesame oil\",\"amount_g\":5}]}]}\nRamen → {\"dishes\":[{\"name\":\"ramen\",\"ingredients\":[{\"name\":\"ramen noodles\",\"amount_g\":200},{\"name\":\"pork broth\",\"amount_g\":350},{\"name\":\"chashu pork\",\"amount_g\":80},{\"name\":\"soft-boiled egg\",\"amount_g\":50},{\"name\":\"nori seaweed\",\"amount_g\":5},{\"name\":\"green onion\",\"amount_g\":10}]}]}\nSalad → {\"dishes\":[{\"name\":\"greek salad\",\"ingredients\":[{\"name\":\"frisee lettuce\",\"amount_g\":60},{\"name\":\"feta cheese\",\"amount_g\":50},{\"name\":\"cherry tomatoes\",\"amount_g\":40},{\"name\":\"kalamata olives\",\"amount_g\":25},{\"name\":\"red bell pepper\",\"amount_g\":30},{\"name\":\"olive oil\",\"amount_g\":10}]}]}"
+}

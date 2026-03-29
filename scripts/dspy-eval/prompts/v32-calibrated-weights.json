@@ -1,0 +1,10 @@
+{
+  "version": "v32",
+  "name": "calibrated-weights",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S4: Calibrate few-shot example weights to match dataset distributions. Meat 80g→130g, rice 250g→200g. Also includes bread example (90g avg). Dataset analysis shows model under-estimates meat by ~40% due to anchoring.",
+  "deployed": false,
+  "grid_search_scores": {},
+  "food_prompt": "JSON format: {\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\n\nExamples:\nFried rice → {\"dishes\":[{\"name\":\"fried rice\",\"ingredients\":[{\"name\":\"rice\",\"amount_g\":200},{\"name\":\"chicken\",\"amount_g\":120},{\"name\":\"soy sauce\",\"amount_g\":20},{\"name\":\"green onion\",\"amount_g\":10},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"sesame oil\",\"amount_g\":10}]}]}\nRamen → {\"dishes\":[{\"name\":\"ramen\",\"ingredients\":[{\"name\":\"noodles\",\"amount_g\":200},{\"name\":\"pork broth\",\"amount_g\":300},{\"name\":\"pork\",\"amount_g\":120},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"seaweed\",\"amount_g\":5},{\"name\":\"green onion\",\"amount_g\":10}]}]}\nSalad → {\"dishes\":[{\"name\":\"greek salad\",\"ingredients\":[{\"name\":\"lettuce\",\"amount_g\":60},{\"name\":\"feta\",\"amount_g\":50},{\"name\":\"tomatoes\",\"amount_g\":40},{\"name\":\"olives\",\"amount_g\":25},{\"name\":\"bell pepper\",\"amount_g\":30},{\"name\":\"olive oil\",\"amount_g\":15}]}]}\n\nTypical weights: rice/noodles ~200g, meat/fish ~130g, broth ~300g, vegetables ~40g, sauce ~25g, oil ~15g.\n\nLook at this food photo. Identify each dish and list ingredients with gram estimates. Return only valid JSON."
+}

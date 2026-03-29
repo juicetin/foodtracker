@@ -1,0 +1,10 @@
+{
+  "version": "v24",
+  "name": "diverse-examples",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S2: Completely different examples — burger, pasta, curry+rice. Test if different food types give model better generalization than Asian-heavy examples. Schema-first + short names.",
+  "deployed": false,
+  "grid_search_scores": {},
+  "food_prompt": "JSON format: {\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\n\nExamples:\nBurger → {\"dishes\":[{\"name\":\"cheeseburger\",\"ingredients\":[{\"name\":\"beef patty\",\"amount_g\":150},{\"name\":\"bun\",\"amount_g\":60},{\"name\":\"cheese\",\"amount_g\":30},{\"name\":\"lettuce\",\"amount_g\":15},{\"name\":\"tomato\",\"amount_g\":30},{\"name\":\"ketchup\",\"amount_g\":15}]}]}\nPasta → {\"dishes\":[{\"name\":\"spaghetti bolognese\",\"ingredients\":[{\"name\":\"pasta\",\"amount_g\":200},{\"name\":\"ground beef\",\"amount_g\":120},{\"name\":\"tomato sauce\",\"amount_g\":100},{\"name\":\"onion\",\"amount_g\":40},{\"name\":\"parmesan\",\"amount_g\":15},{\"name\":\"olive oil\",\"amount_g\":10}]}]}\nCurry with rice → {\"dishes\":[{\"name\":\"chicken curry\",\"ingredients\":[{\"name\":\"chicken\",\"amount_g\":150},{\"name\":\"coconut milk\",\"amount_g\":100},{\"name\":\"curry paste\",\"amount_g\":30},{\"name\":\"onion\",\"amount_g\":50}]},{\"name\":\"rice\",\"ingredients\":[{\"name\":\"rice\",\"amount_g\":200}]}]}\n\nLook at this food photo. Identify each dish and list ingredients with gram estimates. Return only valid JSON."
+}

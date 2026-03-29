@@ -1,0 +1,20 @@
+{
+  "version": "v13",
+  "name": "schema-first",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S2: Put JSON schema and examples BEFORE the instruction. Small models may attend more to early tokens. Schema→examples→instruction ordering.",
+  "deployed": true,
+  "grid_search_scores": {
+    "S5_composite_avg": 0.577,
+    "S5_dish_name_f1": 0.639,
+    "S5_ingredient_recall": 0.565,
+    "S5_ingredient_f2": 0.521,
+    "S5_weight_mae": 0.351,
+    "S5_weight_hallu": 0.761,
+    "S5_parse_rate": 1.0,
+    "regression_v1_original": 0.409,
+    "regression_v7_final": 0.565
+  },
+  "food_prompt": "JSON format: {\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\n\nExamples:\nFried rice → {\"dishes\":[{\"name\":\"fried rice\",\"ingredients\":[{\"name\":\"cooked white rice\",\"amount_g\":250},{\"name\":\"chicken\",\"amount_g\":80},{\"name\":\"soy sauce\",\"amount_g\":20},{\"name\":\"green onion\",\"amount_g\":10},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"sesame oil\",\"amount_g\":5}]}]}\nRamen → {\"dishes\":[{\"name\":\"ramen\",\"ingredients\":[{\"name\":\"ramen noodles\",\"amount_g\":200},{\"name\":\"pork broth\",\"amount_g\":350},{\"name\":\"chashu pork\",\"amount_g\":80},{\"name\":\"soft-boiled egg\",\"amount_g\":50},{\"name\":\"nori seaweed\",\"amount_g\":5},{\"name\":\"green onion\",\"amount_g\":10}]}]}\nSalad → {\"dishes\":[{\"name\":\"greek salad\",\"ingredients\":[{\"name\":\"frisee lettuce\",\"amount_g\":60},{\"name\":\"feta cheese\",\"amount_g\":50},{\"name\":\"cherry tomatoes\",\"amount_g\":40},{\"name\":\"kalamata olives\",\"amount_g\":25},{\"name\":\"red bell pepper\",\"amount_g\":30},{\"name\":\"olive oil\",\"amount_g\":10}]}]}\n\nTypical weights: rice/noodles ~200g, meat ~120g, broth ~300g, vegetables ~80g, sauce ~30g, oil ~10g.\n\nLook at this food photo. Identify each dish and list ingredients with gram estimates. Return only valid JSON."
+}

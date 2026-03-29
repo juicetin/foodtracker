@@ -54,7 +54,7 @@ def dish_name_f1(pred_dishes, gt_dishes) -> float:
     tp = 0
     for pn in pred_names:
         for i, gn in enumerate(gt_names):
-            if i not in matched_gt and fuzzy_match(pn, gn):
+            if i not in matched_gt and fuzzy_match(pn, gn, threshold=0.5):
                 tp += 1
                 matched_gt.add(i)
                 break
@@ -71,10 +71,13 @@ def _flatten_ingredients(dishes, key="name"):
     items = []
     for d in (dishes or []):
         for ing in d.get("ingredients", []):
-            if isinstance(ing, dict):
+            if isinstance(ing, dict) and "name" in ing:
                 items.append(ing)
-            else:
-                items.append({"name": str(ing)})
+            elif isinstance(ing, dict):
+                # Dict without "name" key — skip
+                continue
+            elif isinstance(ing, str):
+                items.append({"name": ing})
     return items
 
 
@@ -176,13 +179,16 @@ def weight_hallucination_penalty(pred_dishes, gt_dishes) -> float:
         match = best_match(gt_name, list(pred_weights.keys()))
         if match is not None:
             pred_g = pred_weights[match]
+            if pred_g <= 0:
+                worst_ratio = max(worst_ratio, 10.0)
+                continue
             ratio = max(pred_g / gt_g, gt_g / pred_g)
             worst_ratio = max(worst_ratio, ratio)
 
     if worst_ratio > 5:
-        return 0.1
-    if worst_ratio > 3:
         return 0.3
+    if worst_ratio > 3:
+        return 0.6
     return 1.0
 
 
@@ -194,11 +200,11 @@ def build_metric() -> MetricBuilder:
     """Compose the food identification metric using auto-strat-eval framework."""
     return (
         MetricBuilder()
-        .add("dish_name_f1", dish_name_f1, weight=0.20)
+        .add("dish_name_f1", dish_name_f1, weight=0.10)
         .add("ingredient_recall", ingredient_recall, weight=0.15)
         .add_fbeta("ingredient_f2", ingredient_precision, ingredient_recall, beta=2, weight=0.35)
         .add("weight_mae_score", weight_mae_score, weight=0.20)
-        .add_reward_shaping(weight_hallucination_penalty)
+        .add("weight_hallucination_penalty", weight_hallucination_penalty, weight=0.10)
         .set_parse_bonus(0.1, fail_score=0.0)
     )
 
@@ -227,6 +233,20 @@ def score_detailed(raw_output: str, ground_truth) -> dict:
             "pred_dishes": None,
             "raw_output": raw_output[:500],
         }
+
+    # Normalize: ensure pred_dishes is a list of dicts with expected keys
+    if isinstance(pred_dishes, list):
+        normalized = []
+        for d in pred_dishes:
+            if isinstance(d, dict):
+                normalized.append(d)
+            elif isinstance(d, str):
+                # Model returned a list of strings (dish names only)
+                normalized.append({"name": d, "ingredients": []})
+        pred_dishes = normalized
+    elif isinstance(pred_dishes, dict):
+        # Single dish returned as object
+        pred_dishes = [pred_dishes]
 
     detail = _metric.score_detailed(pred_dishes, ground_truth)
     detail["json_parsed"] = True

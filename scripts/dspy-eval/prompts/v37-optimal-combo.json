@@ -1,0 +1,10 @@
+{
+  "version": "v37",
+  "name": "optimal-combo",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S5: Optimal combination — schema-first + long descriptive names (better fuzzy matching) + calibrated meat weights (120g) + compact examples (5 ingredients each, skip minor garnishes) + weight anchors at end.",
+  "deployed": false,
+  "grid_search_scores": {},
+  "food_prompt": "JSON format: {\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\n\nExamples:\nFried rice → {\"dishes\":[{\"name\":\"fried rice\",\"ingredients\":[{\"name\":\"cooked white rice\",\"amount_g\":200},{\"name\":\"chicken\",\"amount_g\":120},{\"name\":\"soy sauce\",\"amount_g\":20},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"sesame oil\",\"amount_g\":10}]}]}\nRamen → {\"dishes\":[{\"name\":\"ramen\",\"ingredients\":[{\"name\":\"ramen noodles\",\"amount_g\":200},{\"name\":\"pork broth\",\"amount_g\":300},{\"name\":\"chashu pork\",\"amount_g\":120},{\"name\":\"soft-boiled egg\",\"amount_g\":50},{\"name\":\"nori seaweed\",\"amount_g\":5}]}]}\nGreek salad → {\"dishes\":[{\"name\":\"greek salad\",\"ingredients\":[{\"name\":\"frisee lettuce\",\"amount_g\":60},{\"name\":\"feta cheese\",\"amount_g\":50},{\"name\":\"cherry tomatoes\",\"amount_g\":40},{\"name\":\"kalamata olives\",\"amount_g\":25},{\"name\":\"olive oil\",\"amount_g\":15}]}]}\n\nLook at this food photo. Identify each dish and list ingredients with gram estimates. Return only valid JSON.\nTypical weights: rice/noodles ~200g, meat ~130g, broth ~300g, vegetables ~40g, oil ~15g."
+}

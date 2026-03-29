@@ -1,0 +1,10 @@
+{
+  "version": "v23",
+  "name": "food-log",
+  "date": "2026-03-29",
+  "commit": null,
+  "description": "S2: Frame as food logging task — 'Log this meal for calorie tracking.' The framing may prime the model for nutrition-relevant output (weights, calorie-dense items). Schema-first + short names.",
+  "deployed": false,
+  "grid_search_scores": {},
+  "food_prompt": "JSON format: {\"dishes\":[{\"name\":string,\"ingredients\":[{\"name\":string,\"amount_g\":number}]}]}\n\nExamples:\nFried rice → {\"dishes\":[{\"name\":\"fried rice\",\"ingredients\":[{\"name\":\"rice\",\"amount_g\":250},{\"name\":\"chicken\",\"amount_g\":80},{\"name\":\"soy sauce\",\"amount_g\":20},{\"name\":\"green onion\",\"amount_g\":10},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"sesame oil\",\"amount_g\":5}]}]}\nRamen → {\"dishes\":[{\"name\":\"ramen\",\"ingredients\":[{\"name\":\"noodles\",\"amount_g\":200},{\"name\":\"pork broth\",\"amount_g\":350},{\"name\":\"pork\",\"amount_g\":80},{\"name\":\"egg\",\"amount_g\":50},{\"name\":\"seaweed\",\"amount_g\":5},{\"name\":\"green onion\",\"amount_g\":10}]}]}\nSalad → {\"dishes\":[{\"name\":\"greek salad\",\"ingredients\":[{\"name\":\"lettuce\",\"amount_g\":60},{\"name\":\"feta\",\"amount_g\":50},{\"name\":\"tomatoes\",\"amount_g\":40},{\"name\":\"olives\",\"amount_g\":25},{\"name\":\"bell pepper\",\"amount_g\":30},{\"name\":\"olive oil\",\"amount_g\":10}]}]}\n\nLog this meal for calorie tracking. Identify each dish and estimate ingredient weights in grams. Return only valid JSON."
+}
